@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,probabilityRawDurations,probabilityMathScope,courseLedger};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,probabilityRawDurations,probabilityMathScope,courseLedger} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -39,6 +39,10 @@ if (vocabDays.join(',') !== '0,1,2,3,4,5,6') throw new Error(`every day needs an
 if (!week2.some(x => x.id==='w2-mon-880' && x.title.includes('第二章'))) throw new Error('week 2 must progress instead of copying week 1');
 if (!week2.some(x => x.id==='w2-mon-436' && x.title.includes('p19–21'))) throw new Error('week 2 436 pages must progress');
 if (!week2.some(x => x.id==='w2-mon-eng' && x.title.includes('2015年 Text 2'))) throw new Error('week 2 English reading must progress');
+if (probabilityRawDurations[7] !== '34:23' || probabilityRawDurations[28] !== '1:00:49') throw new Error('verified probability durations missing');
+if (probabilityMathScope[29] !== '数一' || probabilityMathScope[30] !== '数一') throw new Error('Math I-only probability lectures must be excluded');
+if (!courseLedger.some(x => x.subject.includes('概率') && x.duration.includes('第7–8讲'))) throw new Error('probability duration ledger missing');
+if (!courseLedger.some(x => x.subject.includes('线代') && x.duration.includes('2.10(2) 51:06'))) throw new Error('linear algebra duration ledger missing');
 
 for (const phase of [1,2,3,5]) {
   for (let day=0; day<7; day++) {
@@ -49,4 +53,3 @@ for (const phase of [1,2,3,5]) {
   }
 }
 console.log(`SCHEDULE_OK courses=${baseClasses.length} week1=${study1.length} week2=${week2.length}`);
-

@@ -57,7 +57,7 @@ const study1 = [
   t('w1-thu-preview',3,'22:15','22:50','概率 · 方浩第1讲预习','math','只看入口概念','给明天听课降低启动阻力。',['看目录','写5个概念'],'概率入口卡'),
   t('w1-thu-vocab',3,'22:50','23:20','英语单词 · 新15 + 旧30','english','30分钟按15新词 + 30旧词','只做回想，不再开新阅读。',['新词15','旧词30'],'薄弱词'),
 
-  t('w1-fri-prob',4,'08:20','10:00','概率 · 方浩第1–2讲 + 6题','math','1.5倍速含暂停约68分钟','剩余时间做题。',['听2讲','做6题','记错因'],'2讲+6题'),
+  t('w1-fri-prob',4,'08:20','10:00','概率 · 方浩第1–2讲 + 6题','math','第1讲时长待定位；第2讲原始37:15，1.5倍速+暂停约35分钟','第1讲只先完成听课，时长核对后再补题；不编分钟数。',['听2讲','做6题','记错因'],'2讲+6题'),
   t('w1-fri-hw',4,'12:20','14:00','Blackboard作业 · 周五开放项','homework','只处理已经开放且必须交的','周一到周四不再塞作业。',['看截止时间','先做必须交的','上传确认'],'开放项清单'),
   t('w1-fri-436',4,'14:00','15:45','436 · p13–15 + 短答2题','major','框架和落笔串起来','不是只读3页。',['读p13–15','写2题','复述'],'3页+2题'),
   t('w1-fri-880',4,'18:00','20:30','880第一章 · 综合填空5–8 + 综合解答1–6','math','共10题','解答题按步骤写。',['填空4题','解答6题','对答案'],'10题结果'),
@@ -65,7 +65,7 @@ const study1 = [
   t('w1-fri-436rec',4,'21:15','22:30','436 · p1–15连续复述','major','按页码顺序说','断点单列。',['连续复述','补缺口'],'断点清单'),
   t('w1-fri-vocab',4,'22:30','23:20','英语单词 · 新25 + 旧50','english','50分钟按25新词 + 50旧词','轻量收尾。',['新词25','旧词50'],'薄弱词'),
 
-  t('w1-sat-prob',5,'08:20','10:30','概率 · 方浩第3–4讲 + 6题','math','听课约90分钟','至少留40分钟做题。',['听2讲','做6题','核对'],'2讲+6题'),
+  t('w1-sat-prob',5,'08:20','10:30','概率 · 方浩第3–4讲 + 6题','math','原始1:58:10；1.5倍速+暂停约95分钟','课程约95分钟，余下约35分钟做6题。',['听2讲','做6题','核对'],'2讲+6题'),
   t('w1-sat-436',5,'10:45','11:45','436 · p16–18页内全部卡片','major','新3页','一小时只做输入和复述。',['读p16–18','合书复述'],'p16–18框架卡'),
   t('w1-sat-hw',5,'12:20','14:00','Blackboard作业 · 周六开放项','homework','集中处理开放项','没有新作业就直接休息，不补周一到周四的假任务。',['检查开放项','完成必须交的','上传确认'],'开放项清单'),
   t('w1-sat-eng',5,'14:00','15:00','英语二 · 2019年 Text 1','english','20分钟 + 40分钟复盘','第五篇用于巩固闭环。',['限时','证据句','错因'],'1张阅读卡'),
@@ -76,7 +76,7 @@ const study1 = [
   t('w1-sat-close',5,'22:30','22:50','436卡片 · p1–18薄弱页','major','只抽薄弱页内卡片','睡前不再开新页。',['抽薄弱页','标3个断点'],'薄弱页'),
   t('w1-sat-vocab',5,'22:50','23:20','英语单词 · 新15 + 旧30','english','30分钟按15新词 + 30旧词','只做回想，不开新页。',['新词15','旧词30'],'薄弱词'),
 
-  t('w1-sun-prob',6,'09:00','11:00','概率 · 方浩第5–6讲 + 周回收','math','听课约55分钟','重做第1–4讲错题。',['听2讲','重做6题'],'2讲+6题'),
+  t('w1-sun-prob',6,'09:00','11:00','概率 · 方浩第5–6讲 + 周回收','math','原始50:28；1.5倍速+暂停约40分钟','课程约40分钟，余下时间重做第1–4讲错题。',['听2讲','重做6题'],'2讲+6题'),
   t('w1-sun-436',6,'11:15','11:45','436 · p1–18名词抽查','major','30分钟闭卷','只查准确度。',['抽10个名词'],'准确率'),
   t('w1-sun-hw',6,'12:20','14:00','Blackboard作业 · 周日最后收口','homework','只处理必须交的','做完就停，不带进周一。',['清掉必须交的','确认上传'],'零欠账'),
   t('w1-sun-major2',6,'14:00','15:00','436 · 计算3 + 短答1','major','按计分步骤写','本周第三个计算单元。',['计算1题','短答1题'],'2题过程'),
@@ -92,14 +92,14 @@ const week2Math = {
   'w1-tue-line':['线代第2章 · 错题回做8题','只回做第一周的错题'],
   'w1-tue-880':['880第二章 · 基础选择11–17 + 基础填空1–5','共12题'],
   'w1-tue-lineproblems':['概率第1–6讲 · 公式回想 + 4题','给新课做一次短回收'],
-  'w1-wed-line':['概率 · 方浩第7–8讲 + 6题','按1.5倍速听，余下做题'],
+  'w1-wed-line':['概率 · 方浩第7–8讲 + 6题','原始69:15；1.5倍速+暂停约55分钟，配套6题'],
   'w1-wed-880':['880第二章 · 基础填空6–15 + 基础解答1–2','共12题'],
   'w1-thu-line-test':['线代第2章 · 7天回测8题','闭卷完成，再补具体错点'],
   'w1-thu-880':['880第二章 · 基础解答3–10','共8题'],
   'w1-thu-preview':['概率 · 方浩第9–10讲预习','只看目录与入口概念'],
-  'w1-fri-prob':['概率 · 方浩第9–10讲 + 6题','听课后马上做对应题'],
+  'w1-fri-prob':['概率 · 方浩第9–10讲 + 6题','原始49:42；1.5倍速+暂停约40分钟，配套6题'],
   'w1-fri-880':['880第二章 · 基础解答11–16','共6题'],
-  'w1-sat-prob':['概率 · 方浩第11–12讲 + 6题','至少留40分钟做题'],
+  'w1-sat-prob':['概率 · 方浩第11–12讲 + 6题','原始48:03；1.5倍速+暂停约40分钟，配套6题'],
   'w1-sat-880':['880第二章 · 基础解答17–22','共6题'],
   'w1-sun-prob':['概率第7–12讲 · 周回收6题','只回做本周错题'],
   'w1-sun-880':['880第二章 · 基础题错题回做','本周54道基础题收口']
@@ -139,17 +139,50 @@ const breakfastMenu = [
   {name:'豆腐脑（少油） + 鸡蛋 + 馒头',price:'约 6–9 元',source:'食堂窗口优先',swap:'不加辣油'},
   {name:'燕麦牛奶 + 香蕉 + 茶叶蛋',price:'约 7–10 元',source:'便利店/外卖',swap:'牛奶换无糖豆浆'}
 ];
+// 夸克桌面端逐条核对到的方浩概率课时长（原始播放时长）。
+// 29、30讲文件名明确标注“数一”，数学三不排这两讲；第1讲当前未从播放列表定位到，保持未验证。
+const probabilityRawDurations = {
+  2:'37:15',3:'1:00:22',4:'57:48',5:'35:04',6:'15:24',7:'34:23',8:'34:52',9:'28:08',10:'21:34',
+  11:'22:10',12:'25:53',13:'18:18',14:'22:19',15:'59:48',16:'34:30',17:'46:34',18:'45:34',19:'25:13',
+  20:'04:07',21:'14:00',22:'20:24',23:'14:29',24:'06:18',25:'34:00',26:'37:36',27:'30:02',28:'1:00:49',
+  29:'03:44',30:'25:17'
+};
+const probabilityMathScope = {29:'数一',30:'数一'};
+const lineAlgebraVerifiedDurations = {
+  '2.3':'44:20','2.4':'33:43','2.5':'30:47','2.6':'39:51','2.7':'1:03:17','2.8':'57:08','2.9':'51:18','2.10(1)':'54:02','2.10(2)':'51:06'
+};
+const durationSeconds = raw => {
+  const p=String(raw).split(':').map(Number);
+  return p.length===3 ? p[0]*3600+p[1]*60+p[2] : p[0]*60+p[1];
+};
+const formatClockDuration = seconds => {
+  const total=Math.round(seconds), h=Math.floor(total/3600), m=Math.floor((total%3600)/60), s=total%60;
+  return h ? `${h}小时${String(m).padStart(2,'0')}分` : `${m}分${String(s).padStart(2,'0')}秒`;
+};
+// 1.5倍速并不等于1/1.5的机械切片：按约15%暂停、回看和记笔记余量排入课表，向上取整到5分钟。
+const plannedLectureMinutes = (start,end) => Math.ceil((Object.keys(probabilityRawDurations).filter(k=>Number(k)>=start&&Number(k)<=end).reduce((sum,k)=>sum+durationSeconds(probabilityRawDurations[k]),0)/1.5*1.15)/300)*5;
+const probabilityWindow = (start,end) => {
+  const keys=Object.keys(probabilityRawDurations).filter(k=>Number(k)>=start&&Number(k)<=end).map(Number);
+  const raw=keys.reduce((sum,k)=>sum+durationSeconds(probabilityRawDurations[k]),0);
+  const excluded=keys.filter(k=>probabilityMathScope[k]);
+  return `原始${formatClockDuration(raw)} · 1.5倍速+暂停约${plannedLectureMinutes(start,end)}分钟${excluded.length?` · 排除${excluded.join('、')}讲（${excluded.map(k=>probabilityMathScope[k]).join('、')}）`:''}`;
+};
 // 880第一章题量按当前可查的2027数学三讲解目录口径：基础22 + 综合36 + 拓展2 = 60题；不同印次以用户手中试题册为准。
 const courseLedger = [
   {subject:'高数 · 李林880',now:'第一章函数、极限、连续；目录口径60题',week:'周一到周日依次完成13/6/8/15/10/6/2题',done:'当天独立做完并标错因；周日回做代表错题'},
-  {subject:'线代 · 没咋了',now:'第二章只剩 2 节课',week:'周二、周三各收 1 节；周四做 6 题闭卷回测',done:'课听完 + 当天对应题 + 48小时回测'},
-  {subject:'概率 · 方浩',now:'基础班 30 讲，尚未正式推进',week:'周五第1–2讲；周六第3–4讲；周日第5–6讲',done:'每两讲至少 6 道基础题；做不出时只补对应知识点'},
+  {subject:'线代 · 没咋了',now:'第二章只剩 2 节课；播放列表已核对到 2.3–2.10 时长',duration:`可查原始时长：${Object.entries(lineAlgebraVerifiedDurations).map(([k,v])=>`${k} ${v}`).join('、')}；剩余两节编号以你当前夸克勾选为准`,week:'周二、周三各收 1 节；周四做 6 题闭卷回测',done:'课听完 + 当天对应题 + 48小时回测'},
+  {subject:'概率 · 方浩',now:'基础班 30 讲；第2–28讲已核对原始时长，29–30为数一不排',duration:`第7–8讲 ${probabilityWindow(7,8)}；第9–10讲 ${probabilityWindow(9,10)}；第11–12讲 ${probabilityWindow(11,12)}`,week:'周五先处理第1–2讲（第1讲时长待定位）；周六第3–4讲；周日第5–6讲；第二周起按7–8、9–10、11–12讲推进',done:'每两讲至少 6 道基础题；听课时间按1.5倍速并留暂停余量'},
   {subject:'436 · 背诵笔记',now:'168页；本周 p1–18',week:'周一至周六每天新3页；周日只回收；页内定义/公式卡片全部过',done:'能合书说出页内框架；每周3个计算题单元'},
   {subject:'英语二 · 真题',now:'阅读量少，先做精读闭环',week:'2015–2019年各做 Text 1；单词每日写死数量，共新135+旧270',done:'每篇留1张错因卡；当天单词按格内数量收工'}
 ];
 function renderCourseLedger(){
   const body=document.querySelector('#course-ledger-body'); if(!body)return;
-  body.innerHTML=courseLedger.map(r=>`<tr><th scope="row">${r.subject}</th><td>${r.now}</td><td>${r.week}</td><td>${r.done}</td></tr>`).join('');
+  body.innerHTML=courseLedger.map(r=>`<tr><th scope="row">${r.subject}</th><td>${r.now}</td><td>${r.duration||'—'}</td><td>${r.week}</td><td>${r.done}</td></tr>`).join('');
+}
+function renderDurationIndex(){
+  const el=document.querySelector('#duration-index'); if(!el)return;
+  const entries=Object.entries(probabilityRawDurations).map(([lecture,raw])=>`<span class="duration-chip ${probabilityMathScope[lecture]?'excluded':''}">第${lecture}讲 ${raw}${probabilityMathScope[lecture]?` · ${probabilityMathScope[lecture]}不排`:''}</span>`).join('');
+  el.innerHTML=`<div class="duration-index-heading"><b>方浩概率 · 夸克原始时长索引</b><span>第2–28讲已核对；第1讲待定位</span></div><div class="duration-chip-list">${entries}</div>`;
 }
 const rangeStarts = [];
 for (let d = new Date('2026-08-31T00:00:00'); d <= new Date('2026-12-14T00:00:00'); d.setDate(d.getDate()+7)) rangeStarts.push(new Date(d));
@@ -196,11 +229,11 @@ function progressFor(index, day, type, id=''){
       'w1-thu-line-test':['线代第2章 · 48小时回测6题','闭卷60分钟'],
       'w1-thu-880':['880第一章 · 综合选择6–16 + 综合填空1–4','共15题'],
       'w1-thu-preview':['概率 · 方浩第1讲预习','只看入口概念'],
-      'w1-fri-prob':['概率 · 方浩第1–2讲 + 6题','1.5倍速含暂停约68分钟'],
+      'w1-fri-prob':['概率 · 方浩第1–2讲 + 6题','第1讲时长待定位；第2讲原始37:15，先听课再补题'],
       'w1-fri-880':['880第一章 · 综合填空5–8 + 综合解答1–6','共10题'],
-      'w1-sat-prob':['概率 · 方浩第3–4讲 + 6题','听课约90分钟'],
+      'w1-sat-prob':['概率 · 方浩第3–4讲 + 6题','原始1:58:10；1.5倍速+暂停约95分钟'],
       'w1-sat-880':['880第一章 · 综合解答7–12','共6题'],
-      'w1-sun-prob':['概率 · 方浩第5–6讲 + 周回收','听课约55分钟'],
+      'w1-sun-prob':['概率 · 方浩第5–6讲 + 周回收','原始50:28；1.5倍速+暂停约40分钟'],
       'w1-sun-880':['880第一章 · 拓展解答1–2 + 全章错题','2道拓展 + 本周错题']
     };
     if(index===0 && firstWeek[key])return {label:firstWeek[key][0],note:firstWeek[key][1]};
@@ -229,7 +262,7 @@ function syncRangeToToday(){const now=new Date();let idx=0;rangeStarts.forEach((
 function renderPhaseLine(){const el=document.querySelector('#phase-line');if(!el)return;el.innerHTML=routeData.map((r,i)=>`<article class="phase-card ${i===Math.min(4,Math.floor(currentRangeIndex/3))?'is-current':''}" style="--route:${r.color};--tint:${r.tint}"><span class="phase-date">${r.dates}</span><strong>${r.title}</strong><p>${r.desc}</p><small>${r.check}</small></article>`).join('');}
 function displayDate(){const now=new Date();const dates=datesForRange(currentRangeIndex);const start=dates[0];const end=dates[6];if(now<start)return start;if(now>end)return end;return new Date(now.getFullYear(),now.getMonth(),now.getDate());}
 function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);const data=buildDayAgenda(dayBlocks,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么</span></div><div class="agenda-list">${data.map(x=>`<div class="agenda-item ${x.type}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('')}</div>`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;renderPhaseLine();}
-function renderTimetable(){syncRangeToToday();renderCourseLedger();renderDailyAgenda();document.querySelector('#date-title').textContent='2026年8月31日—初试前';document.querySelector('#top-date').textContent='自动跟随真实日期';document.querySelector('#today-focus').textContent='阶段与每日安排';updateDailyBreakfast();}
+function renderTimetable(){syncRangeToToday();renderCourseLedger();renderDurationIndex();renderDailyAgenda();document.querySelector('#date-title').textContent='2026年8月31日—初试前';document.querySelector('#top-date').textContent='自动跟随真实日期';document.querySelector('#today-focus').textContent='阶段与每日安排';updateDailyBreakfast();}
 // 页面只保留当天课表与阶段路线；复盘不再占一整块屏幕。
 function updateDailyBreakfast(){const today=new Date();const b=breakfastFor(today);const el=document.querySelector('#today-meal');if(el)el.textContent=`今天早餐：${b.name} · ${b.price}`;const copy=document.querySelector('#review-breakfast-copy');if(copy)copy.textContent=`${b.name} · ${b.price} · ${b.source}`;}
 function updateClock(){const now=new Date();const pad=n=>String(n).padStart(2,'0');const el=document.querySelector('#live-clock');if(el)el.textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;}
@@ -240,7 +273,6 @@ function stopLiveUpdates(){clearTimeout(clockTimer);clearInterval(dailyTimer);cl
 function startLiveUpdates(){stopLiveUpdates();if(document.hidden)return;scheduleClock();dailyTimer=setInterval(syncDailyState,60000);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopLiveUpdates();else{syncDailyState();startLiveUpdates();}});
 renderTimetable();startLiveUpdates();
-
 
 
 
