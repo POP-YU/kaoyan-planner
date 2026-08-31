@@ -119,6 +119,26 @@ const week2 = study1.map(x => {
   if(math){y.title=math[0];y.note=math[1];}
   return y;
 });
+// 9月1日起提高强度：把原本能用于学习的长空档改成明确的小单元，只有吃饭、通勤和短暂恢复保留为休息。
+// 这些格子只叠加在第二周（9月1日–9月7日），不碰真实课程，也不挤占零点睡眠。
+const highIntensityPhase2 = [
+  t('w2-mon-morning',0,'06:20','07:00','英语单词 · 新20 + 旧40','english','起床后第一轮回想','先完成回想再吃早餐。',['新词20','旧词40'],'60词回想'),
+  t('w2-mon-noon',0,'12:20','13:15','436 · p1–18闭卷框架','major','只写标题和关键词','把第一周内容压成一页，下午不空耗。',['默写框架','补3个缺口'],'一页框架'),
+  t('w2-mon-afternoon',0,'14:50','16:35','880第二章 · 基础选择1–10复盘','math','逐题写错因，不开新视频','为晚间刷题先清掉旧错点。',['重做10题','归类错因'],'10题复盘'),
+  t('w2-tue-morning',1,'06:20','07:00','436 · p1–18闭卷复述','major','卡住再翻页','早上只做主动回忆，不被动阅读。',['连续复述','标3个断点'],'断点清单'),
+  t('w2-tue-noon',1,'12:20','13:15','880第二章 · 基础题错因回收4题','math','下午课前短单元','只回做错题，不开新章节。',['回做4题','写错因'],'4题回收'),
+  t('w2-tue-afternoon',1,'14:50','16:35','436 · p22–24短答2题','major','按评分点写，不只看答案','把上午背的页码转成输出。',['短答2题','对照补点'],'2个短答'),
+  t('w2-wed-morning',2,'06:20','07:00','英语单词 · 新20 + 旧40','english','回想优先','完成后再吃早餐。',['新词20','旧词40'],'60词回想'),
+  t('w2-wed-noon',2,'12:20','13:15','436 · p19–27框架回忆','major','不翻书先写结构','承接上午页码，保持连续记忆。',['写框架','补缺口'],'框架卡'),
+  t('w2-thu-morning',3,'06:20','07:00','880第二章 · 基础选择错题4题','math','闭卷做再核对','早上用来抓数学薄弱点。',['闭卷4题','标错因'],'4题结果'),
+  t('w2-thu-midday',3,'13:50','15:00','436 · p28–30页内卡片','major','新3页 + 合书复述','下午空档不留白，按页推进。',['读p28–30','合书复述'],'3页框架卡'),
+  t('w2-fri-morning',4,'06:20','07:00','英语单词 · 新25 + 旧50','english','回想优先','周五仍保持固定词量。',['新词25','旧词50'],'75词回想'),
+  t('w2-fri-afternoon',4,'16:05','16:55','880第二章 · 基础错题4题','math','只补今天暴露的错因','晚饭前完成一个闭环。',['重做4题','写错因'],'4题回收'),
+  t('w2-sat-morning',5,'06:20','07:00','436 · p19–27闭卷复述','major','先回忆再翻页','不把早起时间变成刷手机。',['连续复述','标断点'],'断点清单'),
+  t('w2-sat-late',5,'15:00','15:45','英语单词 · 薄弱词20','english','只看当天错词','晚饭前做轻量收口。',['回想20词'],'薄弱词'),
+  t('w2-sun-morning',6,'06:20','07:00','880第二章 · 基础题错题4题','math','闭卷回做','周日先做数学，再开始周回收。',['回做4题','写错因'],'4题结果'),
+  t('w2-sun-prep',6,'08:20','09:00','436 · p19–36框架复述','major','周回收前先主动输出','把第二周新增页码串起来。',['写总框架','标断点'],'总框架卡')
+];
 const phaseBlocks = [
   t('w3-mon-math',0,'18:00','20:00','数学 · 章节推进','math','基础题 + 1 道变式','从第一周的基线进入稳定推进。',['完成一小节例题','做 8 道基础题','把重复错因加粗'],'章节清单 + 错因'),
   t('w3-tue-436',1,'10:15','11:45','436 · 主题短答','major','定义→解释→例子','开始按题型输出，不只认关键词。',['抽 2 个主题','每题 12 分钟作答','对照评分点补漏'],'2 个短答'),
@@ -128,7 +148,7 @@ const phaseBlocks = [
   t('w3-sat-politics',5,'14:00','15:00','政治 · 低量启动','politics','只建立目录','先认地图，不在第一周就背满。',['看章节目录','记 5 个关键词','写下暂时不懂的点'],'目录卡'),
   t('w3-sun-mock',6,'09:00','11:30','周测 · 数学+436','buffer','组合小测','用小测决定下周加哪一科，不用一次成绩定义自己。',['数学 90 分钟','436 30 分钟','整理失分原因'],'组合小测记录')
 ];
-const schedules = {1:[...baseClasses,...study1],2:[...baseClasses,...week2],3:[...baseClasses,...phaseBlocks],5:[...baseClasses,...phaseBlocks.map(x=>({...x,id:x.id.replace('w3-','w5-'),title:x.title.replace('推进','真题组').replace('主题短答','题型压缩').replace('两篇对照','真题精读').replace('线代主线','真题线代').replace('计算题步骤','计分点训练').replace('低量启动','选择题启动').replace('组合小测','限时组合')}))]};
+const schedules = {1:[...baseClasses,...study1],2:[...baseClasses,...week2,...highIntensityPhase2],3:[...baseClasses,...phaseBlocks],5:[...baseClasses,...phaseBlocks.map(x=>({...x,id:x.id.replace('w3-','w5-'),title:x.title.replace('推进','真题组').replace('主题短答','题型压缩').replace('两篇对照','真题精读').replace('线代主线','真题线代').replace('计算题步骤','计分点训练').replace('低量启动','选择题启动').replace('组合小测','限时组合')}))]};
 const breakfastMenu = [
   {name:'肉夹馍（少肥少酱） + 无糖豆浆',price:'约 8–12 元',source:'校门店/外卖',swap:'觉得油就换半个肉夹馍，加茶叶蛋'},
   {name:'绿豆粥 + 茶叶蛋 + 素菜包',price:'约 6–9 元',source:'食堂窗口优先',swap:'甜粥换无糖小米粥'},
@@ -262,7 +282,7 @@ function syncRangeToToday(){const now=new Date();let idx=0;rangeStarts.forEach((
 function renderPhaseLine(){const el=document.querySelector('#phase-line');if(!el)return;el.innerHTML=routeData.map((r,i)=>`<article class="phase-card ${i===Math.min(4,Math.floor(currentRangeIndex/3))?'is-current':''}" style="--route:${r.color};--tint:${r.tint}"><span class="phase-date">${r.dates}</span><strong>${r.title}</strong><p>${r.desc}</p><small>${r.check}</small></article>`).join('');}
 function displayDate(){const now=new Date();const dates=datesForRange(currentRangeIndex);const start=dates[0];const end=dates[6];if(now<start)return start;if(now>end)return end;return new Date(now.getFullYear(),now.getMonth(),now.getDate());}
 function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);const data=buildDayAgenda(dayBlocks,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么</span></div><div class="agenda-list">${data.map(x=>`<div class="agenda-item ${x.type}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('')}</div>`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;renderPhaseLine();}
-function renderTimetable(){syncRangeToToday();renderCourseLedger();renderDurationIndex();renderDailyAgenda();document.querySelector('#date-title').textContent='2026年8月31日—初试前';document.querySelector('#top-date').textContent='自动跟随真实日期';document.querySelector('#today-focus').textContent='阶段与每日安排';updateDailyBreakfast();}
+function renderTimetable(){syncRangeToToday();renderDailyAgenda();document.querySelector('#date-title').textContent='2026年8月31日—初试前';document.querySelector('#top-date').textContent='自动跟随真实日期';document.querySelector('#today-focus').textContent='阶段与每日安排';updateDailyBreakfast();}
 // 页面只保留当天课表与阶段路线；复盘不再占一整块屏幕。
 function updateDailyBreakfast(){const today=new Date();const b=breakfastFor(today);const el=document.querySelector('#today-meal');if(el)el.textContent=`今天早餐：${b.name} · ${b.price}`;const copy=document.querySelector('#review-breakfast-copy');if(copy)copy.textContent=`${b.name} · ${b.price} · ${b.source}`;}
 function updateClock(){const now=new Date();const pad=n=>String(n).padStart(2,'0');const el=document.querySelector('#live-clock');if(el)el.textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;}

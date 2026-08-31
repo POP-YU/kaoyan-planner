@@ -43,6 +43,10 @@ if (probabilityRawDurations[7] !== '34:23' || probabilityRawDurations[28] !== '1
 if (probabilityMathScope[29] !== '数一' || probabilityMathScope[30] !== '数一') throw new Error('Math I-only probability lectures must be excluded');
 if (!courseLedger.some(x => x.subject.includes('概率') && x.duration.includes('第7–8讲'))) throw new Error('probability duration ledger missing');
 if (!courseLedger.some(x => x.subject.includes('线代') && x.duration.includes('2.10(2) 51:06'))) throw new Error('linear algebra duration ledger missing');
+for (const [day,title] of [[0,'英语单词 · 新20 + 旧40'],[1,'436 · p1–18闭卷复述'],[6,'880第二章 · 基础题错题4题']]) {
+  if (!schedules[2].some(x => x.day===day && x.start==='06:20' && x.end==='07:00' && x.title===title)) throw new Error(`high-intensity morning missing day=${day}`);
+}
+if (!schedules[2].some(x => x.day===1 && x.start==='14:50' && x.end==='16:35' && x.title.includes('436'))) throw new Error('Tuesday afternoon study block missing');
 
 for (const phase of [1,2,3,5]) {
   for (let day=0; day<7; day++) {
