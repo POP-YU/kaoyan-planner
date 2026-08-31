@@ -1,0 +1,20 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('..', import.meta.url);
+const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
+const js = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+const must = (text, fragment, label) => { if (!text.includes(fragment)) throw new Error(`missing ${label}`); };
+['小于的考研课表','id="daily-agenda"','id="phase-line"','id="live-clock"','course-ledger-body','课程与题量'].forEach((x) => must(html,x,x));
+['本周完成度','今天如果只完成一件事','这张表怎么用','容错规则'].forEach((x) => { if (html.includes(x)) throw new Error(`obsolete copy remains: ${x}`); });
+if (html.includes('modal-backdrop') || html.includes('data-action="complete-task"') || html.includes('method-strip') || html.includes('review-view')) throw new Error('obsolete interactive/extra sections remain');
+if (html.includes('date-range-switcher') || html.includes('view-switcher')) throw new Error('all dates should stay on one page');
+if (/fonts\.(googleapis|gstatic)\.com/.test(html)) throw new Error('remote font dependency should not delay first render');
+['@media(max-width:900px)','phase-card','agenda-item','ledger-table','--font-ui','font-variant-numeric:tabular-nums','contain:layout paint'].forEach((x) => must(css,x,x));
+['renderTimetable','datedBlocks','buildDayAgenda','rangeStarts','2026-08-31','breakfastMenu','breakfastFor','courseLedger','方浩第1–2讲','线代第2章','p1–3页内全部卡片','routeData','updateClock','scheduleClock','visibilitychange','stopLiveUpdates','06:00','24:00','肉夹馍','绿豆粥','英语二 · 2015年 Text 1','英语单词 · 新30 + 旧60','880第一章 · 基础选择1–13','目录口径60题','Blackboard作业 · 周五开放项'].forEach((x) => must(js,x,x));
+['高数诊断','作业 · 当天清掉','只听课，不叠考研任务','洗漱 · 整理床铺','离开屏幕','routine-night-break','（FHSU）'].forEach((x) => { if (js.includes(x)) throw new Error(`obsolete schedule copy remains: ${x}`); });
+if ((js.match(/Blackboard作业/g) || []).length !== 3) throw new Error('Blackboard homework must only be scheduled Friday through Sunday');
+['localStorage','setInterval(updateClock,1000)','renderRoute();renderTimetable()'].forEach((x) => { if (js.includes(x)) throw new Error(`performance regression remains: ${x}`); });
+const blocks = (js.match(/t\('w1-/g) || []).length;
+if (blocks < 30) throw new Error(`expected rich week 1 data, got ${blocks}`);
+console.log(`SMOKE_STATIC_OK blocks=${blocks}`);
+
