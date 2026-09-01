@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,probabilityRawDurations,probabilityMathScope,courseLedger,datedBlocks};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,probabilityRawDurations,probabilityMathScope,courseLedger,datedBlocks} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,courseLedger,math880Required,routeData,datedBlocks,currentRouteIndex};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,courseLedger,math880Required,routeData,datedBlocks,currentRouteIndex} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -30,13 +30,20 @@ if (routines.some(x => x.start==='06:20' && x.title.includes('床铺'))) throw n
 
 const homeworkDays = study1.filter(x => x.type==='homework').map(x => x.day).sort();
 if (homeworkDays.join(',') !== '4,5,6') throw new Error(`homework days must be Fri-Sun, got ${homeworkDays}`);
-if (!study1.some(x => x.id==='w1-mon-880' && x.title.includes('基础选择1–13'))) throw new Error('Monday 880 range missing');
+if (!math880Required || math880Required.source !== '2027数学三带刷计划表') throw new Error('shared 880 plan source missing');
+const listedCount = chapter => [...Object.values(chapter.basics),...Object.values(chapter.comprehensive)].reduce((sum,list)=>sum+list.split('、').length,0);
+if (math880Required.chapter1.count !== 38 || listedCount(math880Required.chapter1) !== 38) throw new Error(`chapter 1 required count must be 38, got declared=${math880Required.chapter1.count} listed=${listedCount(math880Required.chapter1)}`);
+if (math880Required.chapter2.count !== 56 || listedCount(math880Required.chapter2) !== 56) throw new Error(`chapter 2 required count must be 56, got declared=${math880Required.chapter2.count} listed=${listedCount(math880Required.chapter2)}`);
+if (!study1.some(x => x.id==='w1-tue-880' && x.title.includes('基础填空3、4') && x.title.includes('基础解答1、2(2)、4'))) throw new Error('chapter 1 exact required basics missing');
+if (!study1.some(x => x.id==='w1-wed-880' && x.title.includes('综合选择1、2、3、5、6、7、8、9'))) throw new Error('chapter 1 exact required comprehensive choices missing');
+if (!study1.some(x => x.id==='w1-sat-880' && x.title.includes('综合解答7、8、10、11'))) throw new Error('chapter 1 exact required solutions missing');
 if (!study1.some(x => x.id==='w1-mon-eng' && x.title.includes('2015年 Text 1'))) throw new Error('exact English reading missing');
 if (!study1.some(x => x.id==='w1-mon-436' && x.title.includes('p1–3'))) throw new Error('exact 436 page range missing');
 if (!study1.some(x => x.id==='w1-mon-vocab' && x.title.includes('新30 + 旧60'))) throw new Error('vocabulary quantity missing');
 const vocabDays = study1.filter(x => x.title.includes('英语单词')).map(x => x.day).sort();
 if (vocabDays.join(',') !== '0,1,2,3,4,5,6') throw new Error(`every day needs an exact vocabulary block, got ${vocabDays}`);
-if (!week2.some(x => x.id==='w2-mon-880' && x.title.includes('第二章'))) throw new Error('week 2 must progress instead of copying week 1');
+if (!week2.some(x => x.id==='w2-mon-880' && x.title.includes('基础选择10、12、13、15、17'))) throw new Error('week 2 must use chapter 2 required list');
+if (!week2.some(x => x.id==='w2-sun-880' && x.title.includes('综合解答4、6、7、8、10、11'))) throw new Error('chapter 2 required list must close on Sunday');
 if (!week2.some(x => x.id==='w2-mon-436' && x.title.includes('p19–21'))) throw new Error('week 2 436 pages must progress');
 if (!week2.some(x => x.id==='w2-mon-eng' && x.title.includes('2015年 Text 2'))) throw new Error('week 2 English reading must progress');
 if (probabilityRawDurations[7] !== '34:23' || probabilityRawDurations[28] !== '1:00:49') throw new Error('verified probability durations missing');
@@ -47,7 +54,59 @@ for (const [day,title] of [[0,'英语单词 · 新20 + 旧40'],[1,'436 · p1–1
   if (!schedules[2].some(x => x.day===day && x.start==='06:20' && x.end==='07:00' && x.title===title)) throw new Error(`high-intensity morning missing day=${day}`);
 }
 if (!schedules[2].some(x => x.day===1 && x.start==='14:50' && x.end==='16:35' && x.title.includes('436'))) throw new Error('Tuesday afternoon study block missing');
-if (!highIntensityStartWeek.some(x => x.day===1 && x.start==='06:20' && x.title.includes('p1–3'))) throw new Error('September 1 morning intensity is missing');
+if (strictStartDate !== '2026-09-02') throw new Error(`strict plan must restart on 2026-09-02, got ${strictStartDate}`);
+for (const day of ['2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-06','2026-09-07','2026-09-08','2026-09-09','2026-09-10','2026-09-11','2026-09-12','2026-09-13']) {
+  if (!strictDateSchedules[day]?.length) throw new Error(`strict daily schedule missing ${day}`);
+}
+for (let day=2;day<=30;day++) {
+  const date=`2026-09-${String(day).padStart(2,'0')}`;
+  if (!strictDateSchedules[date]?.length) throw new Error(`September strict daily schedule missing ${date}`);
+}
+const sep2 = strictDateSchedules['2026-09-02'];
+for (const required of [
+  '880第一章 · 基础选择8、12、13 + 基础填空3、4 + 基础解答1、2(2)、4',
+  '英语二 · 2010年 Text 1',
+  '436 · p1–6',
+  '线代第2章 · 剩余课第1节 + 对应题6道'
+]) if (!sep2.some(x => x.title.includes(required))) throw new Error(`September 2 restart task missing: ${required}`);
+if (!sep2.some(x => x.title.includes('外贸英文函电课内') && x.title.includes('静默'))) throw new Error('non-FHSU Wednesday class must carry a silent task');
+for (const exactCourse of ['财务管理','营销学']) if (!sep2.some(x => x.title===exactCourse && x.type==='fhsu')) throw new Error(`FHSU course must remain course-only: ${exactCourse}`);
+if (!sep2.some(x => x.start==='12:20' && x.title.includes('午休'))) throw new Error('sleep-protection nap is missing on September 2');
+if (!sep2.some(x => x.end==='24:00' && x.title.includes('最晚00:00'))) throw new Error('midnight sleep boundary missing');
+const mathCopy = [...study1,...week2,...highIntensityStartWeek].filter(x=>x.type==='math').map(x=>`${x.title} ${x.note}`).join('\n');
+for (const forbidden of ['基础选择1–13','拓展解答1–2','综合解答7–12']) {
+  if (mathCopy.includes(forbidden)) throw new Error(`excluded 880 work leaked into schedule: ${forbidden}`);
+}
+if (!mathCopy.includes('选择做/特难题不排')) throw new Error('daily schedule must state the 880 exclusion rule');
+const taskCount = rows => rows.reduce((sum,x)=>sum+(x.note.match(/(?:计划表)?必做(\d+)题/)?.[1] ? Number(x.note.match(/(?:计划表)?必做(\d+)题/)[1]) : 0),0);
+const chapter1Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-02'&&date<='2026-09-06').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第一章'));
+const chapter2Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-07'&&date<='2026-09-13').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第二章'));
+if (taskCount(chapter1Rows) !== 38) throw new Error(`chapter 1 daily required allocation must total 38, got ${taskCount(chapter1Rows)}`);
+if (taskCount(chapter2Rows) !== 56) throw new Error(`chapter 2 daily required allocation must total 56, got ${taskCount(chapter2Rows)}`);
+for (const [chapter,total] of [[3,86],[4,40],[5,41],[6,37]]) {
+  const rows=Object.values(strictDateSchedules).flat().filter(x=>x.type==='math'&&x.title.includes(`880第${'一二三四五六七八九十'[chapter-1]}章`)&&x.note.includes('必做'));
+  if (taskCount(rows)!==total) throw new Error(`chapter ${chapter} September required allocation must total ${total}, got ${taskCount(rows)}`);
+}
+if (!septemberContinuation['2026-09-29'].major.includes('p163–168') || !septemberContinuation['2026-09-30'].major.includes('p1–168')) throw new Error('436 first pass must finish by September 29 and review on September 30');
+for (let day=14;day<=30;day++) {
+  const date=`2026-09-${String(day).padStart(2,'0')}`;
+  if (!strictDateSchedules[date].some(x=>x.type==='politics')) throw new Error(`daily low-dose politics missing ${date}`);
+}
+if (routeData[0].dates !== '9月2日—9月13日' || !routeData[0].desc.includes('第一章必做38题') || !routeData[0].desc.includes('第二章必做56题')) throw new Error('phase route must restart on September 2 and show exact required counts');
+if (!routeData.every(x => x.desc.includes('选择做/特难题不排'))) throw new Error('every phase must preserve the exclusion rule');
+for (const [date,expected] of [['2026-09-02',0],['2026-09-14',1],['2026-10-01',2],['2026-11-01',3],['2026-12-01',4]]) if (currentRouteIndex(new Date(`${date}T12:00:00`))!==expected) throw new Error(`phase highlight wrong on ${date}`);
+for (const [date, rows] of Object.entries(strictDateSchedules)) {
+  const sorted=[...rows].sort((a,b)=>minutes(a.start)-minutes(b.start));
+  if (sorted[0].start!=='06:00' || sorted.at(-1).end!=='24:00') throw new Error(`strict day must cover 06:00-24:00 boundary: ${date}`);
+  for(let i=1;i<sorted.length;i++) if(minutes(sorted[i].start)<minutes(sorted[i-1].end)) throw new Error(`strict overlap ${date}: ${sorted[i-1].title} / ${sorted[i].title}`);
+  if (rows.some(x=>x.type==='homework') && ![0,5,6].includes(new Date(`${date}T12:00:00`).getDay())) throw new Error(`Blackboard homework leaked into weekday ${date}`);
+}
+const activeTypes=new Set(['math','major','english','politics']);
+const activeMinutes=Object.fromEntries(Object.entries(strictDateSchedules).map(([date,rows])=>[date,rows.filter(x=>activeTypes.has(x.type)).reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0)]));
+const lightest=Math.min(...Object.values(activeMinutes)), heaviest=Math.max(...Object.values(activeMinutes));
+const heaviestDate=Object.entries(activeMinutes).find(([,value])=>value===heaviest)?.[0];
+if (lightest<420) throw new Error(`strict plan drops below 7 active study hours: ${lightest} minutes`);
+if (heaviest>690) throw new Error(`strict plan exceeds 11.5 active study hours before FHSU/homework: ${Object.entries(activeMinutes).filter(([,value])=>value>690).map(([date,value])=>`${date}=${value}`).join(', ')}`);
 for (const index of [0,1]) {
   const all=datedBlocks(index);
   for (let day=0;day<7;day++) {
@@ -64,4 +123,4 @@ for (const phase of [1,2,3,5]) {
     }
   }
 }
-console.log(`SCHEDULE_OK courses=${baseClasses.length} week1=${study1.length} week2=${week2.length}`);
+console.log(`SCHEDULE_OK courses=${baseClasses.length} week1=${study1.length} week2=${week2.length} active=${lightest}-${heaviest}min`);
