@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,probabilityRawDurations,probabilityMathScope,courseLedger};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,probabilityRawDurations,probabilityMathScope,courseLedger} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,probabilityRawDurations,probabilityMathScope,courseLedger,datedBlocks};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,probabilityRawDurations,probabilityMathScope,courseLedger,datedBlocks} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -47,6 +47,14 @@ for (const [day,title] of [[0,'英语单词 · 新20 + 旧40'],[1,'436 · p1–1
   if (!schedules[2].some(x => x.day===day && x.start==='06:20' && x.end==='07:00' && x.title===title)) throw new Error(`high-intensity morning missing day=${day}`);
 }
 if (!schedules[2].some(x => x.day===1 && x.start==='14:50' && x.end==='16:35' && x.title.includes('436'))) throw new Error('Tuesday afternoon study block missing');
+if (!highIntensityStartWeek.some(x => x.day===1 && x.start==='06:20' && x.title.includes('p1–3'))) throw new Error('September 1 morning intensity is missing');
+for (const index of [0,1]) {
+  const all=datedBlocks(index);
+  for (let day=0;day<7;day++) {
+    const rows=all.filter(x=>x.day===day).sort((a,b)=>minutes(a.start)-minutes(b.start));
+    for(let i=1;i<rows.length;i++) if(minutes(rows[i].start)<minutes(rows[i-1].end)) throw new Error(`dated overlap index=${index} day=${day}: ${rows[i-1].title} / ${rows[i].title}`);
+  }
+}
 
 for (const phase of [1,2,3,5]) {
   for (let day=0; day<7; day++) {

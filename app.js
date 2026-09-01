@@ -139,6 +139,23 @@ const highIntensityPhase2 = [
   t('w2-sun-morning',6,'06:20','07:00','880第二章 · 基础题错题4题','math','闭卷回做','周日先做数学，再开始周回收。',['回做4题','写错因'],'4题结果'),
   t('w2-sun-prep',6,'08:20','09:00','436 · p19–36框架复述','major','周回收前先主动输出','把第二周新增页码串起来。',['写总框架','标断点'],'总框架卡')
 ];
+// 9月1日位于“8月31日—9月6日”这个日期段，不能错误地等到9月7日才启动高强度。
+// 这里单独补齐9月1日—9月6日，并与第一周的880第一章、436 p1–18进度对齐。
+const highIntensityStartWeek = [
+  t('start-tue-morning',1,'06:20','07:00','436 · p1–3闭卷复述','major','先说框架，卡住再翻','早上第一格直接进入主动回忆。',['连续复述p1–3','标3个断点'],'断点清单'),
+  t('start-tue-noon',1,'12:20','13:15','880第一章 · 基础选择1–4回做','math','闭卷重做4题','利用下午课前的小单元，把周一题目真正收回来。',['闭卷4题','写错因'],'4题回收'),
+  t('start-tue-afternoon',1,'14:50','16:35','436 · p1–3框架 + 短答1题','major','按评分点写，不只看答案','下午长空档必须形成一次输出。',['写p1–3框架','短答1题'],'框架+短答'),
+  t('start-wed-morning',2,'06:20','07:00','英语单词 · 新20 + 旧40','english','只做主动回想','完成60词后再吃早餐。',['新词20','旧词40'],'60词回想'),
+  t('start-wed-noon',2,'12:20','13:15','436 · p1–6闭卷框架','major','不翻书先写结构','承接前两天页码，保持连续记忆。',['写框架','补3个缺口'],'一页框架'),
+  t('start-thu-morning',3,'06:20','07:00','880第一章 · 错题4题','math','闭卷回做','早上先抓数学薄弱点。',['重做4题','写错因'],'4题结果'),
+  t('start-thu-midday',3,'13:50','15:00','英语二 · 已做阅读证据句回看','english','只回看本周已做文章','逐题指出原文定位和干扰项。',['找证据句','写干扰项原因'],'阅读复盘卡'),
+  t('start-fri-morning',4,'06:20','07:00','英语单词 · 新25 + 旧50','english','回想优先','周五仍保持固定词量。',['新词25','旧词50'],'75词回想'),
+  t('start-fri-afternoon',4,'16:05','16:55','880第一章 · 综合题错题4题','math','只补当天暴露的错因','晚饭前完成一个闭环。',['重做4题','写错因'],'4题回收'),
+  t('start-sat-morning',5,'06:20','07:00','436 · p1–15闭卷复述','major','卡住再翻页','不把早起时间变成刷手机。',['连续复述','标断点'],'断点清单'),
+  t('start-sat-late',5,'15:00','15:45','英语单词 · 薄弱词20','english','只看当天错词','下午补一次短回想。',['回想20词'],'薄弱词'),
+  t('start-sun-morning',6,'06:20','07:00','880第一章 · 错题4题','math','闭卷回做','周日先做数学，再开始周回收。',['重做4题','写错因'],'4题结果'),
+  t('start-sun-prep',6,'08:20','09:00','436 · p1–18总框架复述','major','周回收前主动输出','把第一周新增页码串起来。',['写总框架','标断点'],'总框架卡')
+];
 const phaseBlocks = [
   t('w3-mon-math',0,'18:00','20:00','数学 · 章节推进','math','基础题 + 1 道变式','从第一周的基线进入稳定推进。',['完成一小节例题','做 8 道基础题','把重复错因加粗'],'章节清单 + 错因'),
   t('w3-tue-436',1,'10:15','11:45','436 · 主题短答','major','定义→解释→例子','开始按题型输出，不只认关键词。',['抽 2 个主题','每题 12 分钟作答','对照评分点补漏'],'2 个短答'),
@@ -265,7 +282,8 @@ function progressFor(index, day, type, id=''){
 function datedBlocks(index=currentRangeIndex){
   const dates=datesForRange(index); const phase=phaseForRange(index); const focus=schedules[phase]||[];
   const special=(index===9||index===10)?[classBlock('sat-politics',5,'08:20','11:45','形势与政策4')]:[];
-  return [...routines,...focus,...special].map(x=>{
+  const startWeekIntensity=index===0?highIntensityStartWeek:[];
+  return [...routines,...focus,...startWeekIntensity,...special].map(x=>{
     const y={...x}; const d=dates[x.day]; y.date=dateKey(d);
     const progress=progressFor(index,x.day,x.type,x.id);
     if(progress){y.title=progress.label; y.note=progress.note; y.output=x.type==='major' ? (progress.label.includes('旧页')?'能合书说出旧页结构':'3页框架卡 + 闭卷复述记录') : x.output;}
