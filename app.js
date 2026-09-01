@@ -143,7 +143,7 @@ const highIntensityPhase2 = [
 // 这里单独补齐9月1日—9月6日，并与第一周的880第一章、436 p1–18进度对齐。
 const highIntensityStartWeek = [
   t('start-tue-morning',1,'06:20','07:00','436 · p1–3闭卷复述','major','先说框架，卡住再翻','早上第一格直接进入主动回忆。',['连续复述p1–3','标3个断点'],'断点清单'),
-  t('start-tue-noon',1,'12:20','13:15','880第一章 · 基础选择1–4回做','math','闭卷重做4题','利用下午课前的小单元，把周一题目真正收回来。',['闭卷4题','写错因'],'4题回收'),
+  t('start-tue-noon',1,'12:20','13:15','880第一章 · 基础选择1–4','math','昨天做过就闭卷回做，没做就首次完成','保证9月1日正式启动时也能直接执行。',['闭卷4题','写错因'],'4题回收'),
   t('start-tue-afternoon',1,'14:50','16:35','436 · p1–3框架 + 短答1题','major','按评分点写，不只看答案','下午长空档必须形成一次输出。',['写p1–3框架','短答1题'],'框架+短答'),
   t('start-wed-morning',2,'06:20','07:00','英语单词 · 新20 + 旧40','english','只做主动回想','完成60词后再吃早餐。',['新词20','旧词40'],'60词回想'),
   t('start-wed-noon',2,'12:20','13:15','436 · p1–6闭卷框架','major','不翻书先写结构','承接前两天页码，保持连续记忆。',['写框架','补3个缺口'],'一页框架'),
@@ -299,12 +299,21 @@ function buildDayAgenda(items,index,day){const result=[...items];const sorted=[.
 function syncRangeToToday(){const now=new Date();let idx=0;rangeStarts.forEach((d,i)=>{if(now>=d)idx=i;});currentRangeIndex=idx;}
 function renderPhaseLine(){const el=document.querySelector('#phase-line');if(!el)return;el.innerHTML=routeData.map((r,i)=>`<article class="phase-card ${i===Math.min(4,Math.floor(currentRangeIndex/3))?'is-current':''}" style="--route:${r.color};--tint:${r.tint}"><span class="phase-date">${r.dates}</span><strong>${r.title}</strong><p>${r.desc}</p><small>${r.check}</small></article>`).join('');}
 function displayDate(){const now=new Date();const dates=datesForRange(currentRangeIndex);const start=dates[0];const end=dates[6];if(now<start)return start;if(now>end)return end;return new Date(now.getFullYear(),now.getMonth(),now.getDate());}
-function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);const data=buildDayAgenda(dayBlocks,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么</span></div><div class="agenda-list">${data.map(x=>`<div class="agenda-item ${x.type}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('')}</div>`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;renderPhaseLine();}
+function updateCurrentAgenda(){
+  if(!document.querySelectorAll)return;
+  const now=new Date(),current=now.getHours()*60+now.getMinutes();
+  document.querySelectorAll('.agenda-item[data-start]').forEach(row=>{
+    const start=minutes(row.dataset.start),end=minutes(row.dataset.end);
+    row.classList.toggle('is-current',current>=start&&current<end);
+    row.classList.toggle('is-past',current>=end);
+  });
+}
+function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);const data=buildDayAgenda(dayBlocks,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么</span></div><div class="agenda-list">${data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('')}</div>`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
 function renderTimetable(){syncRangeToToday();renderDailyAgenda();document.querySelector('#date-title').textContent='2026年8月31日—初试前';document.querySelector('#top-date').textContent='自动跟随真实日期';document.querySelector('#today-focus').textContent='阶段与每日安排';updateDailyBreakfast();}
 // 页面只保留当天课表与阶段路线；复盘不再占一整块屏幕。
 function updateDailyBreakfast(){const today=new Date();const b=breakfastFor(today);const el=document.querySelector('#today-meal');if(el)el.textContent=`今天早餐：${b.name} · ${b.price}`;const copy=document.querySelector('#review-breakfast-copy');if(copy)copy.textContent=`${b.name} · ${b.price} · ${b.source}`;}
 function updateClock(){const now=new Date();const pad=n=>String(n).padStart(2,'0');const el=document.querySelector('#live-clock');if(el)el.textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;}
-function syncDailyState(){const before=currentRangeIndex;updateDailyBreakfast();syncRangeToToday();const next=dateKey(displayDate());if(before!==currentRangeIndex||next!==lastAgendaDate)renderTimetable();}
+function syncDailyState(){const before=currentRangeIndex;updateDailyBreakfast();syncRangeToToday();const next=dateKey(displayDate());if(before!==currentRangeIndex||next!==lastAgendaDate)renderTimetable();else updateCurrentAgenda();}
 let clockTimer=0;let dailyTimer=0;
 function scheduleClock(){clearTimeout(clockTimer);if(document.hidden)return;updateClock();const delay=Math.max(100,1020-(Date.now()%1000));clockTimer=setTimeout(scheduleClock,delay);}
 function stopLiveUpdates(){clearTimeout(clockTimer);clearInterval(dailyTimer);clockTimer=0;dailyTimer=0;}
