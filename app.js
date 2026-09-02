@@ -312,13 +312,182 @@ const septemberContinuation = {
     english:'英语 · 2010–2015阅读错因总表 + 小作文审题1篇',
     secondaryMath:['数学 · 九月闭卷小测6题','从第1–6章各抽1道基础/中等代表题，其中至少3道不是原错题；选择做/特难题不进小测；50分钟闭卷，记录正确数与概念/计算/思路错因'],
     majorGate:[
-      ['436第1–3章闭卷总框架','先合书；每章登记“能独立输出/只记标题/需回补”，标断点章-节-页'],
-      ['436 · 第4–6章闭卷总框架 + 名解4个','按手头目录写主干与关键词；名解按评分点落笔，标断点章-节-页'],
-      ['436 · 第7–10章框架 + 短答2题 + 计算1题','框架只写主干；短答/计算闭卷，记录通过数与断点章-节-页']
+       ['436 · 第1–26个已背内容单元闭卷总框架','按资料顺序合书；登记“能独立输出/只记标题/需回补”，标断点章-节-内容单元'],
+       ['436 · 第27–52个已背内容单元闭卷总框架 + 名解4个','按手头资料写主干与关键词；名解按评分点落笔，标断点章-节-内容单元'],
+       ['436 · 第53–78个已背内容单元框架 + 短答2题 + 计算1题','框架只写主干；短答/计算闭卷，记录通过数与断点章-节-内容单元']
     ],
-    monthGate:'登记880小测正确数/三类错因、436需回补的章-节-页、英语重复错因、近7天23:30前关灯天数；若880低于4/6、436任一章只记标题或计算空白、英语同类错重复2次、关灯少于5/7天，10月首个对应块先回补'
+     monthGate:'登记880小测正确数/三类错因、436需回补的章-节-内容单元、英语重复错因、近7天23:30前关灯天数；若880低于4/6、436任一章只记标题或计算空白、英语同类错重复2次、关灯少于5/7天，10月首个对应块先回补'
   }
 };
+
+// ---- Supplement3 evidence rebaseline ------------------------------------
+// The user has explicitly said that only the first three 436 content units
+// are memorised.  We do not reinterpret that statement as pages, chapters,
+// or somebody else's card IDs.  The planner therefore uses an ordinal
+// "内容单元" sequence and leaves the exact boundaries to the user's own
+// material.  Three new units per non-Sunday is deliberately time-boxed so a
+// difficult page/answer can spill into the recovery slot without stealing
+// sleep.
+// The high-intensity run starts on 9/2, with the user's first three content
+// units already memorised before that date.
+const currentBaselineDate = '2026-09-02';
+const majorBaseline = Object.freeze({completedUnits:3,dailyNewUnits:3,label:'内容单元'});
+const dateAtNoon = date => new Date(`${date}T12:00:00`);
+const addCalendarDays = (date,delta) => { const d=new Date(date); d.setDate(d.getDate()+delta); return d; };
+const isoDateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function majorCumulativeForDate(date){
+  const target=dateAtNoon(date), baseline=dateAtNoon(currentBaselineDate);
+  if(target < baseline)return majorBaseline.completedUnits;
+  let total=majorBaseline.completedUnits;
+  for(let d=new Date(baseline); d<target; d.setDate(d.getDate()+1)) if(d.getDay()!==0) total+=majorBaseline.dailyNewUnits;
+  if(target.getDay()!==0) total+=majorBaseline.dailyNewUnits;
+  return total;
+}
+function majorNewRangeForDate(date){
+  const target=dateAtNoon(date);
+  if(target < dateAtNoon(currentBaselineDate) || target.getDay()===0)return null;
+  const previous=addCalendarDays(target,-1), end=majorCumulativeForDate(date);
+  return {start:majorCumulativeForDate(isoDateKey(previous))+1,end};
+}
+function majorIsReview(title){
+  const explicit=/滚动|闭卷|回忆|复述|缺口|名词|本周|总框架|总回收|错题|薄弱/.test(title);
+  if(explicit)return true;
+  // A page-labelled row such as “p13–15 + 短答” still introduces new
+  // material; only unpaged framework/answer/calculation rows are review.
+  if(/p\d/.test(title))return false;
+  return /框架|短答|计算|第\d+[–-]\d+章/.test(title);
+}
+function majorOrdinalLabel(date,title,suffix=''){
+  const range=majorNewRangeForDate(date), total=majorCumulativeForDate(date);
+  const review=majorIsReview(title)||!range;
+  const core=review?`第1–${total}个已背${majorBaseline.label}`:`第${range.start}–${range.end}个新${majorBaseline.label}`;
+  return `436 · ${core}${suffix?` · ${suffix}`:''}`;
+}
+function normalizeMajorString(date,value,title){
+  if(typeof value!=='string' || !/p\d/.test(value))return value;
+  const range=majorNewRangeForDate(date), total=majorCumulativeForDate(date), review=majorIsReview(title);
+  const replacement=(!review && range) ? `第${range.start}–${range.end}个新${majorBaseline.label}` : `第1–${total}个已背${majorBaseline.label}`;
+  return value.replace(/p\d+(?:[–-]\d+)?/g,replacement);
+}
+function normalizeMajorTask(date,row){
+  if(!row || row.type!=='major' || !/436|p\d/.test(`${row.title||''} ${row.note||''}`))return row;
+  const originalTitle=row.title||'';
+  ['title','note','why','output'].forEach(field=>{ if(typeof row[field]==='string')row[field]=normalizeMajorString(date,row[field],originalTitle); });
+  row.steps=(row.steps||[]).map(value=>normalizeMajorString(date,value,originalTitle));
+  if(/p\d/.test(originalTitle)){
+    const range=majorNewRangeForDate(date), total=majorCumulativeForDate(date);
+    row.note=`${row.note||''}；前三个已背，按资料顺序${range?`今天新增第${range.start}–${range.end}个`:`回收已背第1–${total}个`}，未完次日只补1个`;
+  }else if(!/第\d+–\d+个(?:新|已背)/.test(originalTitle) && /436\s*[·]|静默学436/.test(originalTitle)){
+    // Generic phase rows used after the strict September ledger should still
+    // name the exact ordinal range instead of falling back to “新页/页码”.
+    const suffix=originalTitle.replace(/^.*?436\s*[·]?\s*/,'')
+      .replace(/本周新增页|当日新页|新旧页|本周页码|页内卡片|页内全部卡片/g,'')
+      .replace(/\s{2,}/g,' ').trim();
+    row.title=majorOrdinalLabel(date,originalTitle,suffix);
+    row.note=`${row.note||''}；前三个已背，按资料顺序记录内容单元；未完次日只补1个`;
+  }
+  return row;
+}
+
+// Exact names read from the user's Quark list.  Durations are intentionally
+// absent: the source listing exposed names/sizes but not playable durations.
+const linearAlgebraVerifiedLessons = Object.freeze([
+  {key:'03-01',section:'矩阵相似',no:'01',short:'特征值与特征向量',file:'01 3.1特征值与特征向量.mp4'},
+  {key:'03-02',section:'矩阵相似',no:'02',short:'秩为1矩阵专题',file:'02 3.2秩为1矩阵专题.mp4'},
+  {key:'03-03',section:'矩阵相似',no:'03',short:'矩阵相似对角化',file:'03 3.3矩阵相似对角化.mp4'},
+  {key:'03-04',section:'矩阵相似',no:'04',short:'矩阵相似',file:'04 3.4矩阵相似.mp4'},
+  {key:'03-05',section:'矩阵相似',no:'05',short:'正交矩阵、实对称矩阵（1）',file:'05 3.5正交矩阵、实对称矩阵（1）.mp4'},
+  {key:'03-06',section:'矩阵相似',no:'06',short:'正交矩阵、实对称矩阵（2）',file:'06 3.5正交矩阵、实对称矩阵（2）.mp4'},
+  {key:'03-07',section:'矩阵相似',no:'07',short:'反求矩阵问题',file:'07 3.6反求矩阵问题.mp4'},
+  {key:'03-08',section:'矩阵相似',no:'08',short:'谱分解定理（补充专题）',file:'08 【补充专题】谱分解定理.mp4'},
+  {key:'03-09',section:'矩阵相似',no:'09',short:'两类特殊的矩阵相似问题',file:'09 3.7两类特殊的矩阵相似问题.mp4'},
+  {key:'03-10',section:'矩阵相似',no:'10',short:'特征值与特征向量（疑似另一版本）',file:'10 3.1特征值与特征向量.mp4（疑另一版本，与01同名）',caveat:'疑似另一版本，不单独计新课'},
+  {key:'04-01',section:'二次型',no:'01',short:'二次型及其表示',file:'01 4.1二次型及其表示.mp4'},
+  {key:'04-02',section:'二次型',no:'02',short:'二次型的标准形、规范形',file:'02 4.2二次型的标准形、规范形.mp4'},
+  {key:'04-03',section:'二次型',no:'03',short:'矩阵合同、惯性定理',file:'03 4.3矩阵合同、惯性定理.mp4'},
+  {key:'04-04',section:'二次型',no:'04',short:'二次型与二次曲面',file:'04 （仅数一）二次型与二次曲面.mp4',caveat:'仅数一，数三跳过'},
+  {key:'04-05',section:'二次型',no:'05',short:'套皮二次型',file:'05 4.4套皮二次型.mp4'},
+  {key:'04-06',section:'二次型',no:'06',short:'平方和形式的二次型应用',file:'06 4.5平方和形式的二次型应用.mp4'},
+  {key:'04-07',section:'二次型',no:'07',short:'二次型等于0的求解',file:'07 4.6二次型等于0的求解.mp4'},
+  {key:'04-08',section:'二次型',no:'08',short:'二次型化成另一个二次型',file:'08 4.7二次型化成另一个二次型.mp4'},
+  {key:'04-09',section:'二次型',no:'09',short:'二次型最值问题',file:'09 4.8二次型最值问题.mp4'},
+  {key:'04-10',section:'二次型',no:'10',short:'正定二次型',file:'10 4.9正定二次型.mp4'},
+  {key:'04-11',section:'二次型',no:'11',short:'矩阵等价、相似、合同',file:'11 4.10矩阵等价、相似、合同.mp4'}
+]);
+const linearLessonByKey=Object.fromEntries(linearAlgebraVerifiedLessons.map(x=>[x.key,x]));
+const linearLessonLabel=(key,mode='时间盒看课')=>{
+  const item=linearLessonByKey[key]; if(!item)return `线代 · ${key}`;
+  return `线代 · ${item.section} ${item.no} ${item.short}${mode==='对应题回收'?' · 对应题回收':''}`;
+};
+const linearLessonNote=(key,mode='时间盒看课')=>{
+  const item=linearLessonByKey[key]||{};
+  if(item.caveat)return `先核对文件名；${item.caveat}。${mode==='对应题回收'?'只做对应题，不重复计新课。':'本格只做核对/时间盒，不把它算成新章节。'}`;
+  return mode==='对应题回收'
+    ? '闭卷写2道对应题；按题型标概念/计算错因，未完成留到下次同一节。'
+    : '90分钟时间盒；1.5倍速并允许暂停。未播完记录时间戳，下次从断点续；看完立即闭卷写2道对应题。';
+};
+// After the September evidence-backed slots, keep the same exact-file
+// sequence for generic October+ line-algebra blocks. This is a queue, not a
+// promise that a video finishes inside one block: the note remains a
+// 90-minute time-box with a timestamp checkpoint.
+const futureLinearQueue = Object.freeze(['04-05','04-06','04-07','04-08','04-09','04-10','04-11']);
+function futureLinearLessonForDate(date){
+  const target=dateAtNoon(date), first=dateAtNoon('2026-10-01');
+  if(target<first)return null;
+  // Generic schedules place the main line-algebra block on Thursday. Count
+  // Thursdays from October 1 so the queue advances only when that block is
+  // shown; Sundays and non-line blocks never consume a lesson.
+  let thursdays=0;
+  for(let d=new Date(first); d<=target; d.setDate(d.getDate()+1)) if(d.getDay()===4)thursdays++;
+  return futureLinearQueue[thursdays-1]||null;
+}
+const probabilityLecture1File='01_s1_1随机事件的概念、关系与运算 (1).mp4';
+function normalizeProbabilityTask(date,row){
+  if(!row || row.type!=='math')return row;
+  const title=row.title||'';
+  if(/方浩第1–2讲/.test(title)){
+    row.title=title.replace('方浩第1–2讲','方浩第1讲（随机事件：概念、关系与运算） + 第2讲');
+    row.note='第1讲文件名已核对，原始时长未验证；第2讲原始37:15；1.5倍速并留暂停，课后做6题';
+    row.steps=(row.steps||[]).length?row.steps:['按文件名打开第1讲','1.5倍速听并允许暂停','做两讲对应基础题'];
+    row.output=row.output||'两讲笔记+6题错因';
+  }else if(/方浩第1讲预习/.test(title)){
+    row.title=title.replace('方浩第1讲预习','方浩第1讲预习 · 随机事件：概念、关系与运算');
+    row.note=`${row.note||''}；先看目录和5个入口概念；${probabilityLecture1File}已核对，原始时长未验证`;
+  }
+  return row;
+}
+// Existing free study slots are deliberately reused so active-load and the
+// no-overlap invariant do not change.  The second slot on a lesson is a
+// practice/continuation slot, not a claim that a full video fits in 35 min.
+const linearAlgebraLessonSlots = Object.freeze([
+  ['2026-09-03','15:00','16:35','03-01','时间盒看课'],['2026-09-03','21:20','21:55','03-01','对应题回收'],
+  ['2026-09-05','14:45','15:45','03-02','时间盒看课'],['2026-09-07','21:35','22:50','03-03','时间盒看课'],
+  ['2026-09-08','20:00','21:00','03-03','对应题回收'],['2026-09-10','18:00','19:00','03-04','时间盒看课'],
+  ['2026-09-15','08:20','10:00','03-05','时间盒看课'],['2026-09-15','21:30','22:20','03-05','对应题回收'],
+  ['2026-09-17','19:30','20:30','03-06','时间盒看课'],['2026-09-21','21:20','22:10','03-06','对应题回收'],
+  ['2026-09-22','08:20','10:00','03-07','时间盒看课'],['2026-09-22','21:30','22:20','03-07','对应题回收'],
+  ['2026-09-23','18:00','18:50','03-08','时间盒看课'],['2026-09-24','19:30','20:30','03-08','对应题回收'],
+  ['2026-09-25','08:20','10:00','03-09','时间盒看课'],['2026-09-26','08:20','10:20','03-09','对应题回收'],
+  ['2026-09-27','09:00','11:00','03-10','核对，不计新课'],['2026-09-28','21:20','22:10','04-01','时间盒看课'],
+  ['2026-09-29','08:20','10:00','04-02','时间盒看课'],['2026-09-29','21:30','22:20','04-03','时间盒看课']
+]);
+const linearAlgebraAppliedSlots=[];
+function applyLinearLessonSlots(){
+  for(const [date,start,end,key,mode] of linearAlgebraLessonSlots){
+    const rows=strictDateSchedules[date]||[];
+    const row=rows.find(x=>x.start===start&&x.end===end&&x.type==='math');
+    if(!row)continue;
+    row.title=linearLessonLabel(key,mode); row.note=linearLessonNote(key,mode);
+    row.why='真实文件名已从夸克清单核对；时长未公开，所以按时间盒推进，不把“看完”当作完成。';
+    row.steps=mode==='对应题回收'?['遮住讲义','独立做2题','记录错因']:['按文件名打开','1.5倍速听并暂停','记时间戳/关键公式'];
+    row.output=mode==='对应题回收'?'2题过程+错因':'时间戳+公式卡';
+    linearAlgebraAppliedSlots.push(`${date} ${start}-${end} ${key}`);
+  }
+}
+function applyEvidenceRebaseline(){
+  Object.entries(strictDateSchedules).forEach(([date,rows])=>rows.forEach(row=>{normalizeMajorTask(date,row);normalizeProbabilityTask(date,row);}));
+  applyLinearLessonSlots();
+}
 const continueMath = spec => [spec.math[0],'math',`计划表必做${spec.math[1]}题；选择做/特难题不排`];
 const continueMajor = spec => [`436 · ${spec.major}`,'major',spec.major.includes('总回收')?'按目录闭卷写总框架，再回书补缺口':'新页先写小标题，旧页闭卷回忆'];
 const continueEnglish = spec => [spec.english,'english',spec.english.includes('小作文')?'35分钟回收阅读错因 + 15分钟审题写提纲；作文只做低剂量基线':spec.english.includes('回看')||spec.english.includes('总表')?'只归类重复错因，不做新篇':'20分钟限时 + 30分钟证据句/干扰项复盘'];
@@ -356,6 +525,9 @@ const continuationRows = (date,spec) => {
 Object.entries(septemberContinuation).forEach(([date,spec])=>{
   strictDateSchedules[date]=strictMorning(date,'英语单词 · 新20 + 旧40','english','60词主动回想',continuationRows(date,spec));
 });
+// Apply only after the continuation rows are materialised; otherwise the
+// generated 9/14–9/30 rows would overwrite the evidence-backed labels.
+applyEvidenceRebaseline();
 const study1 = [
   t('w1-mon-880',0,'18:00','20:00','880第一章 · 讲义例题复盘 + 必做清单核对','math','先复盘本章，再从必做题开始','不按全章题号机械平推，后续只做计划表必做列。',['复盘讲义例题','核对必做题号','圈出当前基础题入口'],'必做清单'),
   t('w1-mon-436',0,'20:15','21:30','436 · p1–3页内全部卡片','major','p1–3；合书复述','按页码明确回收，不虚构卡片编号。',['读p1–3','合书说框架','补缺口'],'p1–3回忆纸'),
@@ -515,9 +687,6 @@ const probabilityMathScope = {29:'数一',30:'数一'};
 // 补充资料只提供了知识模块，不提供与夸克讲次逐一对应的可靠映射。
 // 因此用这七项做“讲完后归档”索引，不反推或伪造每讲内容。
 const probabilityModules = ['随机事件和概率','随机变量及其分布','多维随机变量及其分布','随机变量的数字特征','大数定律与中心极限定理','数理统计基本概念','参数估计'];
-const lineAlgebraVerifiedDurations = {
-  '2.3':'44:20','2.4':'33:43','2.5':'30:47','2.6':'39:51','2.7':'1:03:17','2.8':'57:08','2.9':'51:18','2.10(1)':'54:02','2.10(2)':'51:06'
-};
 const durationSeconds = raw => {
   const p=String(raw).split(':').map(Number);
   return p.length===3 ? p[0]*3600+p[1]*60+p[2] : p[0]*60+p[1];
@@ -536,9 +705,9 @@ const probabilityWindow = (start,end) => {
 };
 const courseLedger = [
   {subject:'高数 · 李林880',now:'按用户分享的2027数学三带刷表，只做必做题',week:'第一章必做38题；第二章必做56题；选择做/特难题不排',done:'先做基础必做，再做综合必做；当天独立做完并标错因'},
-  {subject:'线代 · 没咋了',now:'第二章只剩 2 节课；播放列表已核对到 2.3–2.10 时长',duration:`可查原始时长：${Object.entries(lineAlgebraVerifiedDurations).map(([k,v])=>`${k} ${v}`).join('、')}；剩余两节编号以你当前夸克勾选为准`,week:'周二、周三各收 1 节；周四做 6 题闭卷回测',done:'课听完 + 当天对应题 + 48小时回测'},
-  {subject:'概率 · 方浩',now:'基础班 30 讲；第2–28讲已核对原始时长，29–30为数一不排',duration:`第7–8讲 ${probabilityWindow(7,8)}；第9–10讲 ${probabilityWindow(9,10)}；第11–12讲 ${probabilityWindow(11,12)}`,week:'周五先处理第1–2讲（第1讲时长待定位）；周六第3–4讲；周日第5–6讲；第二周起按7–8、9–10、11–12讲推进',done:'每两讲至少 6 道基础题；听课时间按1.5倍速并留暂停余量'},
-  {subject:'436 · 背诵笔记',now:'168页；本周 p1–18',week:'周一至周六每天新3页；周日只回收；页内定义/公式卡片全部过',done:'能合书说出页内框架；每周3个计算题单元'},
+  {subject:'线代 · 没咋了',now:'03 矩阵相似 → 04 二次型；真实文件名已核对；03-10疑似重复，04-04仅数一跳过',duration:'剩余条目原始时长未从夸克列表公开；每格用90分钟时间盒，1.5倍速并允许暂停，未播完记时间戳',week:'9/2起按文件顺序推进；看课格后紧跟对应题/回测；10月继续04-05→04-11',done:'文件名对上 + 时间戳/公式卡 + 2道对应题；不把时间盒结束冒充看完'},
+  {subject:'概率 · 方浩',now:'基础班30讲；第1讲文件名与“随机事件：概念、关系与运算”已核对；第1讲原始时长未验证；29–30为数一不排',duration:`第7–8讲 ${probabilityWindow(7,8)}；第9–10讲 ${probabilityWindow(9,10)}；第11–12讲 ${probabilityWindow(11,12)}`,week:'先第1–2讲，再第3–4、5–6；第二周起按7–8、9–10、11–12讲推进；每两讲配6道基础题',done:'听课留暂停余量；对应题独做并写错因，未播完留时间戳'},
+  {subject:'436 · 背诵笔记',now:'前三个内容单元已背；不把页码或外部卡号当成事实；从第4个继续',week:'9/2起周一至周六每天新增3个内容单元；周日只回收；未完次日只补1个，不挤睡眠',done:'按手头资料顺序合书复述；短答/计算完整落笔，记录断点'},
   {subject:'英语二 · 真题',now:'阅读量少，先做精读闭环',week:'2015–2019年各做 Text 1；单词每日写死数量，共新135+旧270',done:'每篇留1张错因卡；当天单词按格内数量收工'}
 ];
 function renderCourseLedger(){
@@ -560,15 +729,15 @@ function breakfastFor(d){ const seed = d.getFullYear()*10000+(d.getMonth()+1)*10
 function datesForRange(index=currentRangeIndex){ const start = rangeStarts[index]; return days.map((_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d;}); }
 function phaseForRange(index=currentRangeIndex){ if(index===0)return 1; if(index===1)return 2; if(index<5)return 3; if(index<13)return 5; return 9; }
 const routeData = [
-  {dates:'9月2日—9月13日',title:'重启收口',desc:'从零假设重启：880第一章必做38题、第二章必做56题；选择做/特难题不排。线代第二章两节收完并回测，概率推进到第18讲，英语完成2010年4篇并进入2011/2012，436推进到p60。',check:'验收：每道错题有概念/计算/思路标签；436按章-节-页归档',color:'#5572b8',tint:'#e8eefb'},
-  {dates:'9月14日—9月30日',title:'高数强化',desc:'880第三—六章按“课程→例题→必做题”推进，选择做/特难题不排；概率第19—28讲收尾。436由p61推进到p168并完成第一轮；英语阅读每天闭环，作文仅每周低剂量审题；政治每日30—45分钟选择题。',check:'验收：第一轮不是看完，而是能闭卷独立输出',color:'#e46c4e',tint:'#fbe6df'},
-  {dates:'10月1日—10月31日',title:'线代概率 + 真题入口',desc:'880第七—二十一章随强化课推进，只做必做题，选择做/特难题不排；已结束章节按9月正确率决定何时加入数学分章真题。436第二轮主攻三大方法、机器设备、房地产、企业价值；英语阅读继续并加入小三门，政治刷选择题。',check:'启动：9月30日登记四项实际数据；先留订正/回测，再按剩余必做题和可用分钟排新题；未达项首块先回补。',color:'#3b9b94',tint:'#e1f3f0'},
+  {dates:'9月2日—9月13日',title:'高强度起步 · 先把今天做实',desc:'880第一章必做38题、第二章必做56题；选择做/特难题不排。线代按已核对文件名推进并配对应题，概率从第1讲（随机事件）开始，英语一篇一闭环；436从已背3个接第4个，每个学习日新增3个内容单元。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
+  {dates:'9月14日—9月30日',title:'高数强化 · 边学边回测',desc:'880第三—六章按“例题→必做题→订正”推进，选择做/特难题不排；概率第19—28讲收尾。436继续每天新增3个内容单元并滚动回收，不再用页码冒充进度；英语阅读每天闭环，政治保持低量。',check:'验收：每个单元能闭卷说出框架；每道错题有概念/计算/思路标签',color:'#e46c4e',tint:'#fbe6df'},
+  {dates:'10月1日—10月31日',title:'线代概率 + 真题入口',desc:'880第七—二十一章随强化课推进，只做必做题，选择做/特难题不排；已结束章节按9月正确率决定何时加入分章真题。436进入第二轮输出，英语阅读继续并加入小三门，政治刷选择题。',check:'9月30日只是测量与校准：现在就执行；月底登记实际数据，按剩余必做题、可用分钟、订正/回测量重排，不等到9月30日；未达项首块先回补。',color:'#3b9b94',tint:'#e1f3f0'},
   {dates:'11月1日—11月30日',title:'套卷与多轮输出',desc:'数学转整套真题与错题回做，880选择做/特难题不排；436第三—四轮以名词、短答、计算的限时输出为主；英语小三门和作文进入课表，政治选择题二轮并接时政。',check:'验收：能解释每个失分，而不是只看分数',color:'#d79b46',tint:'#fff0d7'},
   {dates:'12月1日—初试前',title:'模拟与保温',desc:'数学回收必做错题、近年真题和公式，880选择做/特难题不排；436滚动背诵并做整套模拟，英语整卷与作文默写，政治主观题集中背诵。',check:'验收：按考试时长完成，不靠熬夜硬撑',color:'#8170b5',tint:'#eeebf5'}
 ];
 const selfCheckRules = {
   math:'先闭卷独做，再对答案；错题只标概念/计算/思路三类，次日先回做。',
-  major:'页码先按章-节-页自编号；合书写框架，短答与计算必须完整落笔。',
+  major:'前三个已背；按你手头资料顺序记录第几个内容单元；合书写框架，短答与计算必须完整落笔。',
   english:'阅读每题定位证据句并写错因；单词遮住释义主动回想。',
   politics:'选择题记录对错，并把错项归回具体知识点。'
 };
@@ -580,8 +749,8 @@ function taskCheck(x){
     return '验收：闭卷；记录正确数与概念/计算/思路错因。';
   }
   if(x.type==='major'){
-    if(title.includes('课内'))return '验收：先按手头目录补成“章-节-页”，圈3个断点；只读写、不出声。';
-    return '验收：先按手头目录补成“章-节-页”；合书框架，短答/计算落笔。';
+    if(title.includes('课内'))return '验收：按资料顺序核对内容单元，圈3个断点；只读写、不出声。';
+    return '验收：按资料顺序核对内容单元；合书框架，短答/计算完整落笔。';
   }
   if(x.type==='english'){
     if(title.includes('单词')||title.includes('薄弱词'))return '验收：遮住释义回想；不会的词进次日旧词。';
@@ -592,44 +761,45 @@ function taskCheck(x){
   return '';
 }
 function minutes(v){const [h,m]=v.split(':').map(Number);return h*60+m}
-function progressFor(index, day, type, id=''){
-  const key=id.replace(/^w2-/,'w1-');
-  if(type==='major'){
-    const firstWeek={
-      'w1-mon-436':['436 · p1–3页内全部卡片','p1–3；合书复述'],
-      'w1-tue-436':['436 · p4–6页内全部卡片','p4–6；合书复述'],
-      'w1-wed-436':['436 · p7–9页内全部卡片','p7–9；合书复述'],
-      'w1-thu-436':['436 · p10–12 + 计算1题','p10–12；合书复述'],
-      'w1-fri-436':['436 · p13–15 + 短答2题','p13–15；写完再复述'],
-      'w1-sat-436':['436 · p16–18页内全部卡片','p16–18；合书复述']
+function progressFor(index, day, type, id='', rawTitle=''){
+  const dates=datesForRange(index), date=dateKey(dates[day]);
+  if(type==='major' && /436/.test(rawTitle||'')){
+    const original=rawTitle||'';
+    let detail=original.replace(/^.*?436\s*[·]?\s*/,'')
+      .replace(/p\d+(?:[–-]\d+)?/g,'')
+      .replace(/页内全部卡片|页内卡片|新\d+页|新旧页|本周新增页|当日新页|本周页码/g,'')
+      .replace(/\s{2,}/g,' ').trim();
+    const ordinal=majorOrdinalLabel(date,original,detail);
+    return {
+      label:ordinal,
+      note:`前三个已背；按资料顺序核对内容单元；未完次日只补1个。${majorIsReview(original)?'本格是回收/输出，不增加新量。':'本格新增3个内容单元，先框架后闭卷复述。'}`,
+      output:majorIsReview(original)?'闭卷框架/复述记录':'3个新内容单元框架+复述记录'
     };
-    if(index===0 && firstWeek[key])return {label:firstWeek[key][0],note:firstWeek[key][1]};
-    if(index<2)return null;
-    const start=1+index*22;
-    if(day===6 || /4362|4363$/.test(id))return {label:`旧页复述 · p1–${Math.max(3,start-1)}`,note:'436 · 合书复述，不开新页'};
-    const from=start+day*3;return {label:`背诵笔记 p${from}–${from+2}`,note:'436 · 新3页；每页先框架后复述'};
   }
   if(type==='math'){
-    const firstWeek={
-      'w1-mon-880':['880第一章 · 讲义例题复盘 + 必做清单核对','后续只做计划表必做列'],
-      'w1-tue-line':['线代第2章 · 剩余课第1节 + 6题','课程最多70分钟；余下做题'],
-      'w1-tue-880':['880第一章 · 基础填空3、4 + 基础解答1、2(2)、4','必做5题；选择做/特难题不排'],
-      'w1-tue-lineproblems':['线代第2章 · 对应题6道','只做今天课程对应题'],
-      'w1-wed-line':['线代第2章 · 剩余课第2节 + 6题','今天收完第二章课程'],
-      'w1-wed-880':['880第一章 · 综合选择1、2、3、5、6、7、8、9','必做8题'],
-      'w1-thu-line-test':['线代第2章 · 48小时回测6题','闭卷60分钟'],
-      'w1-thu-880':['880第一章 · 综合选择11、12、13、14、15、16 + 综合填空1、2、3、4','必做10题'],
-      'w1-thu-preview':['概率 · 方浩第1讲预习','只看入口概念'],
-      'w1-fri-prob':['概率 · 方浩第1–2讲 + 6题','第1讲时长待定位；第2讲原始37:15，先听课再补题'],
-      'w1-fri-880':['880第一章 · 综合填空5、6、7、8 + 综合解答1、2、5、6','必做8题'],
-      'w1-sat-prob':['概率 · 方浩第3–4讲 + 6题','原始1:58:10；1.5倍速+暂停约95分钟'],
-      'w1-sat-880':['880第一章 · 综合解答7、8、10、11','必做4题'],
-      'w1-sun-prob':['概率 · 方浩第5–6讲 + 周回收','原始50:28；1.5倍速+暂停约40分钟'],
-      'w1-sun-880':['880第一章 · 必做错题回做 + 38题收口','选择做/特难题不排']
-    };
-    if(index===0 && firstWeek[key])return {label:firstWeek[key][0],note:firstWeek[key][1]};
+    if(/线代/.test(rawTitle||'')){
+      const keyMap={'w1-tue-line':'03-01','w1-wed-line':'03-02','w1-tue-lineproblems':'03-01','w1-thu-line-test':null};
+      const key=id.replace(/^w2-/,'w1-');
+      if(keyMap[key]){
+        const mode=key==='w1-tue-lineproblems'?'对应题回收':'时间盒看课';
+        return {label:linearLessonLabel(keyMap[key],mode),note:linearLessonNote(keyMap[key],mode),output:mode==='对应题回收'?'2题过程+错因':'时间戳+公式卡'};
+      }
+      if(key==='w1-thu-line-test')return {label:'线代 · 第二章已学内容48小时回测',note:'闭卷完成6题；按概念/计算错因补洞',output:'6题正确率+错因'};
+      const future=futureLinearLessonForDate(date);
+      if(future && (rawTitle.includes('线代主线')||rawTitle.includes('真题线代'))){
+        return {label:linearLessonLabel(future,'时间盒看课'),note:linearLessonNote(future,'时间盒看课'),output:'时间戳+公式卡'};
+      }
+      if(date>='2026-10-01' && (rawTitle.includes('线代主线')||rawTitle.includes('真题线代'))){
+        return {label:'线代 · 已学文件错题回测 + 分章真题',note:'04-05—04-11队列已排完；从错因表抽6题闭卷回测，不重复播放最后一节。',output:'6题正确率+错因'};
+      }
+      return null;
+    }
+    if(/方浩第1讲预习|方浩第1–2讲/.test(rawTitle||'')){
+      const row={type:'math',title:rawTitle,note:'',steps:[],output:''}; normalizeProbabilityTask(date,row);
+      return {label:row.title,note:row.note,output:row.output};
+    }
     if(index<2)return null;
-    return {label:'数学 · 880对应章节必做题/真题小组',note:'只做计划表必做列；选择做/特难题不排'};
+    return {label:'数学 · 880对应章节必做题/真题小组',note:'只做计划表必做列；选择做/特难题不排',output:'题号+正确数+错因'};
   }
   return null;
 }
@@ -639,8 +809,8 @@ function datedBlocks(index=currentRangeIndex){
   const startWeekIntensity=index===0?highIntensityStartWeek:[];
   let result=[...routines,...focus,...startWeekIntensity,...special].map(x=>{
     const y={...x}; const d=dates[x.day]; y.date=dateKey(d);
-    const progress=progressFor(index,x.day,x.type,x.id);
-    if(progress){y.title=progress.label; y.note=progress.note; y.output=x.type==='major' ? (progress.label.includes('旧页')?'能合书说出旧页结构':'3页框架卡 + 闭卷复述记录') : x.output;}
+    const progress=progressFor(index,x.day,x.type,x.id,x.title);
+    if(progress){y.title=progress.label; y.note=progress.note; y.output=progress.output||x.output;}
     if(y.id.startsWith('routine-breakfast') || y.title==='早餐项目'){
       const b=breakfastFor(d); y.title=`早餐 · ${b.name}`; y.note=`${b.price} · ${b.source}`;
       y.why='今天这份早餐按日期轮换，尽量做到有蛋白质、有主食、少油，避免空腹和油腻让上午发晕。';
@@ -684,8 +854,19 @@ function updateCurrentAgenda(){
     row.classList.toggle('is-past',current>=end);
   });
 }
-function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);const data=buildDayAgenda(dayBlocks,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 做到什么才算</span></div><div class="agenda-list">${data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span>${taskCheck(x)?`<small class="task-check">${taskCheck(x)}</small>`:''}</div></div>`).join('')}</div>`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
-function renderTimetable(){syncRangeToToday();renderDailyAgenda();document.querySelector('#date-title').textContent='2026年9月2日—初试前';document.querySelector('#top-date').textContent='自动跟随真实日期';document.querySelector('#today-focus').textContent='9月2日起 · 严格执行';updateDailyBreakfast();}
+function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);const data=buildDayAgenda(dayBlocks,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('')}</div>`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
+function renderTimetable(){
+  syncRangeToToday();
+  renderDailyAgenda();
+  const now=new Date();
+  const dateTitle=document.querySelector('#date-title');
+  const topDate=document.querySelector('#top-date');
+  const focus=document.querySelector('#today-focus');
+  if(dateTitle)dateTitle.textContent=`${now.getFullYear()}年${now.getMonth()+1}月起 · 初试前`;
+  if(topDate)topDate.textContent='真实时间 · 当天自动更新';
+  if(focus)focus.textContent=`${dateText(now)} · 严格执行`;
+  updateDailyBreakfast();
+}
 // 页面只保留当天课表与阶段路线；复盘不再占一整块屏幕。
 function updateDailyBreakfast(){const today=new Date();const b=breakfastFor(today);const el=document.querySelector('#today-meal');if(el)el.textContent=`今天早餐：${b.name} · ${b.price}`;const copy=document.querySelector('#review-breakfast-copy');if(copy)copy.textContent=`${b.name} · ${b.price} · ${b.source}`;}
 function updateClock(){const now=new Date();const pad=n=>String(n).padStart(2,'0');const el=document.querySelector('#live-clock');if(el)el.textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;}
