@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,currentRouteIndex};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,currentRouteIndex} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -76,6 +76,8 @@ for (const exactCourse of ['财务管理','营销学']) if (!sep2.some(x => x.ti
 if (!sep2.some(x => x.start==='12:20' && x.title.includes('午休'))) throw new Error('sleep-protection nap is missing on September 2');
 if (!sep2.some(x => x.end==='24:00' && x.title.includes('最晚00:00'))) throw new Error('midnight sleep boundary missing');
 if (!selfCheckRules || !taskCheck({type:'math',title:'880第一章 · 8题',note:''}).includes('概念/计算/思路')) throw new Error('math self-check rule missing');
+const math880Check = taskCheck({type:'math',title:'880第一章 · 8题',note:''});
+if (!math880Check.includes('次日或48小时') || !math880Check.includes('同类')) throw new Error('880 correction loop must require a delayed same-type retry');
 if (!taskCheck({type:'major',title:'436 · p1–6',note:''}).includes('先按手头目录补成“章-节-页”')) throw new Error('436 chapter-section-page self-indexing action missing');
 if (!taskCheck({type:'english',title:'英语二 · 2010年 Text 1',note:''}).includes('证据句')) throw new Error('English evidence-sentence completion rule missing');
 const mathCopy = [...study1,...week2,...highIntensityStartWeek].filter(x=>x.type==='math').map(x=>`${x.title} ${x.note}`).join('\n');
@@ -119,6 +121,8 @@ if (routeData[0].dates !== '9月2日—9月13日' || !routeData[0].desc.includes
 if (!routeData.every(x => x.desc.includes('选择做/特难题不排'))) throw new Error('every phase must preserve the exclusion rule');
 if (!routeData[2].check.includes('9月30日') || !routeData[2].check.includes('实际数据')) throw new Error('October route must be gated by September evidence');
 if (!routeData[2].check.includes('未达项') || !routeData[2].check.includes('先回补')) throw new Error('October route must say what to do when a gate fails');
+for (const rule of ['剩余必做题','可用分钟','订正/回测']) if (!routeData[2].check.includes(rule)) throw new Error(`October capacity rule missing: ${rule}`);
+if (/145小时|每天3小时|50天/.test(`${routeData[2].desc} ${routeData[2].check}`)) throw new Error('external 880 timing claim must not become the personal October schedule');
 const allowedFhsuTitles = new Set(['营销学','财务管理','商业政策']);
 for (const [date, rows] of Object.entries(strictDateSchedules)) {
   for (const row of rows.filter(x=>x.type==='fhsu')) {
@@ -130,6 +134,9 @@ for (const [date, rows] of Object.entries(strictDateSchedules)) {
   const sorted=[...rows].sort((a,b)=>minutes(a.start)-minutes(b.start));
   if (sorted[0].start!=='06:00' || sorted.at(-1).end!=='24:00') throw new Error(`strict day must cover 06:00-24:00 boundary: ${date}`);
   for(let i=1;i<sorted.length;i++) if(minutes(sorted[i].start)<minutes(sorted[i-1].end)) throw new Error(`strict overlap ${date}: ${sorted[i-1].title} / ${sorted[i].title}`);
+  const displayed=buildDayAgenda(rows,0,new Date(`${date}T12:00:00`).getDay()).sort((a,b)=>minutes(a.start)-minutes(b.start));
+  if (displayed[0].start!=='06:00' || displayed.at(-1).end!=='24:00') throw new Error(`displayed agenda boundary missing: ${date}`);
+  for(let i=1;i<displayed.length;i++) if(displayed[i].start!==displayed[i-1].end) throw new Error(`displayed agenda gap/overlap ${date}: ${displayed[i-1].end} -> ${displayed[i].start}`);
   if (rows.some(x=>x.type==='homework') && ![0,5,6].includes(new Date(`${date}T12:00:00`).getDay())) throw new Error(`Blackboard homework leaked into weekday ${date}`);
   for (const row of rows.filter(x=>x.type==='politics')) {
     const split=row.note.match(/(\d+)分钟做题 \+ (\d+)分钟错因/);
