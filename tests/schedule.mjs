@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -80,17 +80,19 @@ for (const exactCourse of ['财务管理','营销学']) if (!sep2.some(x => x.ti
 if (!sep2.some(x => x.start==='12:20' && x.title.includes('午休'))) throw new Error('sleep-protection nap is missing on September 2');
 if (!sep2.some(x => x.end==='24:00' && x.title.includes('最晚00:00'))) throw new Error('midnight sleep boundary missing');
 if (sep2.some(x=>/p\d/.test(`${x.title} ${x.note}`))) throw new Error('rendered September 2 rows must not expose page-range shorthand');
+if (!strictDateSchedules['2026-09-02'].some(x=>x.title.includes('矩阵相似 01 特征值与特征向量'))) throw new Error('catch-up verified linear lesson 03-01 missing on the replayed first day');
 if (!strictDateSchedules['2026-09-03'].some(x=>x.title.includes('矩阵相似 01 特征值与特征向量'))) throw new Error('exact verified linear lesson 03-01 missing');
 if (!strictDateSchedules['2026-09-15'].some(x=>x.title.includes('矩阵相似 05 正交矩阵、实对称矩阵（1）'))) throw new Error('exact verified linear lesson 03-05 missing');
 if (!strictDateSchedules['2026-09-05'].some(x=>x.title.includes('矩阵相似 02 秩为1矩阵专题'))) throw new Error('exact verified linear lesson 03-02 missing');
 if (!strictDateSchedules['2026-09-29'].some(x=>x.title.includes('二次型 02 二次型的标准形、规范形'))) throw new Error('exact verified linear lesson 04-02 missing on September 29');
-if (linearAlgebraVerifiedLessons.length !== 21 || linearAlgebraLessonSlots.length !== 20 || linearAlgebraAppliedSlots.length !== 20) throw new Error('verified linear lesson inventory/slot application incomplete');
+if (linearAlgebraVerifiedLessons.length !== 21 || linearAlgebraLessonSlots.length !== 20 || linearAlgebraCatchupSlots.length !== 1 || linearAlgebraAppliedSlots.length !== 21) throw new Error('verified linear lesson inventory/slot application incomplete');
 if (!linearAlgebraVerifiedLessons.find(x=>x.key==='03-10')?.caveat.includes('疑似另一版本') || !linearAlgebraVerifiedLessons.find(x=>x.key==='04-04')?.caveat.includes('数三跳过')) throw new Error('linear duplicate/Math-I caveats missing');
 if (futureLinearQueue[0] !== '04-05' || !futureLinearLessonForDate('2026-10-01')?.includes?.('04-05') || futureLinearLessonForDate('2026-11-19') !== null) throw new Error('October linear continuation queue missing or repeats after exhaustion');
 if (!strictDateSchedules['2026-09-04'].some(x=>x.title.includes('方浩第1讲（随机事件：概念、关系与运算）'))) throw new Error('exact probability lecture topic normalisation missing');
 const sep3Shifted = datedBlocks(0).filter(x=>x.date==='2026-09-03').map(x=>`${x.title} ${x.note}`).join('\n');
-if (!sep3Shifted.includes('第4–6个新内容单元') || !sep3Shifted.includes('2010年 Text 1')) throw new Error('September 3 must replay the unfinished first study day');
+if (!sep3Shifted.includes('第4–6个新内容单元') || !sep3Shifted.includes('2010年 Text 1') || !sep3Shifted.includes('矩阵相似 01 特征值与特征向量')) throw new Error('September 3 must replay the unfinished first study day with verified linear naming');
 if (sep3Shifted.includes('第7–9个新内容单元') || sep3Shifted.includes('2010年 Text 2')) throw new Error('September 3 must not advance past the missed September 2 plan');
+if (sep3Shifted.includes('剩余课第1节') || sep3Shifted.includes('剩余课第2节')) throw new Error('September 3 must not expose vague linear lesson placeholders');
 if (!selfCheckRules || !taskCheck({type:'math',title:'880第一章 · 8题',note:''}).includes('概念/计算/思路')) throw new Error('math self-check rule missing');
 const math880Check = taskCheck({type:'math',title:'880第一章 · 8题',note:''});
 if (!math880Check.includes('次日或48小时') || !math880Check.includes('同类')) throw new Error('880 correction loop must require a delayed same-type retry');

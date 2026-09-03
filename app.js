@@ -480,9 +480,15 @@ const linearAlgebraLessonSlots = Object.freeze([
   ['2026-09-27','09:00','11:00','03-10','核对，不计新课'],['2026-09-28','21:20','22:10','04-01','时间盒看课'],
   ['2026-09-29','08:20','10:00','04-02','时间盒看课'],['2026-09-29','21:30','22:20','04-03','时间盒看课']
 ]);
+// The authored 9/2 first-day ledger had one linear-algebra block before the
+// user actually started on 9/3.  Give that replayed block the first verified
+// lesson name as well; its 9/3 continuation remains the existing 03-01 slot.
+const linearAlgebraCatchupSlots = Object.freeze([
+  ['2026-09-02','18:00','19:30','03-01','时间盒看课']
+]);
 const linearAlgebraAppliedSlots=[];
 function applyLinearLessonSlots(){
-  for(const [date,start,end,key,mode] of linearAlgebraLessonSlots){
+  for(const [date,start,end,key,mode] of [...linearAlgebraLessonSlots,...linearAlgebraCatchupSlots]){
     const rows=strictDateSchedules[date]||[];
     const row=rows.find(x=>x.start===start&&x.end===end&&x.type==='math');
     if(!row)continue;
