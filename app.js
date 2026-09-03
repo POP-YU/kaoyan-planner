@@ -428,12 +428,12 @@ const linearLessonLabel=(key,mode='时间盒看课')=>{
   const item=linearLessonByKey[key]; if(!item)return `线代 · ${key}`;
   return `线代 · ${item.section} ${item.no} ${item.short}${mode==='对应题回收'?' · 对应题回收':''}`;
 };
-const linearLessonNote=(key,mode='时间盒看课')=>{
+const linearLessonNote=(key,mode='时间盒看课',durationMinutes=0)=>{
   const item=linearLessonByKey[key]||{};
   if(item.caveat)return `先核对文件名；${item.caveat}。${mode==='对应题回收'?'只做对应题，不重复计新课。':'本格只做核对/时间盒，不把它算成新章节。'}`;
   return mode==='对应题回收'
-    ? '闭卷写2道对应题；按题型标概念/计算错因，未完成留到下次同一节。'
-    : '90分钟时间盒；1.5倍速并允许暂停。未播完记录时间戳，下次从断点续；看完立即闭卷写2道对应题。';
+    ? `${durationMinutes?`本格${durationMinutes}分钟：`:''}闭卷写2道对应题；按题型标概念/计算错因，未完成留到下次同一节。`
+    : `${durationMinutes?`${durationMinutes}分钟`: '本格'}时间盒；1.5倍速并允许暂停。未播完记录时间戳，下次从断点续；看完立即闭卷写2道对应题。`;
 };
 // After the September evidence-backed slots, keep the same exact-file
 // sequence for generic October+ line-algebra blocks. This is a queue, not a
@@ -492,7 +492,8 @@ function applyLinearLessonSlots(){
     const rows=strictDateSchedules[date]||[];
     const row=rows.find(x=>x.start===start&&x.end===end&&x.type==='math');
     if(!row)continue;
-    row.title=linearLessonLabel(key,mode); row.note=linearLessonNote(key,mode);
+    const durationMinutes=minutes(end)-minutes(start);
+    row.title=linearLessonLabel(key,mode); row.note=linearLessonNote(key,mode,durationMinutes);
     row.why='真实文件名已从夸克清单核对；时长未公开，所以按时间盒推进，不把“看完”当作完成。';
     row.steps=mode==='对应题回收'?['遮住讲义','独立做2题','记录错因']:['按文件名打开','1.5倍速听并暂停','记时间戳/关键公式'];
     row.output=mode==='对应题回收'?'2题过程+错因':'时间戳+公式卡';

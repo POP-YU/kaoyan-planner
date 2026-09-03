@@ -82,6 +82,10 @@ if (!sep2.some(x => x.end==='24:00' && x.title.includes('最晚00:00'))) throw n
 if (sep2.some(x=>/p\d/.test(`${x.title} ${x.note}`))) throw new Error('rendered September 2 rows must not expose page-range shorthand');
 if (!strictDateSchedules['2026-09-02'].some(x=>x.title.includes('矩阵相似 01 特征值与特征向量'))) throw new Error('catch-up verified linear lesson 03-01 missing on the replayed first day');
 if (!strictDateSchedules['2026-09-03'].some(x=>x.title.includes('矩阵相似 01 特征值与特征向量'))) throw new Error('exact verified linear lesson 03-01 missing');
+const sep2Linear=strictDateSchedules['2026-09-02'].find(x=>x.title.includes('矩阵相似 01 特征值与特征向量'));
+if (!sep2Linear?.note.includes('90分钟时间盒')) throw new Error('replayed 90-minute linear time box must match its actual slot');
+const sep3Linear=strictDateSchedules['2026-09-03'].find(x=>x.start==='15:00'&&x.type==='math'&&x.title.includes('矩阵相似 01'));
+if (!sep3Linear?.note.includes('95分钟时间盒') || sep3Linear.note.includes('90分钟时间盒')) throw new Error('linear time-box note must use the actual slot length');
 if (!strictDateSchedules['2026-09-15'].some(x=>x.title.includes('矩阵相似 05 正交矩阵、实对称矩阵（1）'))) throw new Error('exact verified linear lesson 03-05 missing');
 if (!strictDateSchedules['2026-09-05'].some(x=>x.title.includes('矩阵相似 02 秩为1矩阵专题'))) throw new Error('exact verified linear lesson 03-02 missing');
 if (!strictDateSchedules['2026-09-29'].some(x=>x.title.includes('二次型 02 二次型的标准形、规范形'))) throw new Error('exact verified linear lesson 04-02 missing on September 29');
