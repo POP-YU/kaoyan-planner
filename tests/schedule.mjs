@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -58,6 +58,8 @@ for (const [day,title] of [[0,'英语单词 · 新20 + 旧40'],[1,'436 · p1–1
 if (!schedules[2].some(x => x.day===1 && x.start==='14:50' && x.end==='16:35' && x.title.includes('436'))) throw new Error('Tuesday afternoon study block missing');
 if (strictStartDate !== '2026-09-02') throw new Error(`strict plan must restart on 2026-09-02, got ${strictStartDate}`);
 if (currentBaselineDate !== '2026-09-02' || majorBaseline.completedUnits !== 3 || majorBaseline.dailyNewUnits !== 3) throw new Error('436 baseline must be three completed units with three new units per study day');
+if (actualScheduleStartDate !== '2026-09-03' || scheduleLagDays !== 1) throw new Error('the missed 2026-09-02 study day must create a one-day catch-up lag');
+if (scheduleSourceDate('2026-09-03') !== '2026-09-02' || scheduleSourceDate('2026-09-04') !== '2026-09-03') throw new Error('actual dates must consume the previous unfinished day before advancing');
 if (majorCumulativeForDate('2026-09-02') !== 6 || majorNewRangeForDate('2026-09-02').start !== 4 || majorNewRangeForDate('2026-09-02').end !== 6) throw new Error('436 September 2 ordinal range must start at units 4–6');
 if (majorNewRangeForDate('2026-09-06') !== null || majorCumulativeForDate('2026-09-06') !== 15) throw new Error('Sunday must be review-only for 436');
 for (const day of ['2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-06','2026-09-07','2026-09-08','2026-09-09','2026-09-10','2026-09-11','2026-09-12','2026-09-13']) {
@@ -86,6 +88,9 @@ if (linearAlgebraVerifiedLessons.length !== 21 || linearAlgebraLessonSlots.lengt
 if (!linearAlgebraVerifiedLessons.find(x=>x.key==='03-10')?.caveat.includes('疑似另一版本') || !linearAlgebraVerifiedLessons.find(x=>x.key==='04-04')?.caveat.includes('数三跳过')) throw new Error('linear duplicate/Math-I caveats missing');
 if (futureLinearQueue[0] !== '04-05' || !futureLinearLessonForDate('2026-10-01')?.includes?.('04-05') || futureLinearLessonForDate('2026-11-19') !== null) throw new Error('October linear continuation queue missing or repeats after exhaustion');
 if (!strictDateSchedules['2026-09-04'].some(x=>x.title.includes('方浩第1讲（随机事件：概念、关系与运算）'))) throw new Error('exact probability lecture topic normalisation missing');
+const sep3Shifted = datedBlocks(0).filter(x=>x.date==='2026-09-03').map(x=>`${x.title} ${x.note}`).join('\n');
+if (!sep3Shifted.includes('第4–6个新内容单元') || !sep3Shifted.includes('2010年 Text 1')) throw new Error('September 3 must replay the unfinished first study day');
+if (sep3Shifted.includes('第7–9个新内容单元') || sep3Shifted.includes('2010年 Text 2')) throw new Error('September 3 must not advance past the missed September 2 plan');
 if (!selfCheckRules || !taskCheck({type:'math',title:'880第一章 · 8题',note:''}).includes('概念/计算/思路')) throw new Error('math self-check rule missing');
 const math880Check = taskCheck({type:'math',title:'880第一章 · 8题',note:''});
 if (!math880Check.includes('次日或48小时') || !math880Check.includes('同类')) throw new Error('880 correction loop must require a delayed same-type retry');
@@ -107,7 +112,8 @@ for (const [chapter,total] of [[3,86],[4,40],[5,41],[6,37]]) {
 }
 const sep29Rendered=datedBlocks(4).filter(x=>x.date==='2026-09-29'&&x.type==='major').map(x=>x.title).join('\n');
 const sep30Rendered=datedBlocks(4).filter(x=>x.date==='2026-09-30'&&x.type==='major').map(x=>x.title).join('\n');
-if (!sep29Rendered.includes('第73–75个新内容单元') || !sep30Rendered.includes('第1–26个已背内容单元') || !sep30Rendered.includes('第53–78个已背内容单元') || /p\d/.test(`${sep29Rendered}\n${sep30Rendered}`)) throw new Error('436 ordinal first-pass/review rendering is wrong');
+const oct1Rendered=datedBlocks(4).filter(x=>x.date==='2026-10-01'&&x.type==='major').map(x=>x.title).join('\n');
+if (!sep29Rendered.includes('第70–72个新内容单元') || !sep30Rendered.includes('第73–75个新内容单元') || !oct1Rendered.includes('第1–26个已背内容单元') || !oct1Rendered.includes('第53–78个已背内容单元') || /p\d/.test(`${sep29Rendered}\n${sep30Rendered}\n${oct1Rendered}`)) throw new Error('436 ordinal first-pass/review rendering is wrong');
 for (const day of ['2026-09-13','2026-09-20','2026-09-27']) {
   if (!strictDateSchedules[day].some(x=>x.type==='english' && x.title.includes('小作文审题'))) throw new Error(`low-dose September writing baseline missing ${day}`);
 }

@@ -332,9 +332,18 @@ const septemberContinuation = {
 // units already memorised before that date.
 const currentBaselineDate = '2026-09-02';
 const majorBaseline = Object.freeze({completedUnits:3,dailyNewUnits:3,label:'内容单元'});
+// The user confirmed on 2026-09-03 that the 2026-09-02 plan was not started.
+// Keep the authored 9/2 ledger as the source of truth, but consume it on the
+// first real execution day instead of silently advancing by calendar date.
+const actualScheduleStartDate = '2026-09-03';
+const scheduleLagDays = 1;
 const dateAtNoon = date => new Date(`${date}T12:00:00`);
 const addCalendarDays = (date,delta) => { const d=new Date(date); d.setDate(d.getDate()+delta); return d; };
 const isoDateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function scheduleSourceDate(actualDate){
+  const target=dateAtNoon(actualDate), first=dateAtNoon(actualScheduleStartDate);
+  return target < first ? actualDate : isoDateKey(addCalendarDays(target,-scheduleLagDays));
+}
 function majorCumulativeForDate(date){
   const target=dateAtNoon(date), baseline=dateAtNoon(currentBaselineDate);
   if(target < baseline)return majorBaseline.completedUnits;
@@ -729,7 +738,7 @@ function breakfastFor(d){ const seed = d.getFullYear()*10000+(d.getMonth()+1)*10
 function datesForRange(index=currentRangeIndex){ const start = rangeStarts[index]; return days.map((_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d;}); }
 function phaseForRange(index=currentRangeIndex){ if(index===0)return 1; if(index===1)return 2; if(index<5)return 3; if(index<13)return 5; return 9; }
 const routeData = [
-  {dates:'9月2日—9月13日',title:'高强度起步 · 先把今天做实',desc:'880第一章必做38题、第二章必做56题；选择做/特难题不排。线代按已核对文件名推进并配对应题，概率从第1讲（随机事件）开始，英语一篇一闭环；436从已背3个接第4个，每个学习日新增3个内容单元。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
+  {dates:'9月2日—9月13日',title:'高强度起步 · 先把今天做实',desc:'原定9月2日的起步任务因未启动顺延到9月3日；不把未完成当完成，后续按实际执行日消化。880第一章必做38题、第二章必做56题；选择做/特难题不排。线代按已核对文件名推进并配对应题，概率从第1讲（随机事件）开始，英语一篇一闭环；436从已背3个接第4个，每个学习日新增3个内容单元。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
   {dates:'9月14日—9月30日',title:'高数强化 · 边学边回测',desc:'880第三—六章按“例题→必做题→订正”推进，选择做/特难题不排；概率第19—28讲收尾。436继续每天新增3个内容单元并滚动回收，不再用页码冒充进度；英语阅读每天闭环，政治保持低量。',check:'验收：每个单元能闭卷说出框架；每道错题有概念/计算/思路标签',color:'#e46c4e',tint:'#fbe6df'},
   {dates:'10月1日—10月31日',title:'线代概率 + 真题入口',desc:'880第七—二十一章随强化课推进，只做必做题，选择做/特难题不排；已结束章节按9月正确率决定何时加入分章真题。436进入第二轮输出，英语阅读继续并加入小三门，政治刷选择题。',check:'9月30日只是测量与校准：现在就执行；月底登记实际数据，按剩余必做题、可用分钟、订正/回测量重排，不等到9月30日；未达项首块先回补。',color:'#3b9b94',tint:'#e1f3f0'},
   {dates:'11月1日—11月30日',title:'套卷与多轮输出',desc:'数学转整套真题与错题回做，880选择做/特难题不排；436第三—四轮以名词、短答、计算的限时输出为主；英语小三门和作文进入课表，政治选择题二轮并接时政。',check:'验收：能解释每个失分，而不是只看分数',color:'#d79b46',tint:'#fff0d7'},
@@ -761,8 +770,8 @@ function taskCheck(x){
   return '';
 }
 function minutes(v){const [h,m]=v.split(':').map(Number);return h*60+m}
-function progressFor(index, day, type, id='', rawTitle=''){
-  const dates=datesForRange(index), date=dateKey(dates[day]);
+function progressFor(index, day, type, id='', rawTitle='', dateOverride=''){
+  const dates=datesForRange(index), date=dateOverride||dateKey(dates[day]);
   if(type==='major' && /436/.test(rawTitle||'')){
     const original=rawTitle||'';
     let detail=original.replace(/^.*?436\s*[·]?\s*/,'')
@@ -808,8 +817,8 @@ function datedBlocks(index=currentRangeIndex){
   const special=(index===9||index===10)?[classBlock('sat-politics',5,'08:20','11:45','形势与政策4')]:[];
   const startWeekIntensity=index===0?highIntensityStartWeek:[];
   let result=[...routines,...focus,...startWeekIntensity,...special].map(x=>{
-    const y={...x}; const d=dates[x.day]; y.date=dateKey(d);
-    const progress=progressFor(index,x.day,x.type,x.id,x.title);
+    const y={...x}; const d=dates[x.day], key=dateKey(d), sourceKey=scheduleSourceDate(key); y.date=key;
+    const progress=progressFor(index,x.day,x.type,x.id,x.title,sourceKey);
     if(progress){y.title=progress.label; y.note=progress.note; y.output=progress.output||x.output;}
     if(y.id.startsWith('routine-breakfast') || y.title==='早餐项目'){
       const b=breakfastFor(d); y.title=`早餐 · ${b.name}`; y.note=`${b.price} · ${b.source}`;
@@ -819,7 +828,7 @@ function datedBlocks(index=currentRangeIndex){
     return y;
   });
   dates.forEach((d,day)=>{
-    const key=dateKey(d), exact=strictDateSchedules[key];
+    const key=dateKey(d), sourceKey=scheduleSourceDate(key), exact=strictDateSchedules[sourceKey];
     if(!exact)return;
     result=result.filter(x=>x.day!==day);
     exact.forEach(x=>{
