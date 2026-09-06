@@ -373,11 +373,12 @@ function majorChapterHintForRange(start,end){
   if(!a||!b)return '';
   return a===b?a.no:`${a.no}–${b.no}`;
 }
-// The user confirmed on 2026-09-03 that the 2026-09-02 plan was not started.
-// Keep the authored 9/2 ledger as the source of truth, but consume it on the
-// first real execution day instead of silently advancing by calendar date.
-const actualScheduleStartDate = '2026-09-03';
-const scheduleLagDays = 1;
+// The user confirmed on 2026-09-06 that 9/2–9/5 were not executed either:
+// 2026-09-06 is the first real execution day.  Keep the authored ledgers as
+// the source of truth and consume them in order from today, so the first
+// four days replay on 9/6–9/9 instead of being silently skipped.
+const actualScheduleStartDate = '2026-09-06';
+const scheduleLagDays = 4;
 const dateAtNoon = date => new Date(`${date}T12:00:00`);
 const addCalendarDays = (date,delta) => { const d=new Date(date); d.setDate(d.getDate()+delta); return d; };
 const isoDateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -484,7 +485,7 @@ const linearLessonLabel=(key,mode='时间盒看课')=>{
 };
 const linearLessonNote=(key,mode='时间盒看课',durationMinutes=0)=>{
   const item=linearLessonByKey[key]||{};
-  if(item.resumeFrom)return `${durationMinutes?`本格${durationMinutes}分钟：`:''}第2章收尾：从${item.resumeFrom}断点续看《${item.short}》，1.5倍速并允许暂停，未播完记录时间戳；听完立即闭卷写2道对应题，第2章才算收完。`;
+  if(item.resumeFrom)return `${durationMinutes?`本格${durationMinutes}分钟时间盒 · `:''}第2章收尾：从${item.resumeFrom}断点续看《${item.short}》，1.5倍速并允许暂停，未播完记录时间戳；听完立即闭卷写2道对应题，第2章才算收完。`;
   if(item.watchedFull)return `${item.evidence}；不再排课，对应题并入回收格。`;
   if(item.caveat)return `先核对文件名；${item.caveat}。${mode==='对应题回收'?'只做对应题，不重复计新课。':'本格只做核对/时间盒，不把它算成新章节。'}`;
   return mode==='对应题回收'
@@ -495,9 +496,8 @@ const linearLessonNote=(key,mode='时间盒看课',durationMinutes=0)=>{
 // sequence for generic October+ line-algebra blocks. This is a queue, not a
 // promise that a video finishes inside one block: the note remains a
 // 90-minute time-box with a timestamp checkpoint.
-// 2026-09-06 rebaseline：第2章收尾占用9/7、9/8两格后，04二次型的 04-01/04-02/
-// 04-03 从9月顺延进10月队列（04-04仅数一，仍跳过）。
-const futureLinearQueue = Object.freeze(['04-01','04-02','04-03','04-05','04-06','04-07','04-08','04-09','04-10','04-11']);
+// 2026-09-06 二次顺延后 04-01–04-03 回到 9 月账内（9/28–9/29），10月队列从 04-05 继续（04-04仅数一，跳过）。
+const futureLinearQueue = Object.freeze(['04-05','04-06','04-07','04-08','04-09','04-10','04-11']);
 function futureLinearLessonForDate(date){
   const target=dateAtNoon(date), first=dateAtNoon('2026-10-01');
   if(target<first)return null;
@@ -526,28 +526,29 @@ function normalizeProbabilityTask(date,row){
 // Existing free study slots are deliberately reused so active-load and the
 // no-overlap invariant do not change.  The second slot on a lesson is a
 // practice/continuation slot, not a claim that a full video fits in 35 min.
-// 2026-09-06 rebaseline：第2章还剩 2.8矩阵的分块（34%）未听完，所以 9/7、9/8
-// 两格改为第2章收尾（看课+对应题），03矩阵相似链整体顺延2格，04-01/04-02/
-// 04-03 移入10月队列；03-01、03-02 已按9/3、9/5原格执行，不动。
-// 断点续接规则不变：任何线代格先续接最靠前的未完文件（当前断点：2.8@34%）。
+// 2026-09-06 二次顺延：9/2–9/5 账未执行、实际从 9/6 起跑，所以第2章收尾
+// （02-08@34%）排在第1天账（9/2，实际9/6）的 18:00 格，03矩阵相似链保持
+// 原定日期顺序：03-01 在 9/3 账（实际9/7）……04-03 收在 9/29 账（实际10/3）。
+// 断点续接规则不变：任何线代格先续接最靠前的未完文件。
 const linearAlgebraLessonSlots = Object.freeze([
   ['2026-09-03','15:00','16:35','03-01','时间盒看课'],['2026-09-03','21:20','21:55','03-01','对应题回收'],
-  ['2026-09-05','14:45','15:45','03-02','时间盒看课'],
-  ['2026-09-07','21:35','22:50','02-08','时间盒看课'],['2026-09-08','20:00','21:00','02-08','对应题回收'],
-  ['2026-09-10','18:00','19:00','03-03','时间盒看课'],['2026-09-15','08:20','10:00','03-03','对应题回收'],
-  ['2026-09-15','21:30','22:20','03-04','时间盒看课'],['2026-09-17','19:30','20:30','03-04','对应题回收'],
-  ['2026-09-21','21:20','22:10','03-05','时间盒看课'],['2026-09-22','08:20','10:00','03-05','对应题回收'],
-  ['2026-09-22','21:30','22:20','03-06','时间盒看课'],['2026-09-23','18:00','18:50','03-06','对应题回收'],
-  ['2026-09-24','19:30','20:30','03-07','时间盒看课'],['2026-09-25','08:20','10:00','03-07','对应题回收'],
-  ['2026-09-26','08:20','10:20','03-08','时间盒看课'],['2026-09-27','09:00','11:00','03-08','对应题回收'],
-  ['2026-09-28','21:20','22:10','03-09','时间盒看课'],['2026-09-29','08:20','10:00','03-09','对应题回收'],
-  ['2026-09-29','21:30','22:20','03-10','核对，不计新课']
+  ['2026-09-05','14:45','15:45','03-02','时间盒看课'],['2026-09-07','21:35','22:50','03-03','时间盒看课'],
+  ['2026-09-08','20:00','21:00','03-03','对应题回收'],['2026-09-10','18:00','19:00','03-04','时间盒看课'],
+  ['2026-09-15','08:20','10:00','03-05','时间盒看课'],['2026-09-15','21:30','22:20','03-05','对应题回收'],
+  ['2026-09-17','19:30','20:30','03-06','时间盒看课'],['2026-09-21','21:20','22:10','03-06','对应题回收'],
+  ['2026-09-22','08:20','10:00','03-07','时间盒看课'],['2026-09-22','21:30','22:20','03-07','对应题回收'],
+  ['2026-09-23','18:00','18:50','03-08','时间盒看课'],['2026-09-24','19:30','20:30','03-08','对应题回收'],
+  ['2026-09-25','08:20','10:00','03-09','时间盒看课'],['2026-09-26','08:20','10:20','03-09','对应题回收'],
+  ['2026-09-27','09:00','11:00','03-10','核对，不计新课'],['2026-09-28','21:20','22:10','04-01','时间盒看课'],
+  ['2026-09-29','08:20','10:00','04-02','时间盒看课'],['2026-09-29','21:30','22:20','04-03','时间盒看课']
 ]);
 // The authored 9/2 first-day ledger had one linear-algebra block before the
-// user actually started on 9/3.  Give that replayed block the first verified
-// lesson name as well; its 9/3 continuation remains the existing 03-01 slot.
+// user actually started on 9/6.  That replayed block now closes chapter 2:
+// 2.8矩阵的分块 is still at its 34% breakpoint (2026-09-06 截图核对), so the
+// first day finishes it before any 矩阵相似 lesson; 03-01 then starts on the
+// 9/3 ledger (实际 9/7) as scheduled below.
 const linearAlgebraCatchupSlots = Object.freeze([
-  ['2026-09-02','18:00','19:30','03-01','时间盒看课']
+  ['2026-09-02','18:00','19:30','02-08','时间盒看课']
 ]);
 const linearAlgebraAppliedSlots=[];
 function applyLinearLessonSlots(){
@@ -784,9 +785,9 @@ const probabilityWindow = (start,end) => {
 };
 const courseLedger = [
   {subject:'高数 · 李林880',now:'按用户分享的2027数学三带刷表，只做必做题',week:'第一章必做38题；第二章必做56题；选择做/特难题不排',done:'先做基础必做，再做综合必做；当天独立做完并标错因'},
-  {subject:'线代 · 没咋了',now:'第2章收尾：2.9初等变换与初等矩阵已听完（100%）；2.8矩阵的分块停在34%，9/7断点收尾、9/8对应题；随后进03矩阵相似',duration:'剩余条目原始时长未从夸克列表公开；每格用90分钟时间盒，1.5倍速并允许暂停，未播完记时间戳',week:'03-01、03-02已按9/3、9/5原格执行；03-03起顺延2格（9/10恢复），9月底到03-10核对；04-01—04-03移入10月队列',done:'文件名对上 + 时间戳/公式卡 + 2道对应题；不把时间盒结束冒充看完'},
+  {subject:'线代 · 没咋了',now:'第2章收尾：2.9初等变换与初等矩阵已听完（100%）；2.8矩阵的分块停在34%，第1天账（实际9/6）18:00断点收尾，听完再进矩阵相似',duration:'剩余条目原始时长未从夸克列表公开；每格用90分钟时间盒，1.5倍速并允许暂停，未播完记时间戳',week:'03-01从第2天账（实际9/7）起按文件顺序推进；03-10核对+04-01–04-03收在9月底账（实际10/3前）；10月队列从04-05继续',done:'文件名对上 + 时间戳/公式卡 + 2道对应题；不把时间盒结束冒充看完'},
   {subject:'概率 · 方浩',now:'基础班30讲；第1讲文件名与“随机事件：概念、关系与运算”已核对；第1讲原始时长未验证；29–30为数一不排',duration:`第7–8讲 ${probabilityWindow(7,8)}；第9–10讲 ${probabilityWindow(9,10)}；第11–12讲 ${probabilityWindow(11,12)}`,week:'先第1–2讲，再第3–4、5–6；第二周起按7–8、9–10、11–12讲推进；每两讲配6道基础题',done:'听课留暂停余量；对应题独做并写错因，未播完留时间戳'},
-  {subject:'436 · 背诵笔记',now:'《背诵笔记》结构已逐页核对：背诵篇10章213个编号知识点（p1–75）+ 计算题篇按章重点题（p76–168）；前三个内容单元已背，从第4个继续',week:'9/2起周一至周六每天新增3个内容单元；周日只回收；未完次日只补1个，不挤睡眠；9/30应到第78个（第四章），一轮预计11月下旬收尾',done:'按手头资料顺序合书复述；短答/计算完整落笔，记录断点章-节-内容单元'},
+  {subject:'436 · 背诵笔记',now:'《背诵笔记》结构已逐页核对：背诵篇10章213个编号知识点（p1–75）+ 计算题篇按章重点题（p76–168）；前三个内容单元已背，第1天账（实际9/6）从第4个继续',week:'每天新增3个内容单元（按账面周一至周六）；周日账只回收；未完次日账只补1个，不挤睡眠；9/30账（实际10/3）应到第78个（第四章），一轮预计11月下旬收尾',done:'按手头资料顺序合书复述；短答/计算完整落笔，记录断点章-节-内容单元'},
   {subject:'英语二 · 真题',now:'阅读量少，先做精读闭环',week:'2015–2019年各做 Text 1；单词每日写死数量，共新135+旧270',done:'每篇留1张错因卡；当天单词按格内数量收工'}
 ];
 function renderCourseLedger(){
@@ -805,7 +806,9 @@ function renderMajorSyllabus(){
   const rows=majorChapterCumulative.map(c=>`<tr><th scope="row">${c.no}</th><td>${c.title}</td><td>p${c.startPage}–${c.endPage}</td><td>${c.units}</td><td>第${c.from}–${c.to}个</td></tr>`).join('');
   table.innerHTML=`<thead><tr><th scope="col">章</th><th scope="col">名称</th><th scope="col">页</th><th scope="col">知识点</th><th scope="col">内容单元</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th scope="row">合计</th><td>背诵篇 ${majorRecitationMaterial.recitationPages}；计算题篇 ${majorRecitationMaterial.calculationPages}（按章重点题+课后题）</td><td>—</td><td>${majorRecitationMaterial.totalUnits}</td><td>第1–${majorRecitationMaterial.totalUnits}个</td></tr></tfoot>`;
   const progress=document.querySelector('#syllabus-progress'); if(!progress)return;
-  const cum=majorCumulativeForDate(dateKey(new Date())), ch=majorChapterForUnit(Math.min(cum,majorRecitationMaterial.totalUnits));
+  // 进度按“今天正在执行的账面日期”计算：9/6 实际第1天 = 9/2 账，应背到第6个。
+  const sourceToday=scheduleSourceDate(dateKey(new Date()));
+  const cum=majorCumulativeForDate(sourceToday), ch=majorChapterForUnit(Math.min(cum,majorRecitationMaterial.totalUnits));
   let finish=null;
   const cursor=new Date(`${currentBaselineDate}T12:00:00`);
   let total=majorBaseline.completedUnits;
@@ -814,7 +817,9 @@ function renderMajorSyllabus(){
     if(total>=majorRecitationMaterial.totalUnits){finish=new Date(cursor);break;}
     cursor.setDate(cursor.getDate()+1);
   }
-  const pace=finish?`按每天${majorBaseline.dailyNewUnits}个、周日只回收，一轮背诵预计${finish.getMonth()+1}月${finish.getDate()}日前后收尾，赶在12月前`:'';
+  // 账面收尾日 + 实际滞后天数 = 真实日历上的收尾日。
+  if(finish)finish.setDate(finish.getDate()+scheduleLagDays);
+  const pace=finish?`账面按每天${majorBaseline.dailyNewUnits}个、周日只回收，实际日历上（含${scheduleLagDays}天顺延）一轮背诵预计${finish.getMonth()+1}月${finish.getDate()}日前后收尾，赶在12月前`:'';
   progress.textContent=`今天按表应背到第${Math.min(cum,majorRecitationMaterial.totalUnits)}个${ch?`（${ch.no}·${ch.title}）`:''}；${pace}。“内容单元”就是资料每章下按 1.、2.、3.… 编号的条目。`;
 }
 const rangeStarts = [];
@@ -827,7 +832,7 @@ function breakfastFor(d){ const seed = d.getFullYear()*10000+(d.getMonth()+1)*10
 function datesForRange(index=currentRangeIndex){ const start = rangeStarts[index]; return days.map((_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d;}); }
 function phaseForRange(index=currentRangeIndex){ if(index===0)return 1; if(index===1)return 2; if(index<5)return 3; if(index<13)return 5; return 9; }
 const routeData = [
-  {dates:'9月2日—9月13日',title:'高强度起步 · 先把今天做实',desc:'原定9月2日的起步任务因未启动顺延到9月3日；不把未完成当完成，后续按实际执行日消化。880第一章必做38题、第二章必做56题；选择做/特难题不排。线代按已核对文件名推进并配对应题，概率从第1讲（随机事件）开始，英语一篇一闭环；436从已背3个接第4个，每个学习日新增3个内容单元。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
+  {dates:'9月2日—9月13日',title:'高强度起步 · 先把今天做实',desc:'9/2–9/5连续四天没有执行，2026-09-06作为实际第1天，账面任务整体顺延4天消化，不把未完成当完成。880第一章必做38题、第二章必做56题；选择做/特难题不排。线代第1天先收尾第2章（2.8@34%），再按已核对文件名推进并配对应题；概率从第1讲（随机事件）开始，英语一篇一闭环；436从已背3个接第4个，每个学习日新增3个内容单元。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
   {dates:'9月14日—9月30日',title:'高数强化 · 边学边回测',desc:'880第三—六章按“例题→必做题→订正”推进，选择做/特难题不排；概率第19—28讲收尾。436继续每天新增3个内容单元并滚动回收，不再用页码冒充进度；英语阅读每天闭环，政治保持低量。',check:'验收：每个单元能闭卷说出框架；每道错题有概念/计算/思路标签',color:'#e46c4e',tint:'#fbe6df'},
   {dates:'10月1日—10月31日',title:'线代概率 + 真题入口',desc:'880第七—二十一章随强化课推进，只做必做题，选择做/特难题不排；已结束章节按9月正确率决定何时加入分章真题。436进入第二轮输出，英语阅读继续并加入小三门，政治刷选择题。',check:'9月30日只是测量与校准：现在就执行；月底登记实际数据，按剩余必做题、可用分钟、订正/回测量重排，不等到9月30日；未达项首块先回补。',color:'#3b9b94',tint:'#e1f3f0'},
   {dates:'11月1日—11月30日',title:'套卷与多轮输出',desc:'数学转整套真题与错题回做，880选择做/特难题不排；436第三—四轮以名词、短答、计算的限时输出为主；英语小三门和作文进入课表，政治选择题二轮并接时政。',check:'验收：能解释每个失分，而不是只看分数',color:'#d79b46',tint:'#fff0d7'},
@@ -933,8 +938,10 @@ function datedBlocks(index=currentRangeIndex){
 }
 function buildDayAgenda(items,index,day){const result=[...items];const sorted=[...items].sort((a,b)=>minutes(a.start)-minutes(b.start));let cursor=360;for(const x of sorted){const gap=minutes(x.start)-cursor;if(gap>=10)result.push({id:`rest-${index}-${day}-${cursor}`,day,start:`${String(Math.floor(cursor/60)).padStart(2,'0')}:${String(cursor%60).padStart(2,'0')}`,end:x.start,title:'休息 · 走动/补水',type:'free',note:'不安排学习，恢复一下',why:'这一段明确留给身体和现实，不是没排完。',steps:['离开座位','喝水或走动','到下一格再开始'],output:'恢复注意力'});cursor=Math.max(cursor,minutes(x.end));}const gap=1440-cursor;if(gap>=10)result.push({id:`rest-${index}-${day}-${cursor}`,day,start:`${String(Math.floor(cursor/60)).padStart(2,'0')}:${String(cursor%60).padStart(2,'0')}`,end:'24:00',title:'休息 · 收尾',type:'free',note:'23:30开始洗漱，00:00关灯',why:'最后的时间用来收尾和睡觉准备，不用强行塞新任务。',steps:['整理明天第一件事','收好资料','00:00关灯'],output:'明天更容易开始'});return result.sort((a,b)=>minutes(a.start)-minutes(b.start));}
 function syncRangeToToday(){const now=new Date();let idx=0;rangeStarts.forEach((d,i)=>{if(now>=d)idx=i;});currentRangeIndex=idx;}
+// 阶段高亮跟着“今天正在执行的账面日期”走：9/6 实际第1天执行的是 9/2 账，
+// 仍属于起步阶段；不按日历提前切到下一阶段。
 function currentRouteIndex(now=new Date()){
-  const key=dateKey(now);
+  const key=scheduleSourceDate(dateKey(now));
   if(key<'2026-09-14')return 0;
   if(key<'2026-10-01')return 1;
   if(key<'2026-11-01')return 2;
