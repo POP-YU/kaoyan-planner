@@ -18,10 +18,9 @@ const baseClasses = [
 const returnSlots = [['16:35','17:00'],['16:35','17:00'],['16:35','17:00'],['16:35','17:00'],['15:45','16:05'],['16:40','17:00'],['16:00','16:20']];
 const routines = days.flatMap((_,i)=>[
   t(`routine-wake-${i}`,i,'06:00','06:20','起床 · 喝水洗漱','routine','20分钟内一次做完','六点起床后的第一格只负责把人叫醒。',['起床喝水','洗脸刷牙','换衣服'],'06:20前结束'),
-  t(`routine-breakfast-${i}`,i,'07:00','07:30','早餐项目','meal','当天自动轮换','早餐按你给的选项轮换，尽量主食、蛋白质都有，少油。',['买早餐','吃完','带水出门'],'吃完、带水出门'),
-  t(`routine-leave-${i}`,i,'07:30','07:35','出门检查','routine','钥匙、卡、水、耳机','出门前只检查一次。',['钥匙/校园卡','水和耳机'],'准时出门'),
-  t(`routine-commute-${i}`,i,'07:35','07:55','通勤 · 家→学校','routine','20分钟','通勤不塞硬任务。',['出门','到校'],'准时到校'),
-  t(`routine-arrive-${i}`,i,'07:55','08:20','到校 · 找座准备','routine','准备当天第一段','到校先把第一段需要的东西摆好。',['找到座位','拿出第一段资料'],'准备完成'),
+  t(`routine-homestudy-${i}`,i,'07:00','07:45','在家加练 · 昨日错题4道或436回看','math','错题优先，没有错题就436回看','45分钟到点出门，不出门拖延。',['翻错题本','做4道或回看一节','收拾书包'],'加练完成'),
+  t(`routine-leave-${i}`,i,'07:45','07:50','出门检查','routine','钥匙、卡、水、耳机、平板','出门前只检查一次。',['钥匙/校园卡','水和耳机','平板'],'准时出门'),
+  t(`routine-breakfast-${i}`,i,'07:50','08:20','早餐项目','meal','买上带走，路上吃','出门上学30分钟：买饭+吃饭+走路一起完成，到校坐定即开工。',['买早餐','路上吃完','进教室坐定'],'08:15坐定'),
   t(`routine-break-am-${i}`,i,'11:45','11:50','下课 · 走动5分钟','routine','直接离开教室去吃饭','一下课就走，不留在座位上拖。',['起身','离开教室','去吃饭'],'开始午饭'),
   t(`routine-lunch-${i}`,i,'11:50','12:20','午饭 · 直接去吃','meal','不边吃边学习','先吃饭，吃完再处理下午。',['吃饭','简单走动'],'午饭完成'),
   t(`routine-return-${i}`,i,returnSlots[i][0],returnSlots[i][1],'通勤 · 学校→家','routine','约20分钟','按当天最后一段校内任务收工，不套用同一个离校时间。',['收拾课本','回家'],'到家'),
@@ -53,10 +52,9 @@ const strict = (date, rows) => rows.map((row,index)=>t(`strict-${date}-${index}`
 const strictMorning = (date, title, type, note, rows) => strict(date,[
   ['06:00','06:20','起床 · 喝水洗漱','routine','20分钟一次做完','',[],'06:20前结束'],
   ['06:20','07:00',title,type,note,'早上第一格直接进入主动回忆。',[],note],
-  ['07:00','07:30','早餐项目','meal','按日期自动轮换','',[],'吃完、带水出门'],
-  ['07:30','07:35','出门检查','routine','钥匙、校园卡、水、耳机','',[],'准时出门'],
-  ['07:35','07:55','通勤 · 家→学校','routine','20分钟，不塞学习任务','',[],'准时到校'],
-  ['07:55','08:20','到校 · 找座准备','routine','摆好当天第一段资料','',[],'准备完成'],
+  ['07:00','07:45','在家加练 · 昨日错题4道或436回看','math','错题优先，没有错题就436回看；45分钟到点出门','',[],'4道错题或一节回看'],
+  ['07:45','07:50','出门检查','routine','钥匙、校园卡、水、耳机、平板','',[],'准时出门'],
+  ['07:50','08:20','早餐项目','meal','出门上学30分钟：买上带走，路上吃完，到校坐定即开工','',[],'08:15到校坐定'],
   ...rows,
   ['23:20','24:00','洗漱 · 23:30关灯，最晚00:00','sleep','23:20停止开新任务；23:30是目标，00:00只作最晚边界','',[],'23:30关灯']
 ]);
@@ -970,7 +968,7 @@ function datedBlocks(index=currentRangeIndex){
     const progress=progressFor(index,x.day,x.type,x.id,x.title,sourceKey);
     if(progress){y.title=progress.label; y.note=progress.note; y.output=progress.output||x.output;}
     if(y.id.startsWith('routine-breakfast') || y.title==='早餐项目'){
-      const b=breakfastFor(d); y.title=`早餐 · ${b.name}`; y.note=`${b.price} · ${b.source}`;
+      const b=breakfastFor(d); y.title=`早餐 · ${b.name}`; y.note=`${b.price} · ${b.source} · 买上带走路上吃`;
       y.why='今天这份早餐按日期轮换，尽量做到有蛋白质、有主食、少油，避免空腹和油腻让上午发晕。';
       y.steps=[`预算：${b.price}`,`优先：${b.source}`,`替换：${b.swap}`]; y.output='吃完、带水出门'; y.id=`breakfast-${dateKey(d)}`;
     } else y.id=`${y.id}-${dateKey(d)}`;
@@ -983,8 +981,8 @@ function datedBlocks(index=currentRangeIndex){
     exact.forEach(x=>{
       const y={...x,day,date:key};
       if(y.title==='早餐项目'){
-        const b=breakfastFor(d); y.title=`早餐 · ${b.name}`; y.note=`${b.price} · ${b.source}`;
-        y.why='按日期轮换：有主食、有蛋白质、少油。'; y.steps=[`预算：${b.price}`,`替换：${b.swap}`]; y.output='吃完、带水出门';
+        const b=breakfastFor(d); y.title=`早餐 · ${b.name}`; y.note=`${b.price} · ${b.source} · 买上带走路上吃，08:15坐定`;
+        y.why='按日期轮换：有主食、有蛋白质、少油。'; y.steps=[`预算：${b.price}`,`替换：${b.swap}`]; y.output='路上吃完，08:15坐定';
       }
       result.push(y);
     });

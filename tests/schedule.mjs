@@ -184,7 +184,8 @@ const activeMinutes=Object.fromEntries(Object.entries(strictDateSchedules).map((
 const lightest=Math.min(...Object.values(activeMinutes)), heaviest=Math.max(...Object.values(activeMinutes));
 const heaviestDate=Object.entries(activeMinutes).find(([,value])=>value===heaviest)?.[0];
 if (lightest<420) throw new Error(`strict plan drops below 7 active study hours: ${lightest} minutes`);
-if (heaviest>690) throw new Error(`strict plan exceeds 11.5 active study hours before FHSU/homework: ${Object.entries(activeMinutes).filter(([,value])=>value>690).map(([date,value])=>`${date}=${value}`).join(', ')}`);
+// 2026-09-07 极限强度：早上在家加练45分钟后，上限放宽到735分钟（12.25小时）。
+if (heaviest>735) throw new Error(`strict plan exceeds 12.25 active study hours (extreme-mode ceiling): ${Object.entries(activeMinutes).filter(([,value])=>value>735).map(([date,value])=>`${date}=${value}`).join(', ')}`);
 for (const index of [0,1]) {
   const all=datedBlocks(index);
   for (let day=0;day<7;day++) {
