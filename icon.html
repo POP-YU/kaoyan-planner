@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0}</style></head>
+<body><canvas id="c" width="512" height="512"></canvas>
+<input id="out" value="">
+<script>
+const c = document.getElementById('c'), x = c.getContext('2d');
+// 全幅不透明渐变（iOS 主屏自动切圆角）
+const g = x.createLinearGradient(0,0,512,512);
+g.addColorStop(0,'#e46c4e'); g.addColorStop(1,'#bb5137');
+x.fillStyle = g; x.fillRect(0,0,512,512);
+// 顶部细高光带
+x.fillStyle = 'rgba(255,255,255,.10)'; x.fillRect(0,0,512,150);
+// 白色主字
+x.fillStyle = '#fff';
+x.textAlign = 'center'; x.textBaseline = 'middle';
+x.font = '700 170px "Microsoft YaHei UI","Microsoft YaHei",sans-serif';
+x.fillText('考研', 256, 200);
+x.font = '700 120px "Microsoft YaHei UI","Microsoft YaHei",sans-serif';
+x.fillText('课表', 256, 356);
+// 白色小横条
+x.fillStyle = 'rgba(255,255,255,.9)'; x.fillRect(176, 442, 160, 14);
+document.getElementById('out').value = c.toDataURL('image/png');
+</script></body></html>

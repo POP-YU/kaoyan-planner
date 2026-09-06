@@ -1,3 +1,4 @@
+const APP_VERSION = 'profile-0907';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -1035,4 +1036,5 @@ function scheduleClock(){clearTimeout(clockTimer);if(document.hidden)return;upda
 function stopLiveUpdates(){clearTimeout(clockTimer);clearInterval(dailyTimer);clockTimer=0;dailyTimer=0;}
 function startLiveUpdates(){stopLiveUpdates();if(document.hidden)return;scheduleClock();dailyTimer=setInterval(syncDailyState,60000);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopLiveUpdates();else{syncDailyState();startLiveUpdates();}});
+const appVersionEl=document.querySelector('#app-version');if(appVersionEl)appVersionEl.textContent='v'+APP_VERSION;
 renderTimetable();startLiveUpdates();
