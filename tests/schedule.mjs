@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -86,12 +86,18 @@ const sep2Linear=strictDateSchedules['2026-09-02'].find(x=>x.title.includes('矩
 if (!sep2Linear?.note.includes('90分钟时间盒')) throw new Error('replayed 90-minute linear time box must match its actual slot');
 const sep3Linear=strictDateSchedules['2026-09-03'].find(x=>x.start==='15:00'&&x.type==='math'&&x.title.includes('矩阵相似 01'));
 if (!sep3Linear?.note.includes('95分钟时间盒') || sep3Linear.note.includes('90分钟时间盒')) throw new Error('linear time-box note must use the actual slot length');
-if (!strictDateSchedules['2026-09-15'].some(x=>x.title.includes('矩阵相似 05 正交矩阵、实对称矩阵（1）'))) throw new Error('exact verified linear lesson 03-05 missing');
+if (!strictDateSchedules['2026-09-15'].some(x=>x.title.includes('矩阵相似 04 矩阵相似'))) throw new Error('exact verified linear lesson 03-04 missing on September 15 after the chapter-2 rebaseline');
 if (!strictDateSchedules['2026-09-05'].some(x=>x.title.includes('矩阵相似 02 秩为1矩阵专题'))) throw new Error('exact verified linear lesson 03-02 missing');
-if (!strictDateSchedules['2026-09-29'].some(x=>x.title.includes('二次型 02 二次型的标准形、规范形'))) throw new Error('exact verified linear lesson 04-02 missing on September 29');
-if (linearAlgebraVerifiedLessons.length !== 21 || linearAlgebraLessonSlots.length !== 20 || linearAlgebraCatchupSlots.length !== 1 || linearAlgebraAppliedSlots.length !== 21) throw new Error('verified linear lesson inventory/slot application incomplete');
+const sep29LinearCheck=strictDateSchedules['2026-09-29'].find(x=>x.title.includes('矩阵相似 10'));
+if (!sep29LinearCheck || !sep29LinearCheck.title.includes('疑似另一版本') || !`${sep29LinearCheck.note} ${sep29LinearCheck.why||''}`.includes('核对')) throw new Error('03-10 cross-check slot must close the September chain on September 29');
+const sep7Linear=strictDateSchedules['2026-09-07'].find(x=>x.title.includes('第2章 08 矩阵的分块（断点收尾）'));
+if (!sep7Linear || !sep7Linear.note.includes('34%') || !sep7Linear.note.includes('断点')) throw new Error('chapter-2 tail lesson 02-08 must resume from the verified 34% breakpoint on September 7');
+if (!strictDateSchedules['2026-09-08'].some(x=>x.title.includes('第2章 08 矩阵的分块') && x.title.includes('对应题回收'))) throw new Error('02-08 needs its own practice-recovery slot on September 8');
+if (strictDateSchedules['2026-09-08'].some(x=>x.title.includes('02-09')) || Object.values(strictDateSchedules).flat().some(x=>x.title.includes('初等变换与初等矩阵'))) throw new Error('02-09 is already watched to 100% and must never be scheduled');
+if (!linearAlgebraVerifiedLessons.find(x=>x.key==='02-08')?.resumeFrom.includes('34') || !linearAlgebraVerifiedLessons.find(x=>x.key==='02-09')?.watchedFull) throw new Error('chapter-2 tail watch progress evidence missing');
+if (linearAlgebraVerifiedLessons.length !== 23 || linearAlgebraLessonSlots.length !== 20 || linearAlgebraCatchupSlots.length !== 1 || linearAlgebraAppliedSlots.length !== 21) throw new Error('verified linear lesson inventory/slot application incomplete');
 if (!linearAlgebraVerifiedLessons.find(x=>x.key==='03-10')?.caveat.includes('疑似另一版本') || !linearAlgebraVerifiedLessons.find(x=>x.key==='04-04')?.caveat.includes('数三跳过')) throw new Error('linear duplicate/Math-I caveats missing');
-if (futureLinearQueue[0] !== '04-05' || !futureLinearLessonForDate('2026-10-01')?.includes?.('04-05') || futureLinearLessonForDate('2026-11-19') !== null) throw new Error('October linear continuation queue missing or repeats after exhaustion');
+if (futureLinearQueue[0] !== '04-01' || !futureLinearLessonForDate('2026-10-01')?.includes?.('04-01') || futureLinearLessonForDate('2026-12-10') !== null) throw new Error('October linear continuation queue missing or repeats after exhaustion');
 if (!strictDateSchedules['2026-09-04'].some(x=>x.title.includes('方浩第1讲（随机事件：概念、关系与运算）'))) throw new Error('exact probability lecture topic normalisation missing');
 const sep3Shifted = datedBlocks(0).filter(x=>x.date==='2026-09-03').map(x=>`${x.title} ${x.note}`).join('\n');
 if (!sep3Shifted.includes('第4–6个新内容单元') || !sep3Shifted.includes('2010年 Text 1') || !sep3Shifted.includes('矩阵相似 01 特征值与特征向量')) throw new Error('September 3 must replay the unfinished first study day with verified linear naming');
@@ -120,6 +126,8 @@ const sep29Rendered=datedBlocks(4).filter(x=>x.date==='2026-09-29'&&x.type==='ma
 const sep30Rendered=datedBlocks(4).filter(x=>x.date==='2026-09-30'&&x.type==='major').map(x=>x.title).join('\n');
 const oct1Rendered=datedBlocks(4).filter(x=>x.date==='2026-10-01'&&x.type==='major').map(x=>x.title).join('\n');
 if (!sep29Rendered.includes('第70–72个新内容单元') || !sep30Rendered.includes('第73–75个新内容单元') || !oct1Rendered.includes('第1–26个已背内容单元') || !oct1Rendered.includes('第53–78个已背内容单元') || /p\d/.test(`${sep29Rendered}\n${sep30Rendered}\n${oct1Rendered}`)) throw new Error('436 ordinal first-pass/review rendering is wrong');
+if (!sep29Rendered.includes('第70–72个新内容单元（第四章）')) throw new Error('436 ordinal labels must name the verified chapter from the actual 背诵笔记');
+if (sep29Rendered.includes('第214个') || oct1Rendered.includes('第214个')) throw new Error('ordinals must never run past the 213 verified units');
 for (const day of ['2026-09-13','2026-09-20','2026-09-27']) {
   if (!strictDateSchedules[day].some(x=>x.type==='english' && x.title.includes('小作文审题'))) throw new Error(`low-dose September writing baseline missing ${day}`);
 }
@@ -128,6 +136,13 @@ if (!sep30.some(x=>x.type==='math' && x.title.includes('九月闭卷小测6题')
 for (const unitRange of ['第1–26个已背内容单元','第27–52个已背内容单元','第53–78个已背内容单元']) {
   if (!sep30.some(x=>x.type==='major' && x.title.includes(unitRange))) throw new Error(`September 30 436 framework gate missing ${unitRange}`);
 }
+if (!sep30.some(x=>x.type==='major' && x.title.includes('第1–26个已背内容单元（第一章）'))) throw new Error('September 30 436 gate must map ordinal ranges to the verified chapters');
+if (!courseLedger.some(x=>x.subject.includes('436') && x.now.includes('213个编号知识点') && x.week.includes('9/30应到第78个'))) throw new Error('436 ledger must carry the verified 背诵笔记 totals');
+// 2026-09-06：436《背诵笔记》结构成为内容单元序号的唯一事实来源。
+if (majorRecitationMaterial.source !== '背诵笔记（436 资产评估专业基础）' || majorRecitationMaterial.totalUnits !== 213 || majorRecitationMaterial.pages !== 168) throw new Error('436 recitation material must be the verified 背诵笔记 with 213 numbered points across 168 pages');
+if (majorChapterCumulative.length !== 10 || majorChapterCumulative.reduce((s,c)=>s+c.units,0) !== 213 || majorChapterCumulative[3].to !== 108 || majorChapterCumulative[9].from !== 202) throw new Error('436 chapter cumulative map must cover the recitation part in the verified order');
+if (majorChapterForUnit(1)?.no !== '第一章' || majorChapterForUnit(78)?.no !== '第四章' || majorChapterForUnit(213)?.no !== '第十章' || majorChapterForUnit(214) !== null) throw new Error('unit→chapter lookup broken');
+if (majorChapterHintForRange(70,72) !== '第四章' || majorChapterHintForRange(25,30) !== '第一章–第二章') throw new Error('chapter hint for ordinal ranges broken');
 if (sep30.some(x=>`${x.title} ${x.note}`.includes('当日新页'))) throw new Error('September 30 436 closeout must not claim there are new pages');
 if (!sep30.some(x=>x.type==='major' && x.note.includes('断点章-节-内容单元'))) throw new Error('September 30 436 gate must record ordinal breakpoints');
 const sep30Gate = sep30.find(x=>x.type==='buffer' && x.title.includes('月末门禁'));

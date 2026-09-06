@@ -312,9 +312,9 @@ const septemberContinuation = {
     english:'英语 · 2010–2015阅读错因总表 + 小作文审题1篇',
     secondaryMath:['数学 · 九月闭卷小测6题','从第1–6章各抽1道基础/中等代表题，其中至少3道不是原错题；选择做/特难题不进小测；50分钟闭卷，记录正确数与概念/计算/思路错因'],
     majorGate:[
-       ['436 · 第1–26个已背内容单元闭卷总框架','按资料顺序合书；登记“能独立输出/只记标题/需回补”，标断点章-节-内容单元'],
-       ['436 · 第27–52个已背内容单元闭卷总框架 + 名解4个','按手头资料写主干与关键词；名解按评分点落笔，标断点章-节-内容单元'],
-       ['436 · 第53–78个已背内容单元框架 + 短答2题 + 计算1题','框架只写主干；短答/计算闭卷，记录通过数与断点章-节-内容单元']
+       ['436 · 第1–26个已背内容单元（第一章）闭卷总框架','按资料顺序合书；登记“能独立输出/只记标题/需回补”，标断点章-节-内容单元'],
+       ['436 · 第27–52个已背内容单元（第二章–第三章）闭卷总框架 + 名解4个','按手头资料写主干与关键词；名解按评分点落笔，标断点章-节-内容单元'],
+       ['436 · 第53–78个已背内容单元（第三章–第四章）框架 + 短答2题 + 计算1题','框架只写主干；短答/计算闭卷，记录通过数与断点章-节-内容单元']
     ],
      monthGate:'登记880小测正确数/三类错因、436需回补的章-节-内容单元、英语重复错因、近7天23:30前关灯天数；若880低于4/6、436任一章只记标题或计算空白、英语同类错重复2次、关灯少于5/7天，10月首个对应块先回补'
   }
@@ -332,6 +332,47 @@ const septemberContinuation = {
 // units already memorised before that date.
 const currentBaselineDate = '2026-09-02';
 const majorBaseline = Object.freeze({completedUnits:3,dailyNewUnits:3,label:'内容单元'});
+// 2026-09-06 用户提供《背诵笔记》（436 资产评估专业基础，168页扫描版）并逐页
+// 核对结构：第一篇“背诵”p1–75，共10章、213个编号知识点——每章条目按 1.、2.、
+// 3.… 编号，即课表中的“内容单元”；第二篇“计算题”p76–168 按章排重点题，另含
+// 第二章课后题（第七版）。页码为扫描件自身页码，与手头资料一致；单元总数和
+// 各章条目数由逐页核对得出，不再用“约78个”的臆测口径。
+const majorRecitationMaterial = Object.freeze({
+  source:'背诵笔记（436 资产评估专业基础）',
+  pages:168,
+  recitationPages:'p1–75',
+  calculationPages:'p76–168',
+  totalUnits:213,
+  chapters:Object.freeze([
+    {no:'第一章',title:'导论',startPage:2,endPage:11,units:26},
+    {no:'第二章',title:'资产评估程序与基本方法',startPage:12,endPage:19,units:22},
+    {no:'第三章',title:'机器设备评估',startPage:20,endPage:25,units:16},
+    {no:'第四章',title:'房地产价格评估',startPage:26,endPage:40,units:44},
+    {no:'第五章',title:'无形资产评估',startPage:41,endPage:49,units:27},
+    {no:'第六章',title:'金融资产评估',startPage:50,endPage:53,units:15},
+    {no:'第七章',title:'流动资产和其他资产评估',startPage:54,endPage:58,units:15},
+    {no:'第八章',title:'企业价值评估',startPage:59,endPage:63,units:14},
+    {no:'第九章',title:'期权定价模型在资产价值评估中的应用',startPage:64,endPage:68,units:22},
+    {no:'第十章',title:'资产评估报告',startPage:69,endPage:75,units:12}
+  ])
+});
+// 按资料顺序把“第N个内容单元”落到具体章节：第1–26个=第一章……第202–213个=第十章。
+const majorChapterCumulative = Object.freeze((()=>{
+  let cursor=0;
+  return majorRecitationMaterial.chapters.map(c=>{
+    const from=cursor+1, to=cursor+c.units;
+    cursor=to;
+    return Object.freeze({...c,from,to});
+  });
+})());
+function majorChapterForUnit(n){
+  return majorChapterCumulative.find(c=>n>=c.from&&n<=c.to)||null;
+}
+function majorChapterHintForRange(start,end){
+  const a=majorChapterForUnit(start), b=majorChapterForUnit(end);
+  if(!a||!b)return '';
+  return a===b?a.no:`${a.no}–${b.no}`;
+}
 // The user confirmed on 2026-09-03 that the 2026-09-02 plan was not started.
 // Keep the authored 9/2 ledger as the source of truth, but consume it on the
 // first real execution day instead of silently advancing by calendar date.
@@ -369,13 +410,20 @@ function majorIsReview(title){
 function majorOrdinalLabel(date,title,suffix=''){
   const range=majorNewRangeForDate(date), total=majorCumulativeForDate(date);
   const review=majorIsReview(title)||!range;
-  const core=review?`第1–${total}个已背${majorBaseline.label}`:`第${range.start}–${range.end}个新${majorBaseline.label}`;
-  return `436 · ${core}${suffix?` · ${suffix}`:''}`;
+  if(review)return `436 · 第1–${Math.min(total,majorRecitationMaterial.totalUnits)}个已背${majorBaseline.label}${suffix?` · ${suffix}`:''}`;
+  // 一轮背诵把213个编号知识点背完后，序号从第1个重新滚动，不再虚增“第214个”。
+  if(range.start>majorRecitationMaterial.totalUnits){
+    const s=((range.start-1)%majorRecitationMaterial.totalUnits)+1, e=((range.end-1)%majorRecitationMaterial.totalUnits)+1;
+    return `436 · 二轮滚动 第${s}–${e}个${majorBaseline.label}${suffix?` · ${suffix}`:''}`;
+  }
+  const hint=majorChapterHintForRange(range.start,range.end);
+  return `436 · 第${range.start}–${range.end}个新${majorBaseline.label}${hint?`（${hint}）`:''}${suffix?` · ${suffix}`:''}`;
 }
 function normalizeMajorString(date,value,title){
   if(typeof value!=='string' || !/p\d/.test(value))return value;
   const range=majorNewRangeForDate(date), total=majorCumulativeForDate(date), review=majorIsReview(title);
-  const replacement=(!review && range) ? `第${range.start}–${range.end}个新${majorBaseline.label}` : `第1–${total}个已背${majorBaseline.label}`;
+  const hint=(!review && range)?majorChapterHintForRange(range.start,range.end):'';
+  const replacement=(!review && range) ? `第${range.start}–${range.end}个新${majorBaseline.label}${hint?`（${hint}）`:''}` : `第1–${Math.min(total,majorRecitationMaterial.totalUnits)}个已背${majorBaseline.label}`;
   return value.replace(/p\d+(?:[–-]\d+)?/g,replacement);
 }
 function normalizeMajorTask(date,row){
@@ -400,7 +448,12 @@ function normalizeMajorTask(date,row){
 
 // Exact names read from the user's Quark list.  Durations are intentionally
 // absent: the source listing exposed names/sizes but not playable durations.
+// 2026-09-06 补充核对（用户播放器截图）：第2章尾部两讲为 08 2.8矩阵的分块
+// （已观看34%，全章唯一未听完的一讲）和 09 2.9初等变换与初等矩阵（已观看
+// 100%，已听完）。因此第2章在9/7只做"2.8断点收尾"一格，不再排第二节新课。
 const linearAlgebraVerifiedLessons = Object.freeze([
+  {key:'02-08',section:'第2章',no:'08',short:'矩阵的分块',file:'08 2.8矩阵的分块.mp4',resumeFrom:'34%',evidence:'2026-09-06播放器截图：已观看34%，第2章唯一未听完'},
+  {key:'02-09',section:'第2章',no:'09',short:'初等变换与初等矩阵',file:'09 2.9初等变换与初等矩阵.mp4',watchedFull:true,evidence:'2026-09-06播放器截图：已观看100%，已听完'},
   {key:'03-01',section:'矩阵相似',no:'01',short:'特征值与特征向量',file:'01 3.1特征值与特征向量.mp4'},
   {key:'03-02',section:'矩阵相似',no:'02',short:'秩为1矩阵专题',file:'02 3.2秩为1矩阵专题.mp4'},
   {key:'03-03',section:'矩阵相似',no:'03',short:'矩阵相似对角化',file:'03 3.3矩阵相似对角化.mp4'},
@@ -426,10 +479,13 @@ const linearAlgebraVerifiedLessons = Object.freeze([
 const linearLessonByKey=Object.fromEntries(linearAlgebraVerifiedLessons.map(x=>[x.key,x]));
 const linearLessonLabel=(key,mode='时间盒看课')=>{
   const item=linearLessonByKey[key]; if(!item)return `线代 · ${key}`;
-  return `线代 · ${item.section} ${item.no} ${item.short}${mode==='对应题回收'?' · 对应题回收':''}`;
+  const tail=item.resumeFrom?'（断点收尾）':item.watchedFull?'（已听完）':'';
+  return `线代 · ${item.section} ${item.no} ${item.short}${tail}${mode==='对应题回收'?' · 对应题回收':''}`;
 };
 const linearLessonNote=(key,mode='时间盒看课',durationMinutes=0)=>{
   const item=linearLessonByKey[key]||{};
+  if(item.resumeFrom)return `${durationMinutes?`本格${durationMinutes}分钟：`:''}第2章收尾：从${item.resumeFrom}断点续看《${item.short}》，1.5倍速并允许暂停，未播完记录时间戳；听完立即闭卷写2道对应题，第2章才算收完。`;
+  if(item.watchedFull)return `${item.evidence}；不再排课，对应题并入回收格。`;
   if(item.caveat)return `先核对文件名；${item.caveat}。${mode==='对应题回收'?'只做对应题，不重复计新课。':'本格只做核对/时间盒，不把它算成新章节。'}`;
   return mode==='对应题回收'
     ? `${durationMinutes?`本格${durationMinutes}分钟：`:''}闭卷写2道对应题；按题型标概念/计算错因，未完成留到下次同一节。`
@@ -439,7 +495,9 @@ const linearLessonNote=(key,mode='时间盒看课',durationMinutes=0)=>{
 // sequence for generic October+ line-algebra blocks. This is a queue, not a
 // promise that a video finishes inside one block: the note remains a
 // 90-minute time-box with a timestamp checkpoint.
-const futureLinearQueue = Object.freeze(['04-05','04-06','04-07','04-08','04-09','04-10','04-11']);
+// 2026-09-06 rebaseline：第2章收尾占用9/7、9/8两格后，04二次型的 04-01/04-02/
+// 04-03 从9月顺延进10月队列（04-04仅数一，仍跳过）。
+const futureLinearQueue = Object.freeze(['04-01','04-02','04-03','04-05','04-06','04-07','04-08','04-09','04-10','04-11']);
 function futureLinearLessonForDate(date){
   const target=dateAtNoon(date), first=dateAtNoon('2026-10-01');
   if(target<first)return null;
@@ -468,17 +526,22 @@ function normalizeProbabilityTask(date,row){
 // Existing free study slots are deliberately reused so active-load and the
 // no-overlap invariant do not change.  The second slot on a lesson is a
 // practice/continuation slot, not a claim that a full video fits in 35 min.
+// 2026-09-06 rebaseline：第2章还剩 2.8矩阵的分块（34%）未听完，所以 9/7、9/8
+// 两格改为第2章收尾（看课+对应题），03矩阵相似链整体顺延2格，04-01/04-02/
+// 04-03 移入10月队列；03-01、03-02 已按9/3、9/5原格执行，不动。
+// 断点续接规则不变：任何线代格先续接最靠前的未完文件（当前断点：2.8@34%）。
 const linearAlgebraLessonSlots = Object.freeze([
   ['2026-09-03','15:00','16:35','03-01','时间盒看课'],['2026-09-03','21:20','21:55','03-01','对应题回收'],
-  ['2026-09-05','14:45','15:45','03-02','时间盒看课'],['2026-09-07','21:35','22:50','03-03','时间盒看课'],
-  ['2026-09-08','20:00','21:00','03-03','对应题回收'],['2026-09-10','18:00','19:00','03-04','时间盒看课'],
-  ['2026-09-15','08:20','10:00','03-05','时间盒看课'],['2026-09-15','21:30','22:20','03-05','对应题回收'],
-  ['2026-09-17','19:30','20:30','03-06','时间盒看课'],['2026-09-21','21:20','22:10','03-06','对应题回收'],
-  ['2026-09-22','08:20','10:00','03-07','时间盒看课'],['2026-09-22','21:30','22:20','03-07','对应题回收'],
-  ['2026-09-23','18:00','18:50','03-08','时间盒看课'],['2026-09-24','19:30','20:30','03-08','对应题回收'],
-  ['2026-09-25','08:20','10:00','03-09','时间盒看课'],['2026-09-26','08:20','10:20','03-09','对应题回收'],
-  ['2026-09-27','09:00','11:00','03-10','核对，不计新课'],['2026-09-28','21:20','22:10','04-01','时间盒看课'],
-  ['2026-09-29','08:20','10:00','04-02','时间盒看课'],['2026-09-29','21:30','22:20','04-03','时间盒看课']
+  ['2026-09-05','14:45','15:45','03-02','时间盒看课'],
+  ['2026-09-07','21:35','22:50','02-08','时间盒看课'],['2026-09-08','20:00','21:00','02-08','对应题回收'],
+  ['2026-09-10','18:00','19:00','03-03','时间盒看课'],['2026-09-15','08:20','10:00','03-03','对应题回收'],
+  ['2026-09-15','21:30','22:20','03-04','时间盒看课'],['2026-09-17','19:30','20:30','03-04','对应题回收'],
+  ['2026-09-21','21:20','22:10','03-05','时间盒看课'],['2026-09-22','08:20','10:00','03-05','对应题回收'],
+  ['2026-09-22','21:30','22:20','03-06','时间盒看课'],['2026-09-23','18:00','18:50','03-06','对应题回收'],
+  ['2026-09-24','19:30','20:30','03-07','时间盒看课'],['2026-09-25','08:20','10:00','03-07','对应题回收'],
+  ['2026-09-26','08:20','10:20','03-08','时间盒看课'],['2026-09-27','09:00','11:00','03-08','对应题回收'],
+  ['2026-09-28','21:20','22:10','03-09','时间盒看课'],['2026-09-29','08:20','10:00','03-09','对应题回收'],
+  ['2026-09-29','21:30','22:20','03-10','核对，不计新课']
 ]);
 // The authored 9/2 first-day ledger had one linear-algebra block before the
 // user actually started on 9/3.  Give that replayed block the first verified
@@ -721,9 +784,9 @@ const probabilityWindow = (start,end) => {
 };
 const courseLedger = [
   {subject:'高数 · 李林880',now:'按用户分享的2027数学三带刷表，只做必做题',week:'第一章必做38题；第二章必做56题；选择做/特难题不排',done:'先做基础必做，再做综合必做；当天独立做完并标错因'},
-  {subject:'线代 · 没咋了',now:'03 矩阵相似 → 04 二次型；真实文件名已核对；03-10疑似重复，04-04仅数一跳过',duration:'剩余条目原始时长未从夸克列表公开；每格用90分钟时间盒，1.5倍速并允许暂停，未播完记时间戳',week:'9/2起按文件顺序推进；看课格后紧跟对应题/回测；10月继续04-05→04-11',done:'文件名对上 + 时间戳/公式卡 + 2道对应题；不把时间盒结束冒充看完'},
+  {subject:'线代 · 没咋了',now:'第2章收尾：2.9初等变换与初等矩阵已听完（100%）；2.8矩阵的分块停在34%，9/7断点收尾、9/8对应题；随后进03矩阵相似',duration:'剩余条目原始时长未从夸克列表公开；每格用90分钟时间盒，1.5倍速并允许暂停，未播完记时间戳',week:'03-01、03-02已按9/3、9/5原格执行；03-03起顺延2格（9/10恢复），9月底到03-10核对；04-01—04-03移入10月队列',done:'文件名对上 + 时间戳/公式卡 + 2道对应题；不把时间盒结束冒充看完'},
   {subject:'概率 · 方浩',now:'基础班30讲；第1讲文件名与“随机事件：概念、关系与运算”已核对；第1讲原始时长未验证；29–30为数一不排',duration:`第7–8讲 ${probabilityWindow(7,8)}；第9–10讲 ${probabilityWindow(9,10)}；第11–12讲 ${probabilityWindow(11,12)}`,week:'先第1–2讲，再第3–4、5–6；第二周起按7–8、9–10、11–12讲推进；每两讲配6道基础题',done:'听课留暂停余量；对应题独做并写错因，未播完留时间戳'},
-  {subject:'436 · 背诵笔记',now:'前三个内容单元已背；不把页码或外部卡号当成事实；从第4个继续',week:'9/2起周一至周六每天新增3个内容单元；周日只回收；未完次日只补1个，不挤睡眠',done:'按手头资料顺序合书复述；短答/计算完整落笔，记录断点'},
+  {subject:'436 · 背诵笔记',now:'《背诵笔记》结构已逐页核对：背诵篇10章213个编号知识点（p1–75）+ 计算题篇按章重点题（p76–168）；前三个内容单元已背，从第4个继续',week:'9/2起周一至周六每天新增3个内容单元；周日只回收；未完次日只补1个，不挤睡眠；9/30应到第78个（第四章），一轮预计11月下旬收尾',done:'按手头资料顺序合书复述；短答/计算完整落笔，记录断点章-节-内容单元'},
   {subject:'英语二 · 真题',now:'阅读量少，先做精读闭环',week:'2015–2019年各做 Text 1；单词每日写死数量，共新135+旧270',done:'每篇留1张错因卡；当天单词按格内数量收工'}
 ];
 function renderCourseLedger(){
@@ -734,6 +797,25 @@ function renderDurationIndex(){
   const el=document.querySelector('#duration-index'); if(!el)return;
   const entries=Object.entries(probabilityRawDurations).map(([lecture,raw])=>`<span class="duration-chip ${probabilityMathScope[lecture]?'excluded':''}">第${lecture}讲 ${raw}${probabilityMathScope[lecture]?` · ${probabilityMathScope[lecture]}不排`:''}</span>`).join('');
   el.innerHTML=`<div class="duration-index-heading"><b>方浩概率 · 夸克原始时长索引</b><span>第2–28讲已核对；第1讲待定位</span></div><div class="duration-chip-list">${entries}</div>`;
+}
+// 436《背诵笔记》真实目录：章 → 页码 → 编号知识点数 → 内容单元序号区间。
+// 数字全部来自2026-09-06对168页扫描件的逐页核对，页码即手头资料页码。
+function renderMajorSyllabus(){
+  const table=document.querySelector('#syllabus-table'); if(!table)return;
+  const rows=majorChapterCumulative.map(c=>`<tr><th scope="row">${c.no}</th><td>${c.title}</td><td>p${c.startPage}–${c.endPage}</td><td>${c.units}</td><td>第${c.from}–${c.to}个</td></tr>`).join('');
+  table.innerHTML=`<thead><tr><th scope="col">章</th><th scope="col">名称</th><th scope="col">页</th><th scope="col">知识点</th><th scope="col">内容单元</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th scope="row">合计</th><td>背诵篇 ${majorRecitationMaterial.recitationPages}；计算题篇 ${majorRecitationMaterial.calculationPages}（按章重点题+课后题）</td><td>—</td><td>${majorRecitationMaterial.totalUnits}</td><td>第1–${majorRecitationMaterial.totalUnits}个</td></tr></tfoot>`;
+  const progress=document.querySelector('#syllabus-progress'); if(!progress)return;
+  const cum=majorCumulativeForDate(dateKey(new Date())), ch=majorChapterForUnit(Math.min(cum,majorRecitationMaterial.totalUnits));
+  let finish=null;
+  const cursor=new Date(`${currentBaselineDate}T12:00:00`);
+  let total=majorBaseline.completedUnits;
+  while(total<majorRecitationMaterial.totalUnits){
+    if(cursor.getDay()!==0)total+=majorBaseline.dailyNewUnits;
+    if(total>=majorRecitationMaterial.totalUnits){finish=new Date(cursor);break;}
+    cursor.setDate(cursor.getDate()+1);
+  }
+  const pace=finish?`按每天${majorBaseline.dailyNewUnits}个、周日只回收，一轮背诵预计${finish.getMonth()+1}月${finish.getDate()}日前后收尾，赶在12月前`:'';
+  progress.textContent=`今天按表应背到第${Math.min(cum,majorRecitationMaterial.totalUnits)}个${ch?`（${ch.no}·${ch.title}）`:''}；${pace}。“内容单元”就是资料每章下按 1.、2.、3.… 编号的条目。`;
 }
 const rangeStarts = [];
 for (let d = new Date('2026-08-31T00:00:00'); d <= new Date('2026-12-14T00:00:00'); d.setDate(d.getDate()+7)) rangeStarts.push(new Date(d));
@@ -806,7 +888,7 @@ function progressFor(index, day, type, id='', rawTitle='', dateOverride=''){
         return {label:linearLessonLabel(future,'时间盒看课'),note:linearLessonNote(future,'时间盒看课'),output:'时间戳+公式卡'};
       }
       if(date>='2026-10-01' && (rawTitle.includes('线代主线')||rawTitle.includes('真题线代'))){
-        return {label:'线代 · 已学文件错题回测 + 分章真题',note:'04-05—04-11队列已排完；从错因表抽6题闭卷回测，不重复播放最后一节。',output:'6题正确率+错因'};
+        return {label:'线代 · 已学文件错题回测 + 分章真题',note:`${futureLinearQueue[0]}—04-11队列已排完；从错因表抽6题闭卷回测，不重复播放最后一节。`,output:'6题正确率+错因'};
       }
       return null;
     }
@@ -874,6 +956,7 @@ function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');
 function renderTimetable(){
   syncRangeToToday();
   renderDailyAgenda();
+  renderMajorSyllabus();
   const now=new Date();
   const dateTitle=document.querySelector('#date-title');
   const topDate=document.querySelector('#top-date');
