@@ -7,7 +7,7 @@ const must = (text, fragment, label) => { if (!text.includes(fragment)) throw ne
 ['小于的考研课表','id="daily-agenda"','id="phase-line"','id="live-clock"','kaoyan.mobileconfig','id="app-version"','apple-touch-icon'].forEach((x) => must(html,x,x));
 must(html,'9 月 6 日是实际起步日','first execution day explanation');
 must(html,'路线日期是锚点；日任务按实际执行日顺延','phase anchor explanation');
-['styles.css?v=profile-0907','app.js?v=profile-0907'].forEach((x) => must(html,x,x));
+['styles.css?v=install-0907','app.js?v=install-0907'].forEach((x) => must(html,x,x));
 must(html,'id="syllabus-table"','436 recitation syllabus section');
 must(html,'id="syllabus-progress"','436 syllabus progress line');
 ['本周完成度','今天如果只完成一件事','这张表怎么用','容错规则'].forEach((x) => { if (html.includes(x)) throw new Error(`obsolete copy remains: ${x}`); });
