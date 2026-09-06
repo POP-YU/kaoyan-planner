@@ -70,8 +70,7 @@ for (let day=2;day<=30;day++) {
 }
 const sep2 = strictDateSchedules['2026-09-02'];
 for (const required of [
-  '880第一章 第1–8题',
-  '880第一章 · 第9–24题',
+  '880做题号登记',
   '英语二 · 2010年 Text 1',
   '436 · 第1–3个已背内容单元'
 ]) if (!sep2.some(x => x.title.includes(required))) throw new Error(`September 2 restart task missing: ${required}`);
@@ -96,7 +95,7 @@ if (!linearAlgebraVerifiedLessons.find(x=>x.key==='03-10')?.caveat.includes('疑
 if (futureLinearQueue[0] !== '04-05' || !futureLinearLessonForDate('2026-10-01')?.includes?.('04-05') || futureLinearLessonForDate('2026-11-19') !== null) throw new Error('October linear continuation queue missing or repeats after exhaustion');
 if (!strictDateSchedules['2026-09-04'].some(x=>x.title.includes('方浩第1讲（随机事件：概念、关系与运算）'))) throw new Error('exact probability lecture topic normalisation missing');
 const sep6Shifted = datedBlocks(0).filter(x=>x.date==='2026-09-06').map(x=>`${x.title} ${x.note}`).join('\n');
-if (!sep6Shifted.includes('第1–3个已背内容单元') || !sep6Shifted.includes('2010年 Text 1') || !sep6Shifted.includes('880第一章 第1–8题') || !sep6Shifted.includes('第2章 08 矩阵的分块（断点收尾）')) throw new Error('September 6 as day 1 must replay the unfinished first study day with sequential 880 and verified linear naming');
+if (!sep6Shifted.includes('第1–3个已背内容单元') || !sep6Shifted.includes('2010年 Text 1') || !sep6Shifted.includes('880做题号登记') || !sep6Shifted.includes('第2章 08 矩阵的分块（断点收尾）')) throw new Error('September 6 as day 1 must replay the unfinished first study day with sequential 880 and verified linear naming');
 if (sep6Shifted.includes('第13–21个新内容单元') || sep6Shifted.includes('2010年 Text 2')) throw new Error('September 6 must not advance past the missed September 2 plan');
 if (sep6Shifted.includes('剩余课第1节') || sep6Shifted.includes('剩余课第2节')) throw new Error('September 6 must not expose vague linear lesson placeholders');
 if (!selfCheckRules || !taskCheck({type:'math',title:'880第一章 · 8题',note:''}).includes('概念/计算/思路')) throw new Error('math self-check rule missing');
@@ -110,8 +109,8 @@ for (const forbidden of ['基础选择1–13','拓展解答1–2','综合解答7
 }
 if (!mathCopy.includes('按题号顺序')) throw new Error('daily schedule must state the sequential 880 rule');
 const taskCount = rows => rows.reduce((sum,x)=>sum+(x.note.match(/(?:计划表)?必做(\d+)题/)?.[1] ? Number(x.note.match(/(?:计划表)?必做(\d+)题/)[1]) : 0),0);
-const chapter1Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-02'&&date<='2026-09-03').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第一章'));
-const chapter2Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-04'&&date<='2026-09-07').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第二章'));
+const chapter1Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-03'&&date<='2026-09-04').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第一章'));
+const chapter2Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-05'&&date<='2026-09-08').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第二章'));
 if (taskCount(chapter1Rows) !== 38) throw new Error(`chapter 1 daily required allocation must total 38, got ${taskCount(chapter1Rows)}`);
 if (taskCount(chapter2Rows) !== 56) throw new Error(`chapter 2 daily required allocation must total 56, got ${taskCount(chapter2Rows)}`);
 for (const [chapter,total] of [[3,86],[4,40],[5,41],[6,37]]) {
