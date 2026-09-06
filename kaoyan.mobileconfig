@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>ConsistencyUUID</key>
-	<string>841F8146-29F9-495B-8389-6A4E424025C5</string>
+	<string>2CB88528-E7B1-483A-81E6-5A6A2C479B24</string>
 	<key>PayloadContent</key>
 	<array>
 		<dict>
@@ -20,13 +20,13 @@
 			<key>PayloadDisplayName</key>
 			<string>考研课表</string>
 			<key>PayloadIdentifier</key>
-			<string>kaoyan.webclip</string>
+			<string>kaoyan.webclip.managed</string>
 			<key>PayloadOrganization</key>
 			<string>POP-YU</string>
 			<key>PayloadType</key>
-			<string>com.apple.webClip.unmanaged</string>
+			<string>com.apple.webClip.managed</string>
 			<key>PayloadUUID</key>
-			<string>3BFCA523-4668-4C50-A4BB-B813EBF20424</string>
+			<string>A758B52A-4DF0-4DA4-9F56-ED7CCB5DBAB6</string>
 			<key>PayloadVersion</key>
 			<integer>1</integer>
 			<key>Precomposed</key>
@@ -48,7 +48,7 @@
 	<key>PayloadType</key>
 	<string>Configuration</string>
 	<key>PayloadUUID</key>
-	<string>05036BD6-6EA4-4568-B68F-06A37E8991FE</string>
+	<string>7FA1A9A1-BAE3-4DE1-B205-7B5DC0687512</string>
 	<key>PayloadVersion</key>
 	<integer>1</integer>
 </dict>
