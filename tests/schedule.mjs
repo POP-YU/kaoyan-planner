@@ -57,11 +57,11 @@ for (const [day,title] of [[0,'英语单词 · 新20 + 旧40'],[1,'436 · p1–1
 }
 if (!schedules[2].some(x => x.day===1 && x.start==='14:50' && x.end==='16:35' && x.title.includes('436'))) throw new Error('Tuesday afternoon study block missing');
 if (strictStartDate !== '2026-09-02') throw new Error(`strict plan must restart on 2026-09-02, got ${strictStartDate}`);
-if (currentBaselineDate !== '2026-09-02' || majorBaseline.completedUnits !== 3 || majorBaseline.dailyNewUnits !== 3) throw new Error('436 baseline must be three completed units with three new units per study day');
+if (currentBaselineDate !== '2026-09-02' || majorBaseline.completedUnits !== 3 || majorBaseline.dailyNewUnits !== 9) throw new Error('436 baseline must be three completed units with nine new units per study day (fast multi-round pace)');
 if (actualScheduleStartDate !== '2026-09-06' || scheduleLagDays !== 4) throw new Error('2026-09-06 is the confirmed first execution day; the four unexecuted days 9/2-9/5 must create a four-day catch-up lag');
 if (scheduleSourceDate('2026-09-06') !== '2026-09-02' || scheduleSourceDate('2026-09-07') !== '2026-09-03' || scheduleSourceDate('2026-09-03') !== '2026-09-03') throw new Error('actual dates must consume the four unfinished ledgers in order from 2026-09-06');
-if (majorCumulativeForDate('2026-09-02') !== 6 || majorNewRangeForDate('2026-09-02').start !== 4 || majorNewRangeForDate('2026-09-02').end !== 6) throw new Error('436 September 2 ordinal range must start at units 4–6');
-if (majorNewRangeForDate('2026-09-06') !== null || majorCumulativeForDate('2026-09-06') !== 15) throw new Error('Sunday must be review-only for 436');
+if (majorCumulativeForDate('2026-09-02') !== 12 || majorNewRangeForDate('2026-09-02').start !== 4 || majorNewRangeForDate('2026-09-02').end !== 12) throw new Error('436 September 2 ordinal range must cover units 4-12 at the nine-per-day pace');
+if (majorNewRangeForDate('2026-09-06') !== null || majorCumulativeForDate('2026-09-06') !== 39) throw new Error('Sunday must be review-only for 436');
 for (const day of ['2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-06','2026-09-07','2026-09-08','2026-09-09','2026-09-10','2026-09-11','2026-09-12','2026-09-13']) {
   if (!strictDateSchedules[day]?.length) throw new Error(`strict daily schedule missing ${day}`);
 }
@@ -71,14 +71,14 @@ for (let day=2;day<=30;day++) {
 }
 const sep2 = strictDateSchedules['2026-09-02'];
 for (const required of [
-  '880第一章 · 基础选择8、12、13 + 基础填空3、4 + 基础解答1、2(2)、4',
+  '880第一章 · 基础全部8题 + 综合选择1、2、3、5、6、7、8、9',
   '英语二 · 2010年 Text 1',
-  '436 · 第4–6个新内容单元'
+  '436 · 第4–12个新内容单元'
 ]) if (!sep2.some(x => x.title.includes(required))) throw new Error(`September 2 restart task missing: ${required}`);
 if (!sep2.some(x => x.title.includes('外贸英文函电课内') && x.title.includes('静默'))) throw new Error('non-FHSU Wednesday class must carry a silent task');
 for (const exactCourse of ['财务管理','营销学']) if (!sep2.some(x => x.title===exactCourse && x.type==='fhsu')) throw new Error(`FHSU course must remain course-only: ${exactCourse}`);
 if (!sep2.some(x => x.start==='12:20' && x.title.includes('午休'))) throw new Error('sleep-protection nap is missing on September 2');
-if (!sep2.some(x => x.end==='24:00' && x.title.includes('最晚00:00'))) throw new Error('midnight sleep boundary missing');
+if (!sep2.some(x => x.end==='24:00' && x.title.includes('00:00关灯'))) throw new Error('midnight sleep boundary missing');
 if (sep2.some(x=>/p\d/.test(`${x.title} ${x.note}`))) throw new Error('rendered September 2 rows must not expose page-range shorthand');
 const sep2Linear=strictDateSchedules['2026-09-02'].find(x=>x.title.includes('第2章 08 矩阵的分块（断点收尾）'));
 if (!sep2Linear) throw new Error('the replayed first day must close chapter 2 with the verified 02-08 breakpoint lesson');
@@ -96,8 +96,8 @@ if (!linearAlgebraVerifiedLessons.find(x=>x.key==='03-10')?.caveat.includes('疑
 if (futureLinearQueue[0] !== '04-05' || !futureLinearLessonForDate('2026-10-01')?.includes?.('04-05') || futureLinearLessonForDate('2026-11-19') !== null) throw new Error('October linear continuation queue missing or repeats after exhaustion');
 if (!strictDateSchedules['2026-09-04'].some(x=>x.title.includes('方浩第1讲（随机事件：概念、关系与运算）'))) throw new Error('exact probability lecture topic normalisation missing');
 const sep6Shifted = datedBlocks(0).filter(x=>x.date==='2026-09-06').map(x=>`${x.title} ${x.note}`).join('\n');
-if (!sep6Shifted.includes('第4–6个新内容单元') || !sep6Shifted.includes('2010年 Text 1') || !sep6Shifted.includes('第2章 08 矩阵的分块（断点收尾）')) throw new Error('September 6 as day 1 must replay the unfinished first study day with verified linear naming');
-if (sep6Shifted.includes('第7–9个新内容单元') || sep6Shifted.includes('2010年 Text 2')) throw new Error('September 6 must not advance past the missed September 2 plan');
+if (!sep6Shifted.includes('第4–12个新内容单元（第一章）') || !sep6Shifted.includes('2010年 Text 1') || !sep6Shifted.includes('第2章 08 矩阵的分块（断点收尾）')) throw new Error('September 6 as day 1 must replay the unfinished first study day with verified linear naming');
+if (sep6Shifted.includes('第13–21个新内容单元') || sep6Shifted.includes('2010年 Text 2')) throw new Error('September 6 must not advance past the missed September 2 plan');
 if (sep6Shifted.includes('剩余课第1节') || sep6Shifted.includes('剩余课第2节')) throw new Error('September 6 must not expose vague linear lesson placeholders');
 if (!selfCheckRules || !taskCheck({type:'math',title:'880第一章 · 8题',note:''}).includes('概念/计算/思路')) throw new Error('math self-check rule missing');
 const math880Check = taskCheck({type:'math',title:'880第一章 · 8题',note:''});
@@ -110,8 +110,8 @@ for (const forbidden of ['基础选择1–13','拓展解答1–2','综合解答7
 }
 if (!mathCopy.includes('选择做/特难题不排')) throw new Error('daily schedule must state the 880 exclusion rule');
 const taskCount = rows => rows.reduce((sum,x)=>sum+(x.note.match(/(?:计划表)?必做(\d+)题/)?.[1] ? Number(x.note.match(/(?:计划表)?必做(\d+)题/)[1]) : 0),0);
-const chapter1Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-02'&&date<='2026-09-06').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第一章'));
-const chapter2Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-07'&&date<='2026-09-13').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第二章'));
+const chapter1Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-02'&&date<='2026-09-05').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第一章'));
+const chapter2Rows = Object.entries(strictDateSchedules).filter(([date])=>date>='2026-09-06'&&date<='2026-09-10').flatMap(([,rows])=>rows).filter(x=>x.type==='math'&&x.note.includes('必做')&&x.title.includes('880第二章'));
 if (taskCount(chapter1Rows) !== 38) throw new Error(`chapter 1 daily required allocation must total 38, got ${taskCount(chapter1Rows)}`);
 if (taskCount(chapter2Rows) !== 56) throw new Error(`chapter 2 daily required allocation must total 56, got ${taskCount(chapter2Rows)}`);
 for (const [chapter,total] of [[3,86],[4,40],[5,41],[6,37]]) {
@@ -121,19 +121,19 @@ for (const [chapter,total] of [[3,86],[4,40],[5,41],[6,37]]) {
 const sep29Rendered=datedBlocks(4).filter(x=>x.date==='2026-09-29'&&x.type==='major').map(x=>x.title).join('\n');
 const oct3Rendered=datedBlocks(4).filter(x=>x.date==='2026-10-03'&&x.type==='major').map(x=>x.title).join('\n');
 const oct4Rendered=datedBlocks(4).filter(x=>x.date==='2026-10-04'&&x.type==='major').map(x=>x.title).join('\n');
-if (!sep29Rendered.includes('第64–66个新内容单元（第三章–第四章）') || !oct3Rendered.includes('第73–75个新内容单元（第四章）') || !oct4Rendered.includes('第1–26个已背内容单元（第一章）') || !oct4Rendered.includes('第53–78个已背内容单元') || /p\d/.test(`${sep29Rendered}\n${oct3Rendered}\n${oct4Rendered}`)) throw new Error('436 ordinal first-pass/review rendering is wrong under the four-day lag');
-if (!oct3Rendered.includes('第73–75个新内容单元（第四章）')) throw new Error('436 ordinal labels must name the verified chapter from the actual 背诵笔记');
+if (!sep29Rendered.includes('第184–192个新内容单元（第九章）') || !oct3Rendered.includes('第211–213个新内容单元（第十章）') || !oct4Rendered.includes('第1–71个已背内容单元（第一章–第四章）') || !oct4Rendered.includes('第143–213个已背内容单元') || /p\d/.test(`${sep29Rendered}\n${oct3Rendered}\n${oct4Rendered}`)) throw new Error('436 ordinal first-pass/review rendering is wrong under the four-day lag');
+if (!oct3Rendered.includes('第211–213个新内容单元（第十章）')) throw new Error('436 ordinal labels must name the verified chapter from the actual 背诵笔记');
 if (sep29Rendered.includes('第214个') || oct4Rendered.includes('第214个')) throw new Error('ordinals must never run past the 213 verified units');
 for (const day of ['2026-09-13','2026-09-20','2026-09-27']) {
   if (!strictDateSchedules[day].some(x=>x.type==='english' && x.title.includes('小作文审题'))) throw new Error(`low-dose September writing baseline missing ${day}`);
 }
 const sep30 = strictDateSchedules['2026-09-30'];
 if (!sep30.some(x=>x.type==='math' && x.title.includes('九月闭卷小测6题') && x.note.includes('第1–6章各抽1道') && x.note.includes('基础/中等代表题') && x.note.includes('选择做/特难题不进小测'))) throw new Error('September 30 representative cross-chapter math readiness gate missing');
-for (const unitRange of ['第1–26个已背内容单元','第27–52个已背内容单元','第53–78个已背内容单元']) {
+for (const unitRange of ['第1–71个已背内容单元','第72–142个已背内容单元','第143–213个已背内容单元']) {
   if (!sep30.some(x=>x.type==='major' && x.title.includes(unitRange))) throw new Error(`September 30 436 framework gate missing ${unitRange}`);
 }
-if (!sep30.some(x=>x.type==='major' && x.title.includes('第1–26个已背内容单元（第一章）'))) throw new Error('September 30 436 gate must map ordinal ranges to the verified chapters');
-if (!courseLedger.some(x=>x.subject.includes('436') && x.now.includes('213个编号知识点') && x.week.includes('应到第78个') && x.week.includes('实际'))) throw new Error('436 ledger must carry the verified 背诵笔记 totals and the lagged September gate');
+if (!sep30.some(x=>x.type==='major' && x.title.includes('第1–71个已背内容单元（第一章–第四章）'))) throw new Error('September 30 436 gate must map ordinal ranges to the verified chapters');
+if (!courseLedger.some(x=>x.subject.includes('436') && x.now.includes('213个编号知识点') && x.week.includes('一轮213个于9/29账') && x.week.includes('实际'))) throw new Error('436 ledger must carry the verified recitation totals and the 9/29 first-pass closeout');
 // 2026-09-06：436《背诵笔记》结构成为内容单元序号的唯一事实来源。
 if (majorRecitationMaterial.source !== '背诵笔记（436 资产评估专业基础）' || majorRecitationMaterial.totalUnits !== 213 || majorRecitationMaterial.pages !== 168) throw new Error('436 recitation material must be the verified 背诵笔记 with 213 numbered points across 168 pages');
 if (majorChapterCumulative.length !== 10 || majorChapterCumulative.reduce((s,c)=>s+c.units,0) !== 213 || majorChapterCumulative[3].to !== 108 || majorChapterCumulative[9].from !== 202) throw new Error('436 chapter cumulative map must cover the recitation part in the verified order');
