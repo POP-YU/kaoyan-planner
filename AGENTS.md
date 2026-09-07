@@ -33,7 +33,7 @@ iPhone 上已装"描述文件"（Web Clip），图标打开的就是线上地址
 | `strictDateSchedules` | 9/2–9/30 每日账面（键=账面日期，显示时按滞后映射到实际日期） |
 | `actualScheduleStartDate` / `scheduleLagDays` | 实际第 1 天与顺延天数（当前 2026-09-06 / 4 天） |
 | `septemberContinuation` | 9/14–9/30 每日 spec（436 页段 / 880 题号 / 英语 / 概率） |
-| `currentBaselineDate` / `majorBaseline` | 436 起点（前 3 个已背）与每日新单元数（9 个/学习日） |
+| `currentBaselineDate` / `majorBaseline` | 436 起点（前 3 个已背）与每日新单元数（5 个/学习日） |
 | `majorRecitationMaterial` / `majorChapterCumulative` | 《背诵笔记》真实结构：10 章 213 个编号知识点，"第 N 个内容单元"的唯一事实来源 |
 | `linearAlgebraVerifiedLessons` / `linearAlgebraLessonSlots` / `futureLinearQueue` | 线代链：核对过的真实文件名、9 月排期、10 月队列 |
 | `probabilityRawDurations` | 方浩概率逐讲原始时长（夸克核对） |
@@ -57,8 +57,8 @@ git add -A && git commit -m "..." && git push origin main                 # 推�
 ## 当前锚点快照（2026-09-07，改动前先确认用户有没有新进展）
 
 - **实际第 1 天 = 2026-09-06**，滞后 4 天（9/2–9/5 未执行）。
-- **436**：只背了前 3 个（9/7 确认），新单元从 9/3 账起、9 个/学习日、周日只回收；
-  一轮 213 个于 9/30 账收口并总回收；资料结构见 `majorRecitationMaterial`。
+- **436**：只背了前 3 个（9/7 确认），新单元从 9/3 账起、5 个/学习日（用户 2026-09-07 拍板：非专业出身、20–30 分钟/题，不死磕）、周日只回收；
+  一轮 213 个预计 10/25 账收口并总回收；资料结构见 `majorRecitationMaterial`。
 - **880**：2026-09-07 中午用户拍板改回**带刷表跳选题号**（推翻同日早间“顺序推进”方案）。
   逐日题单在 `math880BrushPlan`（44 天，实际日期 9/8 开刷 → 10/21 收尾；必做 828、选择做 37、
   特难题 16，合计 881，已与原带刷计划表逐章逐题型核对一致）。渲染时 `applyBrushPlanOverlay`
@@ -67,6 +67,7 @@ git add -A && git commit -m "..." && git push origin main                 # 推�
 - **线代**：第 2 章只剩 2.8 矩阵的分块（34% 断点，9/3 账已排收尾）；2.9 已听完（100%，永不排课）；
   之后 03 矩阵相似 → 04 二次型按真实文件名推进（`linearAlgebraVerifiedLessons`）。
 - **概率**：方浩基础班 30 讲，第 1 讲文件名已核对，29/30 讲数一跳过。
+- **FHSU 课程行纯净化（硬约束）**：用户 2026-09-07 明确要求“fhsu 的课程不能够允许你占用”——报关实务/外贸英文函电/国际贸易实务/营销学/财务管理/商业政策 六门课只显示课程名称（type=`fhsu`、note 为空、不嵌入 880/线代/概率/436 任务）。880 带刷题单、线代、概率一律落在课余/晚间数学格：`continuationRows` 里原本写进 FHSU 课内格的 `spec.mathMorning` / `spec.math` 已改为晚间 `mathMorningEvening(spec)` 槽位；9/30 门禁日的 `majorGate[0]`（第1–71个）也从课内格移到了晚间 major 槽，三个回收桶（1–71 / 72–142 / 143–213）全部保留。
 - **作息**：06:00 起、07:00 在家加练、07:50 出门 30 分钟到校、18:05 回家、00:00 关灯；
   午休 12:20–12:45（25–35 分钟封顶）。
 - **iPhone**：描述文件（`kaoyan.mobileconfig`，Web Clip 指向线上）已可用，装一次即常新。
