@@ -34,3 +34,11 @@
 .syllabus-section{margin:0 0 34px;padding-top:6px}.syllabus-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin:15px 0 12px}.syllabus-heading h4{font-size:20px;margin:5px 0 0;letter-spacing:-.04em}.syllabus-heading p{font-size:12px;line-height:1.7;color:var(--muted);margin:7px 0 0;max-width:860px}.syllabus-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:var(--shadow)}.syllabus-table{width:100%;min-width:720px;border-collapse:collapse;text-align:left}.syllabus-table th,.syllabus-table td{padding:10px 13px;border-bottom:1px solid #eee8e1;font-size:11px;line-height:1.5;vertical-align:top}.syllabus-table thead th{background:#f5f0ea;color:#91877d;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;white-space:nowrap}.syllabus-table tbody th{font-size:12px;color:var(--accent-dark);white-space:nowrap}.syllabus-table tbody td:first-of-type{min-width:190px}.syllabus-table tbody tr:last-child th,.syllabus-table tbody tr:last-child td{border-bottom:0}.syllabus-table tfoot th,.syllabus-table tfoot td{background:#fbf8f4;color:#756a60;border-top:1px solid var(--line);font-size:10px}@media(max-width:900px){.syllabus-heading{display:block}.syllabus-heading p{margin-top:9px}}
 
 .footer a{color:inherit;text-decoration:underline;text-underline-offset:3px}.footer a:active{color:var(--accent)}
+/* 其他校内课：并列靠边的边栏，纯展示、不排任务；与主线 880/436 分开。 */
+.agenda-sidebar{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;border-top:1px dashed var(--line);background:#faf7f2;padding:12px 15px 14px;margin-top:4px}
+.agenda-sidebar .sidebar-heading{grid-column:1/-1;font-size:10px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:2px}
+.agenda-sidebar .side-course{display:flex;flex-direction:column;gap:3px;border:1px solid var(--line);border-left:3px solid var(--lav);border-radius:10px;padding:9px 11px;background:#fffdf9}
+.agenda-sidebar .side-course time{font:700 10px var(--font-numeric);color:var(--muted);letter-spacing:.02em}
+.agenda-sidebar .side-course b{font-size:12px;line-height:1.4;color:var(--ink)}
+.agenda-sidebar .side-course.fhsu{border-left-color:#aaa3b9}
+@media(max-width:520px){.agenda-sidebar{grid-template-columns:1fr}}

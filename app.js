@@ -1,21 +1,31 @@
-const APP_VERSION = 'brush-0907b';
+const APP_VERSION = 'brush-0907c';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
 const mustListen = (id,day,start,end,title) => classBlock(id,day,start,end,title,'fhsu');
 const baseClasses = [
-  classBlock('mon-report',0,'08:20','09:55','报关实务'),
+  classBlock('mon-report',0,'08:20','09:55','报关实务','course'),
   mustListen('mon-marketing',0,'10:10','11:45','营销学'),
   mustListen('mon-finance-moved',0,'13:15','14:50','财务管理'),
   mustListen('tue-policy',1,'13:15','14:50','商业政策'),
-  classBlock('wed-letter',2,'08:20','09:55','外贸英文函电'),
+  classBlock('wed-letter',2,'08:20','09:55','外贸英文函电','course'),
   mustListen('wed-finance',2,'13:15','14:50','财务管理'),
   mustListen('wed-marketing',2,'15:00','16:35','营销学'),
-  classBlock('thu-report',3,'08:20','09:55','报关实务'),
+  classBlock('thu-report',3,'08:20','09:55','报关实务','course'),
   mustListen('thu-policy',3,'10:10','11:45','商业政策'),
-  classBlock('thu-trade-practice',3,'15:00','16:35','国际贸易实务'),
-  classBlock('fri-letter',4,'10:10','11:45','外贸英文函电')
+  classBlock('thu-trade-practice',3,'15:00','16:35','国际贸易实务','course'),
+  classBlock('fri-letter',4,'10:10','11:45','外贸英文函电','course')
 ];
+// 课程元数据：教师 + 教室（来自用户课表截图）。fhsu 行 title 必须保持裸课名
+// （tests/schedule.mjs 守卫），教室/教师只在渲染时追加，不污染数据行。
+const courseInfo = {
+  '报关实务': {teacher:'李宁', room:'西B203'},
+  '营销学': {teacher:'朱智', room:'西B102', foreign:true},
+  '财务管理': {teacher:'胡成（胡戒）', room:'西B202', foreign:true},
+  '商业政策': {teacher:'于洁', room:'西B401', foreign:true},
+  '外贸英文函电': {teacher:'外教', room:'外A403', foreign:true},
+  '国际贸易实务': {teacher:'高嵩', room:'外A403'}
+};
 const returnSlots = [['16:35','17:00'],['16:35','17:00'],['16:35','17:00'],['16:35','17:00'],['15:45','16:05'],['16:40','17:00'],['16:00','16:20']];
 const routines = days.flatMap((_,i)=>[
   t(`routine-wake-${i}`,i,'06:00','06:20','起床 · 喝水洗漱','routine','20分钟内一次做完','六点起床后的第一格只负责把人叫醒。',['起床喝水','洗脸刷牙','换衣服'],'06:20前结束'),
@@ -142,7 +152,7 @@ const strictMorning = (date, title, type, note, rows) => strict(date,[
 ]);
 const strictDateSchedules = {
   '2026-09-02': strictMorning('2026-09-02','英语单词 · 新20 + 旧40','english','40分钟主动回想',[
-    ['08:20','09:55','外贸英文函电','fhsu',''],
+    ['08:20','09:55','外贸英文函电','course',''],
     ['09:55','10:10','下课休息 · 走动补水','free','15分钟，不刷短视频'],
     ['10:10','11:45','436 · p1–6框架默写 + 短答2题','major','先合书写框架，再对照补评分点'],
     ['11:45','12:20','午饭 · 直接去吃','meal','不留在教室拖延'],
@@ -161,14 +171,14 @@ const strictDateSchedules = {
     ['23:00','23:20','英语单词 · 今日薄弱词30','english','只回想今日错词，不开新词']
   ]),
   '2026-09-03': strictMorning('2026-09-03','880第一章 · 第1–4题（顺序启动）','math','必做4题（按题号顺序，从第1题开始）；错题次日回做',[
-    ['08:20','09:55','报关实务','fhsu',''],
+    ['08:20','09:55','报关实务','course',''],
     ['09:55','10:10','下课休息 · 走动补水','free','15分钟'],
     ['10:10','11:45','商业政策','fhsu',''],
     ['11:45','12:20','午饭 · 直接去吃','meal','吃完离开餐区'],
     ['12:20','12:45','午休 · 闭眼25分钟','sleep','定闹钟'],
     ['12:45','13:50','436 · p4–12 + 短答2题','major','新内容学习：先框架再闭卷；每题写到评分点'],
     ['13:50','15:00','英语二 · 2010年 Text 2','english','20分钟限时 + 证据句/干扰项复盘'],
-    ['15:00','16:35','国际贸易实务','fhsu',''],
+    ['15:00','16:35','国际贸易实务','course',''],
     ['16:35','17:00','通勤 · 学校→家','routine','约20分钟'],
     ['17:00','17:40','晚饭 + 放空','meal','不刷学习视频'],
     ['17:40','18:00','短休 · 洗脸走动','free','20分钟'],
@@ -182,7 +192,7 @@ const strictDateSchedules = {
   '2026-09-04': strictMorning('2026-09-04','英语单词 · 新25 + 旧50','english','75词主动回想',[
     ['08:20','10:00','概率 · 方浩第1–2讲 + 基础题6道','math','第2讲原始37:15；第1讲时长未验证，1.5倍速并留暂停'],
     ['10:00','10:10','休息 · 走动补水','free','10分钟'],
-    ['10:10','11:45','外贸英文函电','fhsu',''],
+    ['10:10','11:45','外贸英文函电','course',''],
     ['11:45','12:20','午饭 · 直接去吃','meal','不边吃边学习'],
     ['12:20','12:45','午休 · 闭眼25分钟','sleep','定闹钟'],
     ['12:45','13:45','Blackboard作业 · 只做已开放必交项','homework','先看截止时间；完成并确认上传'],
@@ -236,7 +246,7 @@ const strictDateSchedules = {
     ['22:50','23:20','英语单词 · 新15 + 旧30','english','45词回想']
   ]),
   '2026-09-07': strictMorning('2026-09-07','英语单词 · 新20 + 旧40','english','60词主动回想',[
-    ['08:20','09:55','报关实务','fhsu',''],
+    ['08:20','09:55','报关实务','course',''],
     ['09:55','10:10','下课休息 · 走动补水','free','15分钟'],
     ['10:10','11:45','营销学','fhsu',''],
     ['11:45','12:20','午饭','meal','正常吃饭'],
@@ -274,7 +284,7 @@ const strictDateSchedules = {
     ['22:20','23:20','英语单词 · 新20 + 旧40','english','60词主动回想']
   ]),
   '2026-09-09': strictMorning('2026-09-09','英语单词 · 新20 + 旧40','english','60词主动回想',[
-    ['08:20','09:55','外贸英文函电','fhsu',''],
+    ['08:20','09:55','外贸英文函电','course',''],
     ['09:55','10:10','下课休息 · 走动补水','free','15分钟'],
     ['10:10','11:45','436 · p49–57 + 短答2题','major','新内容学习：先框架再闭卷'],
     ['11:45','12:20','午饭','meal','正常吃饭'],
@@ -294,14 +304,14 @@ const strictDateSchedules = {
     ['23:00','23:20','英语单词 · 今日薄弱词30','english','只回收错词']
   ]),
   '2026-09-10': strictMorning('2026-09-10','880第二章 · 已做错题4题','math','闭卷回做，写错因',[
-    ['08:20','09:55','报关实务','fhsu',''],
+    ['08:20','09:55','报关实务','course',''],
     ['09:55','10:10','下课休息 · 走动补水','free','15分钟'],
     ['10:10','11:45','商业政策','fhsu',''],
     ['11:45','12:20','午饭','meal','正常吃饭'],
     ['12:20','12:45','午休 · 闭眼25分钟','sleep','定闹钟'],
     ['12:45','13:50','436 · p58–66 + 短答2题','major','新内容学习：先框架再闭卷'],
     ['13:50','15:00','英语二 · 2011年 Text 4','english','20分钟限时 + 50分钟复盘'],
-    ['15:00','16:35','国际贸易实务','fhsu',''],
+    ['15:00','16:35','国际贸易实务','course',''],
     ['16:35','17:00','通勤 · 学校→家','routine','约20分钟'],
     ['17:00','17:40','晚饭 + 放空','meal','正常吃饭'],
     ['17:40','18:00','短休 · 准备资料','free','20分钟'],
@@ -316,7 +326,7 @@ const strictDateSchedules = {
   '2026-09-11': strictMorning('2026-09-11','英语单词 · 新25 + 旧50','english','75词主动回想',[
     ['08:20','10:00','概率 · 方浩第13–14讲 + 基础题6道','math','原始40:37；1.5倍速+暂停约35分钟'],
     ['10:00','10:10','休息 · 走动补水','free','10分钟'],
-    ['10:10','11:45','外贸英文函电','fhsu',''],
+    ['10:10','11:45','外贸英文函电','course',''],
     ['11:45','12:20','午饭','meal','正常吃饭'],
     ['12:20','12:45','午休 · 闭眼25分钟','sleep','定闹钟'],
     ['12:45','13:45','Blackboard作业 · 只做已开放必交项','homework','完成并确认上传'],
@@ -720,22 +730,22 @@ const continuationRows = (date,spec) => {
   const politics=duration=>['政治 · 选择题10道','politics',`${duration-10}分钟做题 + 10分钟错因`];
   const prob=spec.prob?[spec.prob,'math','1.5倍速允许暂停；课程结束立即做6题']:(spec.secondaryMath?[spec.secondaryMath[0],'math',spec.secondaryMath[1]]:null);
   if(day===3 && spec.majorGate)return [
-    ['08:20','09:55','外贸英文函电','fhsu',''],['09:55','10:10','下课休息 · 走动补水','free','15分钟'],['10:10','11:45',spec.majorGate[1][0],'major',spec.majorGate[1][1]],...lunch,['12:45','13:15',...politics(30)],['13:15','14:50','财务管理','fhsu',''],['14:50','15:00','下课休息 · 走动10分钟','free','换教室'],['15:00','16:35','营销学','fhsu',''],...evening,['18:00','18:50',...(prob||['数学 · 当日错题回做4题','math','闭卷回做'])],['18:50','20:30',...math],['20:30','21:10',...english],['21:10','22:00',spec.majorGate[0][0],'major',spec.majorGate[0][1]],['22:00','22:50',spec.majorGate[2][0],'major',spec.majorGate[2][1]],['22:50','23:20','月末门禁 · 十月起点登记','buffer',spec.monthGate]
+    ['08:20','09:55','外贸英文函电','course',''],['09:55','10:10','下课休息 · 走动补水','free','15分钟'],['10:10','11:45',spec.majorGate[1][0],'major',spec.majorGate[1][1]],...lunch,['12:45','13:15',...politics(30)],['13:15','14:50','财务管理','fhsu',''],['14:50','15:00','下课休息 · 走动10分钟','free','换教室'],['15:00','16:35','营销学','fhsu',''],...evening,['18:00','18:50',...(prob||['数学 · 当日错题回做4题','math','闭卷回做'])],['18:50','20:30',...math],['20:30','21:10',...english],['21:10','22:00',spec.majorGate[0][0],'major',spec.majorGate[0][1]],['22:00','22:50',spec.majorGate[2][0],'major',spec.majorGate[2][1]],['22:50','23:20','月末门禁 · 十月起点登记','buffer',spec.monthGate]
   ];
   if(day===1)return [
-    ['08:20','09:55',['报关实务','fhsu','']],['09:55','10:10','下课休息 · 走动补水','free','15分钟'],['10:10','11:45','营销学','fhsu',''],...lunch,['12:45','13:15',...politics(30)],['13:15','14:50','财务管理','fhsu',''],    ['14:50','16:35',...major],...evening,...mathMorningEvening(spec),['18:00','20:30',...math],['20:30','21:20',...english],[ '21:20','22:10',...(prob||['数学 · 当日错题回做4题','math','今日事今日毕'])],['22:10','23:00','436 · 当日新页闭卷复述','major','卡住再翻'],['23:00','23:20','英语单词 · 今日薄弱词30','english','只回收错词']
+    ['08:20','09:55','报关实务','course',''],['09:55','10:10','下课休息 · 走动补水','free','15分钟'],['10:10','11:45','营销学','fhsu',''],...lunch,['12:45','13:15',...politics(30)],['13:15','14:50','财务管理','fhsu',''],    ['14:50','16:35',...major],...evening,...mathMorningEvening(spec),['18:00','20:30',...math],['20:30','21:20',...english],[ '21:20','22:10',...(prob||['数学 · 当日错题回做4题','math','今日事今日毕'])],['22:10','23:00','436 · 当日新页闭卷复述','major','卡住再翻'],['23:00','23:20','英语单词 · 今日薄弱词30','english','只回收错词']
   ];
   if(day===2)return [
     ['08:20','10:00',...(prob||['数学 · 上一章错题6道','math','闭卷回做'])],['10:00','10:15','休息 · 走动补水','free','15分钟'],['10:15','11:45',...major],...lunch,['12:45','13:15',...politics(30)],['13:15','14:50','商业政策','fhsu',''],['14:50','15:40',...english],['15:40','16:35','436 · 新旧页滚动回忆','major','写一页框架'],...evening,['18:00','20:30',...math],['20:30','21:30','436 · 短答2题 + 计算1题','major','按评分点完整书写'],['21:30','22:20','数学 · 当日错题回做4题','math','立即复盘'],['22:20','23:20','英语单词 · 新20 + 旧40','english','60词主动回想']
   ];
   if(day===3)return [
-    ['08:20','09:55',['外贸英文函电','fhsu','']],['09:55','10:10','下课休息 · 走动补水','free','15分钟'],['10:10','11:45',`436 · ${spec.major} + 短答2题`,'major','新内容学习：先框架再闭卷'],...lunch,['12:45','13:15',...politics(30)],['13:15','14:50','财务管理','fhsu',''],['14:50','15:00','下课休息 · 走动10分钟','free','换教室'],['15:00','16:35','营销学','fhsu',''],...evening,...mathMorningEvening(spec),['18:00','18:50',...(prob||['数学 · 上一日错题4题','math','闭卷回做'])],['18:50','21:20',...math],['21:20','22:10',...english],['22:10','23:00','436 · 当日新页闭卷复述','major','卡住再翻'],['23:00','23:20','英语单词 · 今日薄弱词30','english','只回收错词']
+    ['08:20','09:55','外贸英文函电','course',''],['09:55','10:10','下课休息 · 走动补水','free','15分钟'],['10:10','11:45',`436 · ${spec.major} + 短答2题`,'major','新内容学习：先框架再闭卷'],...lunch,['12:45','13:15',...politics(30)],['13:15','14:50','财务管理','fhsu',''],['14:50','15:00','下课休息 · 走动10分钟','free','换教室'],['15:00','16:35','营销学','fhsu',''],...evening,...mathMorningEvening(spec),['18:00','18:50',...(prob||['数学 · 上一日错题4题','math','闭卷回做'])],['18:50','21:20',...math],['21:20','22:10',...english],['22:10','23:00','436 · 当日新页闭卷复述','major','卡住再翻'],['23:00','23:20','英语单词 · 今日薄弱词30','english','只回收错词']
   ];
   if(day===4)return [
-    ['08:20','09:55',['报关实务','fhsu','']],['09:55','10:10','下课休息 · 走动补水','free','15分钟'],['10:10','11:45','商业政策','fhsu',''],...lunch,['12:45','13:35',...english],['13:35','14:15',...politics(40)],['14:15','15:00',`436 · ${spec.major}新内容学习`,'major','先框架再闭卷'],['15:00','16:35','国际贸易实务','fhsu',''],...evening,...mathMorningEvening(spec),['18:00','19:30',...math],['19:30','20:30',...(prob||['数学 · 公式与错因回想','math','不看答案先写'])],['20:30','22:00','436 · 当日新页闭卷复述 + 短答2题','major','完整输出'],['22:00','23:20','英语单词 · 新25 + 旧50','english','75词主动回想']
+    ['08:20','09:55','报关实务','course',''],['09:55','10:10','下课休息 · 走动补水','free','15分钟'],['10:10','11:45','商业政策','fhsu',''],...lunch,['12:45','13:35',...english],['13:35','14:15',...politics(40)],['14:15','15:00',`436 · ${spec.major}新内容学习`,'major','先框架再闭卷'],['15:00','16:35','国际贸易实务','course',''],...evening,...mathMorningEvening(spec),['18:00','19:30',...math],['19:30','20:30',...(prob||['数学 · 公式与错因回想','math','不看答案先写'])],['20:30','22:00','436 · 当日新页闭卷复述 + 短答2题','major','完整输出'],['22:00','23:20','英语单词 · 新25 + 旧50','english','75词主动回想']
   ];
   if(day===5)return [
-    ['08:20','10:00',...(prob||['数学 · 上一章错题6道','math','闭卷回做'])],['10:00','10:10','休息 · 走动补水','free','10分钟'],['10:10','11:45',['外贸英文函电','fhsu','']],...lunch,['12:45','13:45','Blackboard作业 · 只做已开放必交项','homework','完成并确认上传'],['13:45','15:45',`436 · ${spec.major} + 计算1题 + 短答2题`,'major','新内容学习；计算写完整步骤'],['15:45','16:05','通勤 · 学校→家','routine','约20分钟'],['16:05','17:00','休息 · 洗澡/补水','free','明确恢复'],['17:00','17:40','晚饭 + 放空','meal','正常吃饭'],['17:40','18:00','短休 · 准备资料','free','20分钟'],...mathMorningEvening(spec),['18:00','20:30',...math],['20:30','21:20',...english],['21:20','22:00',...politics(40)],['22:00','23:00','436 · 当日新页闭卷复述','major','卡住再翻'],['23:00','23:20','英语单词 · 今日薄弱词30','english','只回收错词']
+    ['08:20','10:00',...(prob||['数学 · 上一章错题6道','math','闭卷回做'])],['10:00','10:10','休息 · 走动补水','free','10分钟'],['10:10','11:45','外贸英文函电','course',''],...lunch,['12:45','13:45','Blackboard作业 · 只做已开放必交项','homework','完成并确认上传'],['13:45','15:45',`436 · ${spec.major} + 计算1题 + 短答2题`,'major','新内容学习；计算写完整步骤'],['15:45','16:05','通勤 · 学校→家','routine','约20分钟'],['16:05','17:00','休息 · 洗澡/补水','free','明确恢复'],['17:00','17:40','晚饭 + 放空','meal','正常吃饭'],['17:40','18:00','短休 · 准备资料','free','20分钟'],...mathMorningEvening(spec),['18:00','20:30',...math],['20:30','21:20',...english],['21:20','22:00',...politics(40)],['22:00','23:00','436 · 当日新页闭卷复述','major','卡住再翻'],['23:00','23:20','英语单词 · 今日薄弱词30','english','只回收错词']
   ];
   if(day===6)return [
     ['08:20','10:20',...(prob||['数学 · 上一章错题回测8题','math','闭卷完成'])],['10:20','10:35','休息 · 走动补水','free','15分钟'],['10:35','11:45',...major],...lunch,['12:45','13:45','Blackboard作业 · 周六开放项','homework','没有新作业就休息'],['13:45','14:35',...english],['14:35','15:35','436 · 短答2题 + 计算1题','major','按评分点写'],['15:35','16:20','英语单词 · 薄弱词30','english','只回收错词'],['16:20','16:40','通勤 · 学校→家','routine','约20分钟'],['16:40','17:00','休息 · 补水','free','20分钟'],['17:00','17:40','晚饭 + 放空','meal','正常吃饭'],['17:40','18:00','短休 · 准备资料','free','20分钟'],['18:00','20:30',...math],['20:30','21:45','436 · 本周新增页闭卷总框架','major','压成一张纸'],['21:45','22:25',...politics(40)],['22:25','23:20','数学/英语 · 当日错因收口','buffer','今日事今日毕']
@@ -1070,7 +1080,7 @@ function progressFor(index, day, type, id='', rawTitle='', dateOverride=''){
 }
 function datedBlocks(index=currentRangeIndex){
   const dates=datesForRange(index); const phase=phaseForRange(index); const focus=schedules[phase]||[];
-  const special=(index===9||index===10)?[classBlock('sat-politics',5,'08:20','11:45','形势与政策4')]:[];
+  const special=(index===9||index===10)?[classBlock('sat-politics',5,'08:20','11:45','形势与政策4','course')]:[];
   const startWeekIntensity=index===0?highIntensityStartWeek:[];
   let result=[...routines,...focus,...startWeekIntensity,...special].map(x=>{
     const y={...x}; const d=dates[x.day], key=dateKey(d), sourceKey=scheduleSourceDate(key); y.date=key;
@@ -1125,7 +1135,13 @@ function updateCurrentAgenda(){
     row.classList.toggle('is-past',current>=end);
   });
 }
-function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);const data=buildDayAgenda(dayBlocks,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('')}</div>`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
+function courseDisplayTitle(x){
+  const info=courseInfo[x.title];
+  if(!info)return x.title;
+  const foreignTag=(info.foreign && info.teacher!=='外教')?' · 外教':'';
+  return `${x.title} · ${info.teacher} · ${info.room}${foreignTag}`;
+}
+function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);const courseItems=dayBlocks.filter(x=>x.type==='course');const mainBlocks=dayBlocks.filter(x=>x.type!=='course');const data=buildDayAgenda(mainBlocks,currentRangeIndex,dayIndex);const decorate=x=>['course','fhsu'].includes(x.type)?courseDisplayTitle(x):x.title;host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';const mainHtml=data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${decorate(x)}</b><span>${x.note||''}</span></div></div>`).join('');const sideHtml=courseItems.length?`<div class="agenda-sidebar"><div class="sidebar-heading">其他校内课 · 并列靠边（不排任务）</div>${courseItems.map(x=>`<div class="side-course ${x.type}"><time>${x.start}–${x.end}</time><b>${courseDisplayTitle(x)}</b></div>`).join('')}</div>`:'';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${sideHtml}`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
 function renderTimetable(){
   syncRangeToToday();
   renderDailyAgenda();

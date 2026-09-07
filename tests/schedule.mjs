@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex,courseInfo};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex,courseInfo} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -106,10 +106,10 @@ for (const required of [
   '英语二 · 2010年 Text 1',
   '436 · 第1–3个已背内容单元'
 ]) if (!sep2.some(x => x.title.includes(required))) throw new Error(`September 2 restart task missing: ${required}`);
-if (!sep2.some(x => x.title==='外贸英文函电' && x.type==='fhsu')) throw new Error('9/2 in-class slot must be a pure FHSU course (not occupied by 880)');
+if (!sep2.some(x => x.title==='外贸英文函电' && x.type==='course')) throw new Error('9/2 外贸英文函电 must be a pure non-fhsu course slot (not occupied by 880)');
 for (const exactCourse of ['财务管理','营销学']) if (!sep2.some(x => x.title===exactCourse && x.type==='fhsu')) throw new Error(`FHSU course must remain course-only: ${exactCourse}`);
 // 全局守卫：任何 strict 日的 FHSU 课程格都不得内嵌 880/线代/概率/做题内容。
-for (const [date,rows] of Object.entries(strictDateSchedules)) for (const x of rows) if (x.type==='fhsu' && /880|线代|方浩|概率|做题|题单|错题|必做|选择做/.test(`${x.title} ${x.note}`)) throw new Error(`FHSU course slot ${date} "${x.title}" must stay course-only (no 880/math embedded)`);
+for (const [date,rows] of Object.entries(strictDateSchedules)) for (const x of rows) if ((x.type==='fhsu' || x.type==='course') && /880|线代|方浩|概率|做题|题单|错题|必做|选择做/.test(`${x.title} ${x.note}`)) throw new Error(`course slot ${date} "${x.title}" must stay course-only (no 880/math embedded)`);
 if (!sep2.some(x => x.start==='12:20' && x.title.includes('午休'))) throw new Error('sleep-protection nap is missing on September 2');
 if (!sep2.some(x => x.end==='24:00' && x.title.includes('00:00关灯'))) throw new Error('midnight sleep boundary missing');
 if (sep2.some(x=>/p\d/.test(`${x.title} ${x.note}`))) throw new Error('rendered September 2 rows must not expose page-range shorthand');
@@ -206,6 +206,20 @@ for (const [date, rows] of Object.entries(strictDateSchedules)) {
     if (!allowedFhsuTitles.has(row.title) || row.note) throw new Error(`FHSU row must remain course-name-only: ${date} ${row.title}`);
   }
 }
+// 2026-09-07 晚间：非 fhsu 校内课改为 type 'course'，并列靠边、不排任务。
+const nonFhsuCourses=new Set(['报关实务','外贸英文函电','国际贸易实务','形势与政策4']);
+for (const [date,rows] of Object.entries(strictDateSchedules)) {
+  for (const row of rows.filter(x=>nonFhsuCourses.has(x.title))) {
+    if (row.type!=='course') throw new Error(`non-fhsu course must be type 'course': ${date} ${row.title}`);
+    if (row.note) throw new Error(`non-fhsu course must carry no task note: ${date} ${row.title}`);
+    if (Array.isArray(row.title)) throw new Error(`course row title must be a string, not nested array: ${date}`);
+  }
+}
+// 课程元数据必须覆盖全部六门课，渲染时追加教室/教师。
+for (const name of ['报关实务','营销学','财务管理','商业政策','外贸英文函电','国际贸易实务']) {
+  if (!courseInfo[name] || !courseInfo[name].room || !courseInfo[name].teacher) throw new Error(`courseInfo must have room+teacher for ${name}`);
+}
+
 for (const [date,expected] of [['2026-09-02',0],['2026-09-14',0],['2026-09-18',1],['2026-10-01',1],['2026-10-05',2],['2026-11-05',3],['2026-12-05',4]]) if (currentRouteIndex(new Date(`${date}T12:00:00`))!==expected) throw new Error(`phase highlight must follow the consumed ledger date, wrong on ${date}`);
 for (const [date, rows] of Object.entries(strictDateSchedules)) {
   const sorted=[...rows].sort((a,b)=>minutes(a.start)-minutes(b.start));
