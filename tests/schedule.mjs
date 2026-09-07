@@ -52,19 +52,19 @@ if (brushPlanStartDate !== '2026-09-08' || math880BrushPlan[0][0] !== '2026-09-0
   const byStage=d=>math880BrushPlan.find(x=>x[0]===d)?.[1];
   if (math880BrushPlan.filter(x=>x[1]==='必做').at(-1)[0] !== '2026-10-17') throw new Error('required stage must run through 2026-10-17');
   if (['2026-10-18','2026-10-19','2026-10-20'].some(d=>byStage(d)!=='选择做') || byStage('2026-10-21')!=='特难题') throw new Error('optional/hard stage windows must match the plan');
-  const e=brushPlanEntryFor('2026-09-08');
-  if (!e || e[2] !== math880BrushPlan[0][2] || brushPlanEntryFor('2026-09-07') !== null || brushPlanEntryFor('2026-10-22') !== null) throw new Error('brushPlanEntryFor window wrong');
+  const e=brushPlanEntryFor('2026-09-09');
+  if (!e || e[2] !== math880BrushPlan[0][2] || brushPlanEntryFor('2026-09-08') !== null || brushPlanEntryFor('2026-10-23') !== null) throw new Error('brushPlanEntryFor window wrong (lag=1: brush starts 9/9, ends 10/22)');
 }
-// 带刷覆盖渲染守卫：实际日期 9/8 起每天数学格变成“880 带刷”并写明题号明细。
+// 带刷覆盖渲染守卫：2026-09-08 休整顺延1天后，实际 9/9 起每天数学格变成“880 带刷”并写明题号明细。
 {
   const allDays=[0,1,2,3,4,5,6,7].flatMap(i=>datedBlocks(i));
-  for (const [actual,tail] of [['2026-09-08','基础选择：8、12-13'],['2026-09-12','基础解答：2-13、15'],['2026-10-08','第15章·随机事件及其概率'],['2026-10-21','综合解答：2']]) {
+  for (const [actual,tail] of [['2026-09-09','基础选择：8、12-13'],['2026-09-13','基础解答：2-13、15'],['2026-10-09','第15章·随机事件及其概率'],['2026-10-22','综合解答：2']]) {
     const brush=allDays.filter(x=>x.date===actual && x.type==='math' && x.title.includes('880 带刷'));
     if (!brush.length) throw new Error(`brush overlay missing on ${actual}`);
     if (!brush.some(x=>`${x.title} ${x.note}`.includes(tail))) throw new Error(`brush task detail missing on ${actual}: ${tail}`);
   }
-  const nonBrush=allDays.filter(x=>x.date==='2026-09-07' && x.type==='math' && x.title.includes('带刷'));
-  if (nonBrush.length) throw new Error('brush overlay must not start before 2026-09-08');
+  const nonBrush=allDays.filter(x=>x.date==='2026-09-08' && x.type==='math' && x.title.includes('带刷'));
+  if (nonBrush.length) throw new Error('brush overlay must not start before 2026-09-09 (9/8 is a rest day, lag=1)');
 }
 if (!study1.some(x => x.id==='w1-tue-880' && x.title.includes('按题号顺序推进12题'))) throw new Error('sequential chapter-1 work block missing');
 if (!study1.some(x => x.id==='w1-wed-880' && x.title.includes('按题号顺序推进8题'))) throw new Error('sequential chapter-1 work block missing');

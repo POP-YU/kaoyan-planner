@@ -1,4 +1,4 @@
-const APP_VERSION = 'brush-0907c';
+const APP_VERSION = 'brush-0907d';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -108,7 +108,7 @@ const math880BrushPlan = Object.freeze([
   ['2026-10-21','特难题','第3章·一元函数积分学 拓展题：4-5；第5章·二重积分 综合解答：22；拓展题：3；第14章·二次型 综合选择：12；第15章·随机事件及其概率 综合填空：6；综合解答：2',7,'1.7小时']
 ]);
 const brushPlanStartDate = '2026-09-08';
-const brushPlanLagDays = 0; // 带刷表漏做一天就 +1：题单整体后移，周日缓冲不动。
+const brushPlanLagDays = 1; // 2026-09-08 用户休整一天，9/8 的带刷首日（第1章32题）顺延到 9/9；漏做一天就 +1，题单整体后移，周日缓冲不动。
 function brushPlanEntryFor(actualKey){
   const idx=Math.round((new Date(`${actualKey}T12:00:00`) - new Date(`${brushPlanStartDate}T12:00:00`))/86400000)-brushPlanLagDays;
   return idx>=0 && idx<math880BrushPlan.length ? math880BrushPlan[idx] : null;
