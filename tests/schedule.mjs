@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -30,10 +30,42 @@ if (routines.some(x => x.start==='06:20' && x.title.includes('床铺'))) throw n
 
 const homeworkDays = study1.filter(x => x.type==='homework').map(x => x.day).sort();
 if (homeworkDays.join(',') !== '4,5,6') throw new Error(`homework days must be Fri-Sun, got ${homeworkDays}`);
-if (!math880Required || math880Required.source !== '李林880题（数学三）· 2026-09-07 改为按题号顺序推进') throw new Error('sequential 880 plan source missing');
-if (!math880Required.rule?.includes('从第1题按题号顺序推进') || !math880Required.rule.includes('14–16题/天') || !math880Required.rule.includes('不再跳题')) throw new Error('sequential 880 rule missing');
-if (!math880Required.alignment?.includes('章内题数以手头书为准') || !math880Required.alignment.includes('转下一章第1题')) throw new Error('sequential 880 chapter-rollover rule missing');
+if (!math880Required || math880Required.source !== '李林880题（数学三）· 2026-09-07 中午改回带刷表跳选题号') throw new Error('brush-plan 880 source missing');
+if (!math880Required.rule?.includes('按带刷计划表逐日跳选指定题号') || !math880Required.rule.includes('必做828题9/8–10/17完成') || !math880Required.rule.includes('特难题16题10/21收尾')) throw new Error('brush-plan 880 rule missing');
+if (!math880Required.alignment?.includes('881个题号与原表逐章逐题型一致') || !math880Required.alignment.includes('brushPlanLagDays +1')) throw new Error('brush-plan alignment/defer rule missing');
 if (math880Required.chapter1.count !== 38 || math880Required.chapter2.count !== 56 || math880Required.chapter3.count !== 86 || math880Required.chapter4.count !== 40 || math880Required.chapter5.count !== 41 || math880Required.chapter6.count !== 37) throw new Error('880 chapter totals must match the verified counts');
+// 2026-09-07 中午：带刷表成为 880 的唯一事实来源。数据守卫：
+if (math880Required.totalCount !== 881 || math880Required.requiredCount !== 828 || math880Required.optionalCount !== 37 || math880Required.hardCount !== 16 || math880Required.planDays !== 44) throw new Error('brush-plan totals must be 828+37+16=881 across 44 days');
+if (!Array.isArray(math880BrushPlan) || math880BrushPlan.length !== 44) throw new Error('brush plan must have exactly 44 daily entries');
+if (brushPlanStartDate !== '2026-09-08' || math880BrushPlan[0][0] !== '2026-09-08' || math880BrushPlan.at(-1)[0] !== '2026-10-21') throw new Error('brush plan must run 2026-09-08 through 2026-10-21');
+{
+  const sum = math880BrushPlan.reduce((s,[,,,count])=>s+count,0);
+  if (sum !== 881) throw new Error(`brush plan daily counts must total 881, got ${sum}`);
+  for (let i=1;i<math880BrushPlan.length;i++) {
+    const a=new Date(`${math880BrushPlan[i-1][0]}T12:00:00`), b=new Date(`${math880BrushPlan[i][0]}T12:00:00`);
+    if (b-a !== 86400000) throw new Error(`brush plan dates must be contiguous at ${math880BrushPlan[i][0]}`);
+  }
+  for (const [,stage,task,count] of math880BrushPlan) {
+    if (!['必做','选择做','特难题'].includes(stage) || typeof task!=='string' || !/第\d+章·/.test(task) || count<1) throw new Error('brush plan entry shape invalid');
+  }
+  // 每日计划的“阶段”列是排期分组：必做段到 10/17，加餐（选择做集中）10/18–20，特难题 10/21。
+  const byStage=d=>math880BrushPlan.find(x=>x[0]===d)?.[1];
+  if (math880BrushPlan.filter(x=>x[1]==='必做').at(-1)[0] !== '2026-10-17') throw new Error('required stage must run through 2026-10-17');
+  if (['2026-10-18','2026-10-19','2026-10-20'].some(d=>byStage(d)!=='选择做') || byStage('2026-10-21')!=='特难题') throw new Error('optional/hard stage windows must match the plan');
+  const e=brushPlanEntryFor('2026-09-08');
+  if (!e || e[2] !== math880BrushPlan[0][2] || brushPlanEntryFor('2026-09-07') !== null || brushPlanEntryFor('2026-10-22') !== null) throw new Error('brushPlanEntryFor window wrong');
+}
+// 带刷覆盖渲染守卫：实际日期 9/8 起每天数学格变成“880 带刷”并写明题号明细。
+{
+  const allDays=[0,1,2,3,4,5,6,7].flatMap(i=>datedBlocks(i));
+  for (const [actual,tail] of [['2026-09-08','基础选择：8、12-13'],['2026-09-12','基础解答：2-13、15'],['2026-10-08','第15章·随机事件及其概率'],['2026-10-21','综合解答：2']]) {
+    const brush=allDays.filter(x=>x.date===actual && x.type==='math' && x.title.includes('880 带刷'));
+    if (!brush.length) throw new Error(`brush overlay missing on ${actual}`);
+    if (!brush.some(x=>`${x.title} ${x.note}`.includes(tail))) throw new Error(`brush task detail missing on ${actual}: ${tail}`);
+  }
+  const nonBrush=allDays.filter(x=>x.date==='2026-09-07' && x.type==='math' && x.title.includes('带刷'));
+  if (nonBrush.length) throw new Error('brush overlay must not start before 2026-09-08');
+}
 if (!study1.some(x => x.id==='w1-tue-880' && x.title.includes('按题号顺序推进12题'))) throw new Error('sequential chapter-1 work block missing');
 if (!study1.some(x => x.id==='w1-wed-880' && x.title.includes('按题号顺序推进8题'))) throw new Error('sequential chapter-1 work block missing');
 if (!study1.some(x => x.id==='w1-sat-880' && x.title.includes('按题号顺序推进14题'))) throw new Error('sequential chapter-1 work block missing');
@@ -152,11 +184,11 @@ for (let day=14;day<=30;day++) {
   const date=`2026-09-${String(day).padStart(2,'0')}`;
   if (!strictDateSchedules[date].some(x=>x.type==='politics')) throw new Error(`daily low-dose politics missing ${date}`);
 }
-if (routeData[0].dates !== '9月2日—9月13日' || !routeData[0].desc.includes('第一章必做38题2天收口') || !routeData[0].desc.includes('第二章必做56题4天收口')) throw new Error('phase route must show the sequential closeout windows');
-if (!routeData.every(x => x.desc.includes('按题号顺序'))) throw new Error('every phase must preserve the sequential 880 rule');
+if (routeData[0].dates !== '9月2日—9月13日' || !routeData[0].desc.includes('带刷计划表逐日跳选题号') || !routeData[0].desc.includes('实际9/8开刷')) throw new Error('phase route must show the brush-plan 880 switch');
+if (!routeData.every(x => x.desc.includes('带刷'))) throw new Error('every phase must reference the brush plan');
 if (!routeData[2].check.includes('9月30日') || !routeData[2].check.includes('实际数据')) throw new Error('October route must be gated by September evidence');
 if (!routeData[2].check.includes('未达项') || !routeData[2].check.includes('先回补')) throw new Error('October route must say what to do when a gate fails');
-for (const rule of ['剩余必做题','可用分钟','订正/回测']) if (!routeData[2].check.includes(rule)) throw new Error(`October capacity rule missing: ${rule}`);
+for (const rule of ['剩余题单','可用分钟','订正/回测']) if (!routeData[2].check.includes(rule)) throw new Error(`October capacity rule missing: ${rule}`);
 if (/145小时|每天3小时|50天/.test(`${routeData[2].desc} ${routeData[2].check}`)) throw new Error('external 880 timing claim must not become the personal October schedule');
 const allowedFhsuTitles = new Set(['营销学','财务管理','商业政策']);
 for (const [date, rows] of Object.entries(strictDateSchedules)) {
