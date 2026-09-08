@@ -1,4 +1,4 @@
-const APP_VERSION = 'brush-0908a';
+const APP_VERSION = 'brush-0908b';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -6,7 +6,7 @@ const mustListen = (id,day,start,end,title) => classBlock(id,day,start,end,title
 const baseClasses = [
   classBlock('mon-report',0,'08:20','09:55','报关实务','course'),
   mustListen('mon-marketing',0,'10:10','11:45','营销学'),
-  mustListen('mon-finance-moved',0,'13:15','14:50','财务管理'),
+  mustListen('mon-finance',0,'15:00','16:35','财务管理'),
   mustListen('tue-policy',1,'13:15','14:50','商业政策'),
   classBlock('wed-letter',2,'08:20','09:55','外贸英文函电','course'),
   mustListen('wed-finance',2,'13:15','14:50','财务管理'),
@@ -16,15 +16,17 @@ const baseClasses = [
   classBlock('thu-trade-practice',3,'15:00','16:35','国际贸易实务','course'),
   classBlock('fri-letter',4,'10:10','11:45','外贸英文函电','course')
 ];
-// 课程元数据：教师 + 教室（来自用户课表截图）。fhsu 行 title 必须保持裸课名
-// （tests/schedule.mjs 守卫），教室/教师只在渲染时追加，不污染数据行。
+// 课程元数据：教室来自用户课表截图（2026-2027学年第1学期 第1周）。
+// 截图里没有教师姓名——此前误标的人名已全部删除；fhsu 三门即课表上的 (FHSU) 外教课。
+// 同一门课不同天上不同教室的（报关实务/营销学），按周几记教室；形势与政策4 为双周课（非本周）。
 const courseInfo = {
-  '报关实务': {teacher:'李宁', room:'西B203'},
-  '营销学': {teacher:'朱智', room:'西B102', foreign:true},
-  '财务管理': {teacher:'胡成（胡戒）', room:'西B202', foreign:true},
-  '商业政策': {teacher:'于洁', room:'西B401', foreign:true},
-  '外贸英文函电': {teacher:'外教', room:'外A403', foreign:true},
-  '国际贸易实务': {teacher:'高嵩', room:'外A403'}
+  '报关实务': { rooms:{0:'国商310',3:'国商309'} },
+  '外贸英文函电': { rooms:{2:'国商608',4:'国商608'} },
+  '营销学': { rooms:{0:'国商513',2:'国商207'}, foreign:true },
+  '商业政策': { rooms:{1:'国商311',3:'国商311'}, foreign:true },
+  '财务管理': { rooms:{0:'国商502',2:'国商502'}, foreign:true },
+  '国际贸易实务': { rooms:{3:'国商514'} },
+  '形势与政策4': { rooms:{5:'博文411'} }
 };
 const returnSlots = [['16:35','17:00'],['16:35','17:00'],['16:35','17:00'],['16:35','17:00'],['15:45','16:05'],['16:40','17:00'],['16:00','16:20']];
 const routines = days.flatMap((_,i)=>[
@@ -875,7 +877,7 @@ const week2 = study1.map(x => {
 const highIntensityPhase2 = [
   t('w2-mon-morning',0,'06:20','07:00','英语单词 · 新20 + 旧40','english','起床后第一轮回想','先完成回想再吃早餐。',['新词20','旧词40'],'60词回想'),
   t('w2-mon-noon',0,'12:20','13:15','436 · p1–18闭卷框架','major','只写标题和关键词','把第一周内容压成一页，下午不空耗。',['默写框架','补3个缺口'],'一页框架'),
-  t('w2-mon-afternoon',0,'14:50','16:35','880第二章 · 基础选择1–10复盘','math','逐题写错因，不开新视频','为晚间刷题先清掉旧错点。',['重做10题','归类错因'],'10题复盘'),
+  t('w2-mon-afternoon',0,'13:15','14:50','880第二章 · 基础选择1–10复盘','math','逐题写错因，不开新视频；15:00 起是财务管理课','真实课表周一 5-6节没课、7-8节是财务管理，880 复盘填进空档。',['重做10题','归类错因'],'10题复盘'),
   t('w2-tue-morning',1,'06:20','07:00','436 · p1–18闭卷复述','major','卡住再翻页','早上只做主动回忆，不被动阅读。',['连续复述','标3个断点'],'断点清单'),
   t('w2-tue-noon',1,'12:20','13:15','880第二章 · 基础题错因回收4题','math','下午课前短单元','只回做错题，不开新章节。',['回做4题','写错因'],'4题回收'),
   t('w2-tue-afternoon',1,'14:50','16:35','436 · p19–21框架 + 短答1题','major','按评分点写，不只看答案','把前一周页码转成输出，晚间再做p22–24短答。',['短答2题','对照补点'],'2个短答'),
@@ -1138,8 +1140,9 @@ function updateCurrentAgenda(){
 function courseDisplayTitle(x){
   const info=courseInfo[x.title];
   if(!info)return x.title;
-  const foreignTag=(info.foreign && info.teacher!=='外教')?' · 外教':'';
-  return `${x.title} · ${info.teacher} · ${info.room}${foreignTag}`;
+  const room=info.rooms?(info.rooms[x.day]||Object.values(info.rooms)[0]):'';
+  const tag=info.foreign?'（FHSU）':'';
+  return `${x.title}${tag}${room?' · '+room:''}`;
 }
 function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);
 // 课程跟"实际周几"走（baseClasses=真实课表），不跟 4 天账面顺延走：

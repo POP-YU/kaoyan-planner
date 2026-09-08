@@ -15,7 +15,7 @@ const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strict
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
-  [0,'08:20','09:55','报关实务'], [0,'10:10','11:45','营销学'], [0,'13:15','14:50','财务管理'],
+  [0,'08:20','09:55','报关实务'], [0,'10:10','11:45','营销学'], [0,'15:00','16:35','财务管理'],
   [1,'13:15','14:50','商业政策'], [2,'08:20','09:55','外贸英文函电'], [2,'13:15','14:50','财务管理'],
   [2,'15:00','16:35','营销学'], [3,'08:20','09:55','报关实务'], [3,'10:10','11:45','商业政策'],
   [3,'15:00','16:35','国际贸易实务'], [4,'10:10','11:45','外贸英文函电']
@@ -23,7 +23,8 @@ const expectedCourses = [
 for (const [day,start,end,title] of expectedCourses) {
   if (!baseClasses.some(x => x.day===day && x.start===start && x.end===end && x.title===title)) throw new Error(`missing course ${day} ${start}-${end} ${title}`);
 }
-if (baseClasses.some(x => x.day===0 && x.start==='15:00' && x.title.includes('财务管理'))) throw new Error('old Monday finance slot remains');
+// 2026-09-08 按用户真实课表截图核对：周一财务管理在 7-8节(15:00-16:35)，13:15 是旧错位。
+if (baseClasses.some(x => x.day===0 && x.start==='13:15' && x.title.includes('财务管理'))) throw new Error('stale Monday finance 13:15 slot remains');
 if (baseClasses.some(x => x.note || x.why)) throw new Error('course rows must show the course name only');
 if (routines.some(x => x.id.includes('night-break'))) throw new Error('fixed night break overlaps subject blocks');
 if (routines.some(x => x.start==='06:20' && x.title.includes('床铺'))) throw new Error('bed-making row should be merged into wake-up');
@@ -215,9 +216,17 @@ for (const [date,rows] of Object.entries(strictDateSchedules)) {
     if (Array.isArray(row.title)) throw new Error(`course row title must be a string, not nested array: ${date}`);
   }
 }
-// 课程元数据必须覆盖全部六门课，渲染时追加教室/教师。
-for (const name of ['报关实务','营销学','财务管理','商业政策','外贸英文函电','国际贸易实务']) {
-  if (!courseInfo[name] || !courseInfo[name].room || !courseInfo[name].teacher) throw new Error(`courseInfo must have room+teacher for ${name}`);
+// 课程元数据必须按周几给全教室（来自用户真实课表截图 2026-09-08）；截图无教师姓名，
+// 此前误标的人名已删除；fhsu 三门须标 (FHSU) 外教课。
+for (const row of baseClasses) {
+  const info=courseInfo[row.title];
+  if (!info || !info.rooms || !info.rooms[row.day]) throw new Error(`courseInfo must have a room for ${row.title} on day ${row.day}`);
+}
+for (const row of baseClasses.filter(x=>x.type==='fhsu')) {
+  if (!courseInfo[row.title].foreign) throw new Error(`fhsu course must be marked (FHSU): ${row.title}`);
+}
+for (const name of Object.keys(courseInfo)) {
+  if (courseInfo[name].teacher) throw new Error(`courseInfo must not carry teacher names (schedule has none): ${name}`);
 }
 
 for (const [date,expected] of [['2026-09-02',0],['2026-09-14',0],['2026-09-18',1],['2026-10-01',1],['2026-10-05',2],['2026-11-05',3],['2026-12-05',4]]) if (currentRouteIndex(new Date(`${date}T12:00:00`))!==expected) throw new Error(`phase highlight must follow the consumed ledger date, wrong on ${date}`);
