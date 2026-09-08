@@ -1,4 +1,4 @@
-const APP_VERSION = 'brush-0907d';
+const APP_VERSION = 'brush-0908a';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -1141,7 +1141,14 @@ function courseDisplayTitle(x){
   const foreignTag=(info.foreign && info.teacher!=='外教')?' · 外教':'';
   return `${x.title} · ${info.teacher} · ${info.room}${foreignTag}`;
 }
-function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);const courseItems=dayBlocks.filter(x=>x.type==='course');const mainBlocks=dayBlocks.filter(x=>x.type!=='course');const data=buildDayAgenda(mainBlocks,currentRangeIndex,dayIndex);const decorate=x=>['course','fhsu'].includes(x.type)?courseDisplayTitle(x):x.title;host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';const mainHtml=data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${decorate(x)}</b><span>${x.note||''}</span></div></div>`).join('');const sideHtml=courseItems.length?`<div class="agenda-sidebar"><div class="sidebar-heading">其他校内课 · 并列靠边（不排任务）</div>${courseItems.map(x=>`<div class="side-course ${x.type}"><time>${x.start}–${x.end}</time><b>${courseDisplayTitle(x)}</b></div>`).join('')}</div>`:'';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${sideHtml}`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
+function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);
+// 课程跟"实际周几"走（baseClasses=真实课表），不跟 4 天账面顺延走：
+// 人在哪天上课就看哪天的课（含 fhsu 三门 + 教室 + 外教标注）；
+// 账面日程里嵌的旧课行既不进主线也不进边栏，避免周几错位。
+const specialCourses=dayBlocks.filter(x=>x.type==='course'&&x.title.includes('形势与政策'));
+const courseItems=[...baseClasses.filter(x=>x.day===dayIndex),...specialCourses].sort((a,b)=>minutes(a.start)-minutes(b.start));
+const mainBlocks=dayBlocks.filter(x=>x.type!=='course'&&x.type!=='fhsu');
+const data=buildDayAgenda(mainBlocks,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';const mainHtml=data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('');const sideHtml=courseItems.length?`<div class="agenda-sidebar"><div class="sidebar-heading">今日校内课 · 实际课表（并列靠边 · 不排任务）</div>${courseItems.map(x=>`<div class="side-course ${x.type}"><time>${x.start}–${x.end}</time><b>${courseDisplayTitle(x)}</b></div>`).join('')}</div>`:'';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${sideHtml}`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
 function renderTimetable(){
   syncRangeToToday();
   renderDailyAgenda();
