@@ -1,4 +1,4 @@
-const APP_VERSION = 'brush-0909b';
+const APP_VERSION = 'brush-0909c';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -45,13 +45,14 @@ const routines = days.flatMap((_,i)=>[
 // 2026-09-07 中午用户拍板：880 改回**带刷表跳选题号**（推翻同日早间“按题号顺序
 // 推进”的方案）。逐日题单来自《2027李林880带刷执行计划.xlsx》，881 个题号已与
 // 原带刷计划表逐章逐题型程序化核对一致（必做828 + 选择做37 + 特难题16）。
-// 必做按带刷表排 9/8–10/17；9/8 休整顺延1天后实际 9/9 开刷、必做 9/9–10/18、
-// 选择做 10/19–10/21 集中处理、特难题 10/22 收尾（日期跟随 brushPlanLagDays 变化）；
+// 必做按带刷表排 9/8–10/17；9/8 休整顺延1天 + 周日缓冲不参与顺延后，
+// 实际 9/9 开刷、必做 9/9–10/19、选择做 10/18（周日轻量格）与 10/20–10/21、
+// 特难题 10/22 收尾（日期跟随 brushPlanLagDays 变化）；
 // 周日只排轻量+复盘（缓冲垫）。落后按缓冲顺延：brushPlanLagDays +1。
 const math880Required = {
   source:'李林880题（数学三）· 2026-09-07 中午改回带刷表跳选题号',
   edition:'用户手头《李林880题》数学三 + 《2027李林880带刷执行计划.xlsx》',
-  rule:'按带刷计划表逐日跳选指定题号：必做828题9/9–10/18完成；选择做37题10/19–10/21集中处理；特难题16题10/22收尾；错题次日回做',
+  rule:'按带刷计划表逐日跳选指定题号：必做828题9/9–10/19完成；选择做37题10/18、10/20–10/21集中处理；特难题16题10/22收尾；周日只吃计划表当周的周日轻量格（缓冲不参与顺延）；错题次日回做',
   alignment:'题号以核对过的带刷计划表为唯一事实来源（881个题号与原表逐章逐题型一致）；周日轻量+复盘；落后按缓冲顺延（brushPlanLagDays +1），不把没做的当完成',
   chapter1:{count:38},
   chapter2:{count:56},
@@ -111,10 +112,25 @@ const math880BrushPlan = Object.freeze([
   ['2026-10-21','特难题','第3章·一元函数积分学 拓展题：4-5；第5章·二重积分 综合解答：22；拓展题：3；第14章·二次型 综合选择：12；第15章·随机事件及其概率 综合填空：6；综合解答：2',7,'1.7小时']
 ]);
 const brushPlanStartDate = '2026-09-08';
-const brushPlanLagDays = 1; // 2026-09-08 用户休整一天，9/8 的带刷首日（第1章32题）顺延到 9/9；漏做一天就 +1，题单整体后移，周日缓冲不动。
+const brushPlanLagDays = 1; // 2026-09-08 用户休整一天，9/8 的带刷首日（第1章32题）顺延到 9/9；漏做一天就 +1，题单整体后移。
+// 2026-09-09 用户拍板：周日缓冲不动——周日永远吃计划表当周的周日轻量格（15/10/14/7/9/6题），
+// 不参与顺延指针；周一到周六按序消费计划表里的非周日格。代价是尾部自然后推（lag=1 时必做到 10/19）。
+const brushPlanSundayPlanIndices = math880BrushPlan.reduce((acc,[d],i)=>{ if(new Date(`${d}T12:00:00`).getDay()===0)acc.push(i); return acc; },[]);
+const brushPlanWeekdayPlanIndices = math880BrushPlan.map((e,i)=>i).filter(i=>!brushPlanSundayPlanIndices.includes(i));
 function brushPlanEntryFor(actualKey){
-  const idx=Math.round((new Date(`${actualKey}T12:00:00`) - new Date(`${brushPlanStartDate}T12:00:00`))/86400000)-brushPlanLagDays;
-  return idx>=0 && idx<math880BrushPlan.length ? math880BrushPlan[idx] : null;
+  const noon=new Date(`${actualKey}T12:00:00`);
+  const diff=Math.round((noon - new Date(`${brushPlanStartDate}T12:00:00`))/86400000);
+  if(diff<0)return null;
+  if(noon.getDay()===0){
+    // 周日缓冲不动：直接取计划表同日期的周日轻量格；计划表周日格用完后周日不再排 880。
+    const i=math880BrushPlan.findIndex(([d])=>d===actualKey);
+    return i>=0?math880BrushPlan[i]:null;
+  }
+  let wd=0;
+  for(let d=new Date(`${brushPlanStartDate}T12:00:00`); d<=noon; d.setDate(d.getDate()+1)) if(d.getDay()!==0) wd++;
+  const ptr=wd-1-brushPlanLagDays;
+  if(ptr<0||ptr>=brushPlanWeekdayPlanIndices.length)return null;
+  return math880BrushPlan[brushPlanWeekdayPlanIndices[ptr]];
 }
 // 把某一天的数学格改写成带刷题单：第一个可用的数学格承载当日完整题单，
 // 其余数学格变成“续”格。线代/概率格不动（它们不是 880 刷题格）。
@@ -122,7 +138,8 @@ function applyBrushPlanOverlay(rows,actualKey){
   const entry=brushPlanEntryFor(actualKey);
   if(!entry)return;
   const [,stage,task,count,hours]=entry;
-  const targets=rows.filter(x=>x.type==='math' && !/线代|方浩|概率/.test(x.title||''));
+  // 07:00 的“在家加练”只有 45 分钟且要出门，不承载当日完整题单；题单落在第一个真正的数学学习格。
+  const targets=rows.filter(x=>x.type==='math' && !/线代|方浩|概率|在家加练/.test(x.title||''));
   targets.forEach((y,i)=>{
     if(i===0){
       y.title=`880 带刷（${stage} · ${count}题 · 约${hours||'3小时'}）`;
@@ -477,12 +494,18 @@ function majorChapterHintForRange(start,end){
 // four days replay on 9/6–9/9 instead of being silently skipped.
 const actualScheduleStartDate = '2026-09-06';
 const scheduleLagDays = 4;
+// 2026-09-08 用户休整一整天：从实际 9/9 起，账面（436/线代/概率/英语）在 4 天基础
+// 上再多滞后 1 天——9/8 当天应做的 9/4 账顺延到实际 9/9 重演，之后逐日后移。
+// 880 带刷不走这套（它按实际日期独立排，brushPlanLagDays 已单独 +1）。
+const scheduleLagFrom = '2026-09-09';
 const dateAtNoon = date => new Date(`${date}T12:00:00`);
 const addCalendarDays = (date,delta) => { const d=new Date(date); d.setDate(d.getDate()+delta); return d; };
 const isoDateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 function scheduleSourceDate(actualDate){
   const target=dateAtNoon(actualDate), first=dateAtNoon(actualScheduleStartDate);
-  return target < first ? actualDate : isoDateKey(addCalendarDays(target,-scheduleLagDays));
+  if(target < first)return actualDate;
+  const lag = target < dateAtNoon(scheduleLagFrom) ? scheduleLagDays : scheduleLagDays+1;
+  return isoDateKey(addCalendarDays(target,-lag));
 }
 function majorCumulativeForDate(date){
   const target=dateAtNoon(date), baseline=dateAtNoon(currentBaselineDate);
@@ -959,8 +982,8 @@ const probabilityWindow = (start,end) => {
   return `原始${formatClockDuration(raw)} · 1.5倍速+暂停约${plannedLectureMinutes(start,end)}分钟${excluded.length?` · 排除${excluded.join('、')}讲（${excluded.map(k=>probabilityMathScope[k]).join('、')}）`:''}`;
 };
 const courseLedger = [
-  {subject:'高数 · 李林880',now:'带刷表跳选题号（2026-09-07中午拍板；9/8休整顺延1天）：必做828题9/9–10/18完成；选择做37题10/19–10/21集中处理；特难题16题10/22收尾',week:'逐日题单写在每天课表的“880 带刷”格里，题号与《2027李林880带刷执行计划.xlsx》逐题核对一致；周日轻量+复盘；落后按缓冲顺延（brushPlanLagDays +1）',done:'当天独立做完并标错因；错题次日回做；课上跳过的题当晚补'},
-  {subject:'线代 · 没咋了',now:'第2章收尾：2.9初等变换与初等矩阵已听完（100%）；2.8矩阵的分块停在34%，第1天账（实际9/6）18:00断点收尾，听完再进矩阵相似',duration:'剩余条目原始时长未从夸克列表公开；每格用90分钟时间盒，1.5倍速并允许暂停，未播完记时间戳',week:'03-01从第2天账（实际9/7）起按文件顺序推进；03-10核对+04-01–04-03收在9月底账（实际10/3前）；10月队列从04-05继续',done:'文件名对上 + 时间戳/公式卡 + 2道对应题；不把时间盒结束冒充看完'},
+  {subject:'高数 · 李林880',now:'带刷表跳选题号（2026-09-07中午拍板；9/8休整顺延1天）：必做828题9/9–10/19完成；选择做37题10/18、10/20–10/21集中处理；特难题16题10/22收尾',week:'逐日题单写在每天课表的“880 带刷”格里，题号与《2027李林880带刷执行计划.xlsx》逐题核对一致；周日轻量格固定不动（缓冲不参与顺延）；落后按 brushPlanLagDays +1',done:'当天独立做完并标错因；错题次日回做；课上跳过的题当晚补'},
+  {subject:'线代 · 没咋了',now:'第2章收尾：2.9初等变换与初等矩阵已听完（100%）；2.8矩阵的分块停在34%，第1天账（实际9/6）18:00断点收尾，听完再进矩阵相似',duration:'剩余条目原始时长未从夸克列表公开；每格用90分钟时间盒，1.5倍速并允许暂停，未播完记时间戳',week:'03-01从第2天账（实际9/7）起按文件顺序推进；03-10核对+04-01–04-03收在9月底账（实际10/4前）；10月队列从04-05继续',done:'文件名对上 + 时间戳/公式卡 + 2道对应题；不把时间盒结束冒充看完'},
   {subject:'概率 · 方浩',now:'基础班30讲；第1讲文件名与“随机事件：概念、关系与运算”已核对；第1讲原始时长未验证；29–30为数一不排',duration:`第7–8讲 ${probabilityWindow(7,8)}；第9–10讲 ${probabilityWindow(9,10)}；第11–12讲 ${probabilityWindow(11,12)}`,week:'先第1–2讲，再第3–4、5–6；第二周起按7–8、9–10、11–12讲推进；每两讲配6道基础题',done:'听课留暂停余量；对应题独做并写错因，未播完留时间戳'},
   {subject:'436 · 背诵笔记',now:'《背诵笔记》结构已逐页核对：背诵篇10章213个编号知识点（p1–75）+ 计算题篇按章重点题（p76–168）；前三个内容单元已背；第1天账的4–12没背（9/7确认），第2天账（实际9/7）从第4个继续',week:'快速多轮：每天新增5个内容单元（非专业出身、20–30分钟/题，不死磕）；周日账只回收；未完次日账只补3个，不挤睡眠；一轮213个于10/25账收口并总回收',done:'按手头资料顺序合书复述；短答/计算完整落笔，记录断点章-节-内容单元'},
   {subject:'英语二 · 真题',now:'阅读量少，先做精读闭环',week:'2015–2019年各做 Text 1；单词每日写死数量，共新135+旧270',done:'每篇留1张错因卡；当天单词按格内数量收工'}
@@ -992,8 +1015,8 @@ function renderMajorSyllabus(){
     if(total>=majorRecitationMaterial.totalUnits){finish=new Date(cursor);break;}
     cursor.setDate(cursor.getDate()+1);
   }
-  // 账面收尾日 + 实际滞后天数 = 真实日历上的收尾日。
-  if(finish)finish.setDate(finish.getDate()+scheduleLagDays);
+  // 账面收尾日 + 实际滞后天数 = 真实日历上的收尾日（含 9/8 休整再 +1）。
+  if(finish)finish.setDate(finish.getDate()+scheduleLagDays+1);
   const pace=finish?`账面按每天${majorBaseline.dailyNewUnits}个、周日只回收，实际日历上（含${scheduleLagDays}天顺延）一轮背诵预计${finish.getMonth()+1}月${finish.getDate()}日前后收尾，赶在12月前`:'';
   progress.textContent=`今天按表应背到第${Math.min(cum,majorRecitationMaterial.totalUnits)}个${ch?`（${ch.no}·${ch.title}）`:''}；${pace}。“内容单元”就是资料每章下按 1.、2.、3.… 编号的条目。`;
 }
@@ -1007,9 +1030,9 @@ function breakfastFor(d){ const seed = d.getFullYear()*10000+(d.getMonth()+1)*10
 function datesForRange(index=currentRangeIndex){ const start = rangeStarts[index]; return days.map((_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d;}); }
 function phaseForRange(index=currentRangeIndex){ if(index===0)return 1; if(index===1)return 2; if(index<5)return 3; if(index<13)return 5; return 9; }
 const routeData = [
-  {dates:'9月2日—9月13日',title:'高强度起步 · 先把今天做实',desc:'9/2–9/5连续四天没有执行，2026-09-06作为实际第1天，账面任务整体顺延4天消化，不把未完成当完成。880改按带刷计划表逐日跳选题号（2026-09-07中午拍板；9/8休整顺延1天，实际9/9开刷，必做828题9/9–10/18完成，881个题号已与原表逐题核对一致）；课内为纯 FHSU 课程不占用，880 带刷题单写在课余/晚间数学格，436出声背放家里晚间。每天18:05回家：到家先充电+挂下载，晚自习在家三段走。线代第1天先收尾第2章（2.8@34%），概率从第1讲开始，英语一篇一闭环；436快速多轮，每个学习日新增5个内容单元。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
+  {dates:'9月2日—9月13日',title:'高强度起步 · 先把今天做实',desc:'9/2–9/5连续四天没有执行，2026-09-06作为实际第1天，账面任务整体顺延4天消化；9/8休整，从实际9/9起账面（436/线代/概率/英语）再顺延1天，9/4账在9/9重演。880改按带刷计划表逐日跳选题号（2026-09-07中午拍板；9/8休整顺延1天，实际9/9开刷，必做828题9/9–10/19完成，周日轻量缓冲不参与顺延，881个题号已与原表逐题核对一致）；课内为纯 FHSU 课程不占用，880 带刷题单写在课余/晚间数学格，436出声背放家里晚间。每天18:05回家：到家先充电+挂下载，晚自习在家三段走。线代第1天先收尾第2章（2.8@34%），概率从第1讲开始，英语一篇一闭环；436快速多轮，每个学习日新增5个内容单元。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
   {dates:'9月14日—9月30日',title:'高数强化 · 边学边回测',desc:'880带刷题单逐日覆盖数学格（第3—14章题号按表推进，周日轻量+复盘）；概率第19—28讲收尾。436以5个/天推进，一轮213个在10月下旬账收口并总回收；英语阅读每天闭环，政治保持低量。',check:'验收：每个单元能闭卷说出框架；每道错题有概念/计算/思路标签',color:'#e46c4e',tint:'#fbe6df'},
-  {dates:'10月1日—10月31日',title:'带刷收尾 + 真题入口',desc:'880带刷计划收尾：10/18前完成必做828题，10/19–10/21选择做37题集中处理，10/22特难题16题收尾（逐日题单见课表“880 带刷”格；落后按顺延+1再推）。436进入二轮滚动输出（5个/天继续），英语阅读错因保温，政治刷选择题。',check:'9月30日只是测量与校准：现在就执行；月底登记实际数据，按剩余题单、可用分钟、订正/回测量重排，不等到9月30日；未达项首块先回补。',color:'#3b9b94',tint:'#e1f3f0'},
+  {dates:'10月1日—10月31日',title:'带刷收尾 + 真题入口',desc:'880带刷计划收尾：10/19完成必做828题，10/18（周日轻量格）与10/20–10/21选择做37题集中处理，10/22特难题16题收尾（逐日题单见课表“880 带刷”格；周日缓冲不动，落后自然后推）。436进入二轮滚动输出（5个/天继续），英语阅读错因保温，政治刷选择题。',check:'9月30日只是测量与校准：现在就执行；月底登记实际数据，按剩余题单、可用分钟、订正/回测量重排，不等到9月30日；未达项首块先回补。',color:'#3b9b94',tint:'#e1f3f0'},
   {dates:'11月1日—11月30日',title:'套卷与多轮输出',desc:'880带刷已于10/21收尾，数学转整套真题与错题回做；436第三—四轮以名词、短答、计算的限时输出为主；英语小三门和作文进入课表，政治选择题二轮并接时政。',check:'验收：能解释每个失分，而不是只看分数',color:'#d79b46',tint:'#fff0d7'},
   {dates:'12月1日—初试前',title:'模拟与保温',desc:'数学回收880带刷错题（全部题号已完成）、近年真题和公式；436滚动背诵并做整套模拟，英语整卷与作文默写，政治主观题集中背诵。',check:'验收：按考试时长完成，不靠熬夜硬撑',color:'#8170b5',tint:'#eeebf5'}
 ];

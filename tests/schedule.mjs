@@ -32,7 +32,7 @@ if (routines.some(x => x.start==='06:20' && x.title.includes('床铺'))) throw n
 const homeworkDays = study1.filter(x => x.type==='homework').map(x => x.day).sort();
 if (homeworkDays.join(',') !== '4,5,6') throw new Error(`homework days must be Fri-Sun, got ${homeworkDays}`);
 if (!math880Required || math880Required.source !== '李林880题（数学三）· 2026-09-07 中午改回带刷表跳选题号') throw new Error('brush-plan 880 source missing');
-if (!math880Required.rule?.includes('按带刷计划表逐日跳选指定题号') || !math880Required.rule.includes('必做828题9/9–10/18完成') || !math880Required.rule.includes('特难题16题10/22收尾')) throw new Error('brush-plan 880 rule missing');
+if (!math880Required.rule?.includes('按带刷计划表逐日跳选指定题号') || !math880Required.rule.includes('必做828题9/9–10/19完成') || !math880Required.rule.includes('特难题16题10/22收尾') || !math880Required.rule.includes('周日只吃计划表当周的周日轻量格')) throw new Error('brush-plan 880 rule missing');
 if (!math880Required.alignment?.includes('881个题号与原表逐章逐题型一致') || !math880Required.alignment.includes('brushPlanLagDays +1')) throw new Error('brush-plan alignment/defer rule missing');
 if (math880Required.chapter1.count !== 38 || math880Required.chapter2.count !== 56 || math880Required.chapter3.count !== 86 || math880Required.chapter4.count !== 40 || math880Required.chapter5.count !== 41 || math880Required.chapter6.count !== 37) throw new Error('880 chapter totals must match the verified counts');
 // 2026-09-07 中午：带刷表成为 880 的唯一事实来源。数据守卫：
@@ -54,12 +54,21 @@ if (brushPlanStartDate !== '2026-09-08' || math880BrushPlan[0][0] !== '2026-09-0
   if (math880BrushPlan.filter(x=>x[1]==='必做').at(-1)[0] !== '2026-10-17') throw new Error('required stage must run through 2026-10-17');
   if (['2026-10-18','2026-10-19','2026-10-20'].some(d=>byStage(d)!=='选择做') || byStage('2026-10-21')!=='特难题') throw new Error('optional/hard stage windows must match the plan');
   const e=brushPlanEntryFor('2026-09-09');
-  if (!e || e[2] !== math880BrushPlan[0][2] || brushPlanEntryFor('2026-09-08') !== null || brushPlanEntryFor('2026-10-23') !== null) throw new Error('brushPlanEntryFor window wrong (lag=1: brush starts 9/9, ends 10/22)');
+  if (!e || e[2] !== math880BrushPlan[0][2] || brushPlanEntryFor('2026-09-08') !== null) throw new Error('brushPlanEntryFor must start on 9/9 with lag=1');
+  // 周日缓冲不动（2026-09-09 拍板）：实际周日吃计划表同日期的周日轻量格；
+  // 周中（含周六）跳过计划表周日格按序消费；尾部自然后推（lag=1 时特难题 10/22 收尾）。
+  const sun913=brushPlanEntryFor('2026-09-13');
+  if (!sun913 || sun913[0] !== '2026-09-13' || sun913[3] !== 15) throw new Error('Sunday 9/13 must take the plan Sunday light entry (15题), not the shifted Saturday load');
+  if (brushPlanEntryFor('2026-09-14')[0] !== '2026-09-12') throw new Error('Monday 9/14 must resume the plan weekday sequence (plan 9/12)');
+  if (brushPlanEntryFor('2026-09-20')?.[0] !== '2026-09-20' || brushPlanEntryFor('2026-09-20')?.[3] !== 10) throw new Error('every plan-week Sunday must stay light');
+  if (brushPlanEntryFor('2026-10-19')?.[0] !== '2026-10-17') throw new Error('last required entry must land on actual 10/19 under Sunday protection');
+  if (brushPlanEntryFor('2026-10-22')?.[1] !== '特难题') throw new Error('hard-problem tail must close on actual 10/22');
+  if (brushPlanEntryFor('2026-10-23') !== null || brushPlanEntryFor('2026-10-25') !== null) throw new Error('plan exhausted: weekdays after 10/22 and Sundays after 10/18 must not schedule 880');
 }
 // 带刷覆盖渲染守卫：2026-09-08 休整顺延1天后，实际 9/9 起每天数学格变成“880 带刷”并写明题号明细。
 {
   const allDays=[0,1,2,3,4,5,6,7].flatMap(i=>datedBlocks(i));
-  for (const [actual,tail] of [['2026-09-09','基础选择：8、12-13'],['2026-09-13','基础解答：2-13、15'],['2026-10-09','第15章·随机事件及其概率'],['2026-10-22','综合解答：2']]) {
+  for (const [actual,tail] of [['2026-09-09','基础选择：8、12-13'],['2026-09-13','综合填空：1-3、5-10、12-15'],['2026-10-09','第15章·随机事件及其概率'],['2026-10-22','综合解答：2']]) {
     const brush=allDays.filter(x=>x.date===actual && x.type==='math' && x.title.includes('880 带刷'));
     if (!brush.length) throw new Error(`brush overlay missing on ${actual}`);
     if (!brush.some(x=>`${x.title} ${x.note}`.includes(tail))) throw new Error(`brush task detail missing on ${actual}: ${tail}`);
@@ -92,6 +101,8 @@ if (strictStartDate !== '2026-09-02') throw new Error(`strict plan must restart 
 if (currentBaselineDate !== '2026-09-03' || majorBaseline.completedUnits !== 3 || majorBaseline.dailyNewUnits !== 5) throw new Error('436 baseline must be three completed units with five new units per study day (user-paced 20-30min/unit)');
 if (actualScheduleStartDate !== '2026-09-06' || scheduleLagDays !== 4) throw new Error('2026-09-06 is the confirmed first execution day; the four unexecuted days 9/2-9/5 must create a four-day catch-up lag');
 if (scheduleSourceDate('2026-09-06') !== '2026-09-02' || scheduleSourceDate('2026-09-07') !== '2026-09-03' || scheduleSourceDate('2026-09-03') !== '2026-09-03') throw new Error('actual dates must consume the four unfinished ledgers in order from 2026-09-06');
+// 2026-09-08 休整：从实际 9/9 起账面再滞后 1 天（436/线代/概率/英语），9/4 账在 9/9 重演。
+if (scheduleSourceDate('2026-09-08') !== '2026-09-04' || scheduleSourceDate('2026-09-09') !== '2026-09-04' || scheduleSourceDate('2026-09-13') !== '2026-09-08' || scheduleSourceDate('2026-10-05') !== '2026-09-30') throw new Error('9/8 rest must add one replay day from actual 9/9 (lag 4->5)');
 if (majorCumulativeForDate('2026-09-02') !== 3 || majorCumulativeForDate('2026-09-03') !== 8 || majorNewRangeForDate('2026-09-03').start !== 4 || majorNewRangeForDate('2026-09-03').end !== 8) throw new Error('436 September 2 ordinal range must cover units 4-8 at the five-per-day pace');
 if (majorNewRangeForDate('2026-09-06') !== null || majorCumulativeForDate('2026-09-06') !== 18) throw new Error('Sunday must be review-only for 436');
 for (const day of ['2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-06','2026-09-07','2026-09-08','2026-09-09','2026-09-10','2026-09-11','2026-09-12','2026-09-13']) {
@@ -154,17 +165,20 @@ for (const [chapter,total] of [[3,86],[4,40],[5,41],[6,37]]) {
 }
 // 436 序数渲染：用户 2026-09-07 拍板非专业出身、每天只背 5 个新内容单元
 // （majorBaseline.dailyNewUnits=5，一轮 213 个预计 10/25 前后账收口）。以下序数
-// 按 5 个/天口径，经四天顺延（scheduleLagDays=4）后落到各实际日期；章节提示
+// 按 5 个/天口径，经五天顺延（9/2–9/5 四天 + 9/8 休整一天）后落到各实际日期；章节提示
 // 需与背诵笔记目录一致（第一章1–26、第二章27–48、第三章49–64、第四章65–108、
 // 第五章109–135、第六章136–150…）。9/12 与 9/21 覆盖跨章提示（第一章–第二章、
 // 第三章–第四章），验证 majorChapterHintForRange 的两章分支。
 const sep29Rendered=datedBlocks(4).filter(x=>x.date==='2026-09-29'&&x.type==='major').map(x=>x.title).join('\n');
 const oct3Rendered=datedBlocks(4).filter(x=>x.date==='2026-10-03'&&x.type==='major').map(x=>x.title).join('\n');
 const oct4Rendered=datedBlocks(4).filter(x=>x.date==='2026-10-04'&&x.type==='major').map(x=>x.title).join('\n');
+const oct5Rendered=datedBlocks(5).filter(x=>x.date==='2026-10-05'&&x.type==='major').map(x=>x.title).join('\n');
 const sep12Rendered=datedBlocks(1).filter(x=>x.date==='2026-09-12'&&x.type==='major').map(x=>x.title).join('\n');
-const all436=`${sep29Rendered}\n${oct3Rendered}\n${oct4Rendered}\n${sep12Rendered}`;
-if (!sep29Rendered.includes('第99–103个新内容单元（第四章）') || !sep29Rendered.includes('第1–103个已背内容单元') || !oct3Rendered.includes('第114–118个新内容单元（第五章）') || !oct3Rendered.includes('第1–118个已背内容单元') || !oct4Rendered.includes('第72–142个已背内容单元（第四章–第六章）') || !oct4Rendered.includes('第143–213个已背内容单元') || !sep12Rendered.includes('第24–28个新内容单元（第一章–第二章）') || /p\d/.test(all436)) throw new Error('436 ordinal first-pass/review rendering is wrong under the four-day lag (5 units/day)');
-if (!oct3Rendered.includes('第114–118个新内容单元（第五章）')) throw new Error('436 ordinal labels must name the verified chapter from the actual 背诵笔记');
+const all436=`${sep29Rendered}\n${oct3Rendered}\n${oct4Rendered}\n${oct5Rendered}\n${sep12Rendered}`;
+// 9/8 休整后账面再 +1：实际 9/29→9/24 账（94–98）、10/3→9/28 账（109–113）、
+// 10/4→9/29 账（114–118）、9/30 的月末三段门禁落到实际 10/5、9/12→9/7 账（19–23）。
+if (!sep29Rendered.includes('第94–98个新内容单元（第四章）') || !sep29Rendered.includes('第1–98个已背内容单元') || !oct3Rendered.includes('第109–113个新内容单元（第五章）') || !oct3Rendered.includes('第1–113个已背内容单元') || !oct4Rendered.includes('第114–118个新内容单元（第五章）') || !oct4Rendered.includes('第1–118个已背内容单元') || !oct5Rendered.includes('第72–142个已背内容单元（第四章–第六章）') || !oct5Rendered.includes('第143–213个已背内容单元') || !sep12Rendered.includes('第19–23个新内容单元（第一章）') || /p\d/.test(all436)) throw new Error('436 ordinal first-pass/review rendering is wrong under the five-day lag (5 units/day)');
+if (!oct3Rendered.includes('第109–113个新内容单元（第五章）')) throw new Error('436 ordinal labels must name the verified chapter from the actual 背诵笔记');
 if (all436.includes('第214个')) throw new Error('ordinals must never run past the 213 verified units');
 for (const day of ['2026-09-13','2026-09-20','2026-09-27']) {
   if (!strictDateSchedules[day].some(x=>x.type==='english' && x.title.includes('小作文审题'))) throw new Error(`low-dose September writing baseline missing ${day}`);
@@ -229,7 +243,7 @@ for (const name of Object.keys(courseInfo)) {
   if (courseInfo[name].teacher) throw new Error(`courseInfo must not carry teacher names (schedule has none): ${name}`);
 }
 
-for (const [date,expected] of [['2026-09-02',0],['2026-09-14',0],['2026-09-18',1],['2026-10-01',1],['2026-10-05',2],['2026-11-05',3],['2026-12-05',4]]) if (currentRouteIndex(new Date(`${date}T12:00:00`))!==expected) throw new Error(`phase highlight must follow the consumed ledger date, wrong on ${date}`);
+for (const [date,expected] of [['2026-09-02',0],['2026-09-14',0],['2026-09-19',1],['2026-10-01',1],['2026-10-06',2],['2026-11-06',3],['2026-12-06',4]]) if (currentRouteIndex(new Date(`${date}T12:00:00`))!==expected) throw new Error(`phase highlight must follow the consumed ledger date, wrong on ${date}`);
 for (const [date, rows] of Object.entries(strictDateSchedules)) {
   const sorted=[...rows].sort((a,b)=>minutes(a.start)-minutes(b.start));
   if (sorted[0].start!=='06:00' || sorted.at(-1).end!=='24:00') throw new Error(`strict day must cover 06:00-24:00 boundary: ${date}`);
