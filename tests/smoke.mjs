@@ -3,11 +3,19 @@ const root = new URL('..', import.meta.url);
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
 const js = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+const sw = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
 const must = (text, fragment, label) => { if (!text.includes(fragment)) throw new Error(`missing ${label}`); };
 ['小于的考研课表','id="daily-agenda"','id="phase-line"','id="live-clock"','kaoyan.mobileconfig','id="app-version"','apple-touch-icon'].forEach((x) => must(html,x,x));
 must(html,'9 月 6 日是实际起步日','first execution day explanation');
 must(html,'路线日期是锚点；日任务按实际执行日顺延','phase anchor explanation');
-['styles.css?v=brush-0908b','app.js?v=brush-0908b'].forEach((x) => must(html,x,x));
+['styles.css?v=brush-0908c','app.js?v=brush-0908c'].forEach((x) => must(html,x,x));
+// 2026-09-08：主屏 Web Clip 用户要求"打开即最新版"。sw.js（网络优先、缓存仅离线兜底）
+// 已注册；每次发布必须同步 bump index.html 的 sw.js?v= 与 sw.js 内 CACHE 版本。
+must(html,"serviceWorker.register('sw.js?v=brush-0908c')",'service worker registration');
+must(sw,"kaoyan-brush-0908c",'sw cache version');
+must(sw,"addEventListener('fetch'",'sw fetch handler');
+must(sw,'caches.delete','sw old cache purge');
+must(sw,'skipWaiting','sw immediate activation');
 must(html,'id="syllabus-table"','436 recitation syllabus section');
 must(html,'id="syllabus-progress"','436 syllabus progress line');
 ['本周完成度','今天如果只完成一件事','这张表怎么用','容错规则'].forEach((x) => { if (html.includes(x)) throw new Error(`obsolete copy remains: ${x}`); });
