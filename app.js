@@ -1,4 +1,4 @@
-const APP_VERSION = 'brush-0908c';
+const APP_VERSION = 'brush-0909a';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -1144,14 +1144,45 @@ function courseDisplayTitle(x){
   const tag=info.foreign?'（FHSU）':'';
   return `${x.title}${tag}${room?' · '+room:''}`;
 }
+// 把账面学习任务围绕"真实课表"排进当天：课格固定且纯净（不排任何任务），
+// 学习格不早于自己原来的开始时间（保早晚节律），只在课后的空档里找位置，
+// 一个格放不下就拆成"续"格；23:20 睡眠边界后还放不下的，进当日容错注记。
+function packAroundRealClasses(taskBlocks, occupied){
+  const fmt=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+  const occ=[...occupied].sort((a,b)=>minutes(a.start)-minutes(b.start));
+  const gaps=[]; let cur=360;
+  for(const f of occ){ if(minutes(f.start)>cur)gaps.push([cur,minutes(f.start)]); cur=Math.max(cur,minutes(f.end)); }
+  if(cur<1400)gaps.push([cur,1400]);
+  const out=[]; const overflow=[]; let gi=0, gc=gaps.length?gaps[0][0]:1440;
+  for(const blk of taskBlocks){
+    let rem=minutes(blk.end)-minutes(blk.start), first=true;
+    const want=minutes(blk.start);
+    while(gi<gaps.length && gaps[gi][1]<=want){ gi++; gc=gi<gaps.length?gaps[gi][0]:1440; }
+    gc=Math.max(gc,want);
+    while(rem>0){
+      while(gi<gaps.length && gaps[gi][1]-gc<=0){ gi++; gc=gi<gaps.length?gaps[gi][0]:1440; }
+      if(gi>=gaps.length){ overflow.push(`${blk.title}（约${minutes(blk.end)-minutes(blk.start)}分钟）`); break; }
+      const space=gaps[gi][1]-gc, use=Math.min(rem,space);
+      const row={...blk,start:fmt(gc),end:fmt(gc+use)};
+      if(!first){ row.title=`${blk.title}（续）`; row.note='承前格续做；到点收口，未完部分次日账只补'; }
+      else if(rem>use){ row.note=`${blk.note||''}；课多，本格先做一部分，余下进下一格`; }
+      out.push(row); gc+=use; rem-=use; first=false;
+    }
+  }
+  return {rows:out, overflow};
+}
 function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);
-// 课程跟"实际周几"走（baseClasses=真实课表），不跟 4 天账面顺延走：
-// 人在哪天上课就看哪天的课（含 fhsu 三门 + 教室 + 外教标注）；
-// 账面日程里嵌的旧课行既不进主线也不进边栏，避免周几错位。
+// 课表与任务结合：真实课程按周几固定插进主线（纯净、带教室；fhsu 格内什么都不排），
+// 账面学习任务由 packAroundRealClasses 围绕课格排布，不再出现"课表呢/课时撞任务"。
 const specialCourses=dayBlocks.filter(x=>x.type==='course'&&x.title.includes('形势与政策'));
-const courseItems=[...baseClasses.filter(x=>x.day===dayIndex),...specialCourses].sort((a,b)=>minutes(a.start)-minutes(b.start));
-const mainBlocks=dayBlocks.filter(x=>x.type!=='course'&&x.type!=='fhsu');
-const data=buildDayAgenda(mainBlocks,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';const mainHtml=data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('');const sideHtml=courseItems.length?`<div class="agenda-sidebar"><div class="sidebar-heading">今日校内课 · 实际课表（并列靠边 · 不排任务）</div>${courseItems.map(x=>`<div class="side-course ${x.type}"><time>${x.start}–${x.end}</time><b>${courseDisplayTitle(x)}</b></div>`).join('')}</div>`:'';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${sideHtml}`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
+const classRows=[...baseClasses.filter(x=>x.day===dayIndex),...specialCourses].sort((a,b)=>minutes(a.start)-minutes(b.start)).map(x=>({...x,title:courseDisplayTitle(x),note:'',why:'上课：按真实周几固定；此格不排任何考研任务。'}));
+const ledger=dayBlocks.filter(x=>x.type!=='course'&&x.type!=='fhsu');
+const FIXED=new Set(['routine','meal','sleep']);
+const fixedRows=ledger.filter(x=>FIXED.has(x.type));
+const taskRows=ledger.filter(x=>!FIXED.has(x.type)&&x.type!=='free').sort((a,b)=>minutes(a.start)-minutes(b.start));
+const {rows:packed,overflow}=packAroundRealClasses(taskRows,[...fixedRows,...classRows].map(x=>({start:x.start,end:x.end})));
+const merged=[...fixedRows,...classRows,...packed];
+const data=buildDayAgenda(merged,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';const mainHtml=data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('');const overflowHtml=overflow.length?`<div class="overflow-note">今晚没排下（课多不硬塞，进明早容错格先补）：${overflow.join('；')}</div>`:'';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${overflowHtml}`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
 function renderTimetable(){
   syncRangeToToday();
   renderDailyAgenda();

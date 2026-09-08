@@ -42,3 +42,5 @@
 .agenda-sidebar .side-course b{font-size:12px;line-height:1.4;color:var(--ink)}
 .agenda-sidebar .side-course.fhsu{border-left-color:#aaa3b9}
 @media(max-width:520px){.agenda-sidebar{grid-template-columns:1fr}}
+/* 课多排不下时的容错注记条：不进时间轴，贴在卡片底部。 */
+.overflow-note{margin:0 15px 12px;padding:9px 11px;border:1px dashed #efc8b8;border-radius:10px;background:#fff0ea;color:#99614c;font-size:11px;line-height:1.5}
