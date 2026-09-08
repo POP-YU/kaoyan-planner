@@ -32,7 +32,7 @@ if (routines.some(x => x.start==='06:20' && x.title.includes('床铺'))) throw n
 const homeworkDays = study1.filter(x => x.type==='homework').map(x => x.day).sort();
 if (homeworkDays.join(',') !== '4,5,6') throw new Error(`homework days must be Fri-Sun, got ${homeworkDays}`);
 if (!math880Required || math880Required.source !== '李林880题（数学三）· 2026-09-07 中午改回带刷表跳选题号') throw new Error('brush-plan 880 source missing');
-if (!math880Required.rule?.includes('按带刷计划表逐日跳选指定题号') || !math880Required.rule.includes('必做828题9/8–10/17完成') || !math880Required.rule.includes('特难题16题10/21收尾')) throw new Error('brush-plan 880 rule missing');
+if (!math880Required.rule?.includes('按带刷计划表逐日跳选指定题号') || !math880Required.rule.includes('必做828题9/9–10/18完成') || !math880Required.rule.includes('特难题16题10/22收尾')) throw new Error('brush-plan 880 rule missing');
 if (!math880Required.alignment?.includes('881个题号与原表逐章逐题型一致') || !math880Required.alignment.includes('brushPlanLagDays +1')) throw new Error('brush-plan alignment/defer rule missing');
 if (math880Required.chapter1.count !== 38 || math880Required.chapter2.count !== 56 || math880Required.chapter3.count !== 86 || math880Required.chapter4.count !== 40 || math880Required.chapter5.count !== 41 || math880Required.chapter6.count !== 37) throw new Error('880 chapter totals must match the verified counts');
 // 2026-09-07 中午：带刷表成为 880 的唯一事实来源。数据守卫：
@@ -195,7 +195,7 @@ for (let day=14;day<=30;day++) {
   const date=`2026-09-${String(day).padStart(2,'0')}`;
   if (!strictDateSchedules[date].some(x=>x.type==='politics')) throw new Error(`daily low-dose politics missing ${date}`);
 }
-if (routeData[0].dates !== '9月2日—9月13日' || !routeData[0].desc.includes('带刷计划表逐日跳选题号') || !routeData[0].desc.includes('实际9/8开刷')) throw new Error('phase route must show the brush-plan 880 switch');
+if (routeData[0].dates !== '9月2日—9月13日' || !routeData[0].desc.includes('带刷计划表逐日跳选题号') || !routeData[0].desc.includes('实际9/9开刷')) throw new Error('phase route must show the brush-plan 880 switch');
 if (!routeData.every(x => x.desc.includes('带刷'))) throw new Error('every phase must reference the brush plan');
 if (!routeData[2].check.includes('9月30日') || !routeData[2].check.includes('实际数据')) throw new Error('October route must be gated by September evidence');
 if (!routeData[2].check.includes('未达项') || !routeData[2].check.includes('先回补')) throw new Error('October route must say what to do when a gate fails');
