@@ -1,4 +1,4 @@
-const APP_VERSION = 'reset-0910b';
+const APP_VERSION = 'reset-0910d';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -1032,7 +1032,7 @@ function breakfastFor(d){ const seed = d.getFullYear()*10000+(d.getMonth()+1)*10
 function datesForRange(index=currentRangeIndex){ const start = rangeStarts[index]; return days.map((_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d;}); }
 function phaseForRange(index=currentRangeIndex){ if(index===0)return 1; if(index===1)return 2; if(index<5)return 3; if(index<13)return 5; return 9; }
 const routeData = [
-  {dates:'9月10日—9月21日',title:'从零起步 · 先把第一天做实',desc:'2026-09-09确认数学与436均未开始；实际9/10作为新第1天，9/2起的已核对账面整体后移8天消化。880按带刷计划表逐日跳选题号，实际9/10从原题单第1天开刷，必做828题预计10/20完成；436从第1个内容单元开始，每个学习日新增5个。课内为纯 FHSU 课程不占用；Blackboard（BB）只在真实周五19:30–20:30处理。每天18:05回家，到家充电并挂下载，00:00关灯。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
+  {dates:'9月10日—9月21日',title:'从零起步 · 先把第一天做实',desc:'2026-09-09确认数学与436均未开始；实际9/10作为新第1天，9/2起的已核对账面整体后移8天消化。880按带刷计划表逐日跳选题号，实际9/10从原题单第1天开刷，必做828题预计10/20完成；436从第1个内容单元开始，每个学习日新增5个。FHSU 课程正常听课；其余校内课时全部作为数学刷题格，按当日880总题量分摊且不背436。Blackboard（BB）只在真实周五19:30–20:30处理。每天18:05回家，到家充电并挂下载，00:00关灯。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
   {dates:'9月22日—10月8日',title:'高数强化 · 边学边回测',desc:'880带刷题单逐日覆盖数学格（题号按表推进，周日轻量+复盘）；概率继续按核对讲次推进。436以5个/天推进，一轮213个预计10/29前后收口；英语阅读每天闭环，政治保持低量。',check:'验收：每个单元能闭卷说出框架；每道错题有概念/计算/思路标签',color:'#e46c4e',tint:'#fbe6df'},
   {dates:'10月9日—11月8日',title:'带刷收尾 + 真题入口',desc:'880带刷计划收尾：10/20完成必做828题，10/18（周日轻量格）与10/21–10/22选择做37题集中处理，10/23特难题16题收尾（逐日题单见课表“880 带刷”格；周日缓冲不动，落后自然后推）。436继续一轮并滚动输出（5个/天），英语阅读错因保温，政治刷选择题。',check:'9月30日账随重置落在实际10月8日，只做测量与校准：登记实际数据，按剩余题单、可用分钟、订正/回测量重排；未达项首块先回补。',color:'#3b9b94',tint:'#e1f3f0'},
   {dates:'11月9日—12月8日',title:'套卷与多轮输出',desc:'880带刷预计于10/23收尾，数学转整套真题与错题回做；436第三—四轮以名词、短答、计算的限时输出为主；英语小三门和作文进入课表，政治选择题二轮并接时政。',check:'验收：能解释每个失分，而不是只看分数',color:'#d79b46',tint:'#fff0d7'},
@@ -1178,7 +1178,46 @@ function courseDisplayTitle(x){
   const tag=info.foreign?'（FHSU）':'';
   return `${x.title}${tag}${room?' · '+room:''}${info.teacher?' · 教师：'+info.teacher:''}`;
 }
-// 把账面学习任务围绕"真实课表"排进当天：课格固定且纯净（不排任何任务），
+function classAgendaRow(x,actualKey){
+  const display=courseDisplayTitle(x),mustAttend=x.type==='fhsu'||courseInfo[x.title]?.foreign;
+  if(actualKey<resetStudyStartDate||mustAttend)return {...x,title:display,note:'',why:mustAttend?'FHSU 课程正常听课，不嵌入考研任务。':'重置起跑日前保留当天真实课表。'};
+  return {...x,type:'math',title:'数学刷题 · 课内学习格',note:`原课表：${display}；本格只刷数学，不背436`,why:'2026-09-09 用户确认：除 FHSU 外，校内课时全部作为考研学习时间，当前优先数学刷题。',steps:['按今日880题单继续','独立完成','当场订正并标错因'],output:'本格题量+错因',studyClass:true,originalCourse:display};
+}
+function wholeNumberAllocation(total,rows){
+  const durations=rows.map(x=>Math.max(1,minutes(x.end)-minutes(x.start))),sum=durations.reduce((a,b)=>a+b,0);
+  const raw=durations.map(value=>total*value/sum),allocated=raw.map(Math.floor);
+  let left=total-allocated.reduce((a,b)=>a+b,0);
+  raw.map((value,index)=>({index,fraction:value-Math.floor(value)})).sort((a,b)=>b.fraction-a.fraction||a.index-b.index).forEach(x=>{if(left>0){allocated[x.index]++;left--;}});
+  return allocated;
+}
+function allocateBrushPlanAcrossAgenda(rows,actualKey){
+  const studyClasses=rows.filter(x=>x.studyClass);
+  const entry=brushPlanEntryFor(actualKey);
+  if(!entry){
+    studyClasses.forEach(x=>{
+      const count=Math.max(6,Math.round((minutes(x.end)-minutes(x.start))/8));
+      x.title=`数学刷题 · 课内错题${count}题`;
+      x.note=`原课表：${x.originalCourse}；优先回做880错题${count}题，每题当场订正并标错因；不背436`;
+      x.output=`${count}题结果+错因`;
+    });
+    return;
+  }
+  const [,stage,,count]=entry;
+  const targets=rows.filter(x=>x.studyClass||(x.title||'').startsWith('880 带刷')).sort((a,b)=>minutes(a.start)-minutes(b.start));
+  if(!targets.length)return;
+  const allocation=wholeNumberAllocation(count,targets);let cursor=1;
+  targets.forEach((x,index)=>{
+    const amount=allocation[index],from=cursor,to=cursor+amount-1;cursor=to+1;
+    const origin=x.studyClass?`原课表：${x.originalCourse}；`:'';
+    x.type='math';x.brushCount=amount;
+    x.title=amount?`880 带刷（${stage}）· 今日第${from}–${to}题 / 共${count}题`:`880 带刷（${stage}）· 本格只订正`;
+    x.note=`${origin}${amount?`本格完成${amount}题`:'本格不领新题'}；完整题号见上方“880 · 今日战单”；独立做完当场对答案并标错因${x.studyClass?'；课内不背436':''}`;
+    x.why='把当日880总题量按所有可用数学格的分钟数分摊，题量只计算一次。';
+    x.steps=['按今日战单接续','独立完成','对答案并标概念/计算/思路'];x.output=amount?`${amount}题结果+错因`:'订正记录';
+  });
+}
+// 把账面学习任务围绕"真实课表"排进当天：FHSU 课格固定且纯净，
+// 其余课格从 9/10 起固定为数学刷题时间；所有固定课格都继续作为时间边界。
 // 学习格不早于自己原来的开始时间（保早晚节律），只在课后的空档里找位置，
 // 一个格放不下就拆成"续"格；23:20 睡眠边界后还放不下的，进当日容错注记。
 function packAroundRealClasses(taskBlocks, occupied){
@@ -1214,7 +1253,7 @@ function composeDailyAgenda(d,index=currentRangeIndex){
   const specialCourses=dayBlocks.filter(x=>x.type==='course'&&x.title.includes('形势与政策'));
   const classRows=[...baseClasses.filter(x=>x.day===dayIndex),...specialCourses]
     .sort((a,b)=>minutes(a.start)-minutes(b.start))
-    .map(x=>({...x,title:courseDisplayTitle(x),note:'',why:'上课：按真实周几固定；此格不排任何考研任务。'}));
+    .map(x=>classAgendaRow(x,actualKey));
   const beforeReset=actualKey<resetStudyStartDate;
   const ledger=dayBlocks
     .filter(x=>x.type!=='course'&&x.type!=='fhsu'&&x.type!=='homework')
@@ -1231,7 +1270,9 @@ function composeDailyAgenda(d,index=currentRangeIndex){
   const fixedRows=finalLedger.filter(x=>fixedTypes.has(x.type)&&(x.type!=='free'||!overlapsClass(x)));
   const taskRows=finalLedger.filter(x=>!fixedTypes.has(x.type)).sort((a,b)=>minutes(a.start)-minutes(b.start));
   const {rows:packed,overflow}=packAroundRealClasses(taskRows,[...fixedRows,...classRows].map(x=>({start:x.start,end:x.end})));
-  return {dayIndex,data:buildDayAgenda([...fixedRows,...classRows,...packed],index,dayIndex),overflow};
+  const data=buildDayAgenda([...fixedRows,...classRows,...packed],index,dayIndex);
+  allocateBrushPlanAcrossAgenda(data,actualKey);
+  return {dayIndex,data,overflow};
 }
 const studyMinutesLabel=value=>value>=60?`${Math.floor(value/60)}小时${value%60?`${value%60}分`:''}`:`${value}分钟`;
 function brushFocusFor(d,data){
@@ -1294,71 +1335,30 @@ function syncDayNavigationControls(){
     button.setAttribute?.('aria-pressed',String(agendaDayOffset===offset));
   }
 }
-function animateAgendaSwap(previousCard,direction,dragX=0){
-  const host=document.querySelector('#daily-agenda'),currentCard=host?.querySelector?.('.day-agenda-card');
-  if(!host||!currentCard||!previousCard?.cloneNode)return;
-  const distance=Math.max(host.clientWidth||0,320);
-  const ghost=previousCard.cloneNode(true);
-  ghost.classList.remove('is-dragging');ghost.classList.add('swipe-ghost');
-  ghost.style.setProperty('--swipe-start',`${dragX}px`);
-  ghost.style.setProperty('--swipe-end',`${direction*distance}px`);
-  host.append(ghost);
-  const enterClass=direction>0?'swipe-enter-left':'swipe-enter-right';
-  currentCard.classList.add(enterClass);
-  const removeGhost=()=>ghost.remove?.();
-  ghost.addEventListener?.('animationend',removeGhost,{once:true});
-  setTimeout(()=>{removeGhost();currentCard.classList.remove(enterClass);},340);
-}
-function setAgendaDayOffset(offset,transition=null){
+function setAgendaDayOffset(offset){
   const next=offset===1?1:0;if(next===agendaDayOffset)return;
-  const previousCard=document.querySelector('#daily-agenda')?.querySelector?.('.day-agenda-card');
   agendaDayOffset=next;renderDailyAgenda();renderMajorSyllabus(displayDate());
-  if(transition)animateAgendaSwap(previousCard,transition.direction,transition.dragX);
 }
 function setupDayNavigation(){
   const host=document.querySelector('#daily-agenda');if(!host?.addEventListener)return;
-  let startX=0,startY=0,lastX=0,lastY=0,startAt=0,pointerId=null,tracking=false,axis='';
-  const activeCard=()=>host.querySelector?.('.day-agenda-card');
-  const resetCard=card=>{
-    if(!card)return;card.classList.remove('is-dragging');card.style.setProperty('--swipe-x','0px');
-    setTimeout(()=>card.style.removeProperty('--swipe-x'),280);
-  };
-  const finish=(event,cancelled=false)=>{
+  let startX=0,startY=0,pointerId=null,tracking=false;
+  const finish=event=>{
     if(!tracking||(pointerId!==null&&event.pointerId!==undefined&&event.pointerId!==pointerId))return;
-    const card=activeCard(),endX=event.clientX??lastX,endY=event.clientY??lastY;
-    const dx=endX-startX,dy=endY-startY,elapsed=Math.max(1,Date.now()-startAt);
-    const horizontal=axis==='horizontal'||(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)*1.12);
-    const intended=agendaDayOffset===0?dx>0:dx<0;
-    const threshold=Math.min(64,Math.max(42,(host.clientWidth||360)*.14));
-    const committed=!cancelled&&horizontal&&intended&&(Math.abs(dx)>=threshold||(Math.abs(dx)>=28&&Math.abs(dx)/elapsed>=.45));
-    tracking=false;axis='';
+    const dx=event.clientX-startX,dy=event.clientY-startY;
+    tracking=false;
     try{host.releasePointerCapture?.(pointerId);}catch{}
     pointerId=null;
-    if(committed){
-      card?.classList.remove('is-dragging');
-      setAgendaDayOffset(agendaDayOffset===0?1:0,{direction:dx>0?1:-1,dragX:dx});
-    }else resetCard(card);
+    if(Math.abs(dx)<55||Math.abs(dx)<=Math.abs(dy)*1.2)return;
+    if(dx<0&&agendaDayOffset===0)setAgendaDayOffset(1);
+    else if(dx>0&&agendaDayOffset===1)setAgendaDayOffset(0);
   };
   host.addEventListener('pointerdown',event=>{
     if((event.pointerType==='mouse'&&event.button!==0)||tracking)return;
-    startX=lastX=event.clientX;startY=lastY=event.clientY;startAt=Date.now();pointerId=event.pointerId??null;tracking=true;axis='';
+    startX=event.clientX;startY=event.clientY;pointerId=event.pointerId??null;tracking=true;
     try{host.setPointerCapture?.(pointerId);}catch{}
   });
-  host.addEventListener('pointermove',event=>{
-    if(!tracking||(pointerId!==null&&event.pointerId!==undefined&&event.pointerId!==pointerId))return;
-    lastX=event.clientX;lastY=event.clientY;
-    const dx=lastX-startX,dy=lastY-startY;
-    if(!axis&&Math.hypot(dx,dy)>=8)axis=Math.abs(dx)>Math.abs(dy)*1.12?'horizontal':'vertical';
-    if(axis!=='horizontal')return;
-    event.preventDefault?.();
-    const intended=agendaDayOffset===0?dx>0:dx<0;
-    const resistance=intended?dx:dx*.12;
-    const limit=(host.clientWidth||360)*.56;
-    const dragX=Math.max(-limit,Math.min(limit,resistance));
-    const card=activeCard();card?.classList.add('is-dragging');card?.style.setProperty('--swipe-x',`${dragX}px`);
-  });
   host.addEventListener('pointerup',event=>finish(event));
-  host.addEventListener('pointercancel',event=>finish(event,true));
+  host.addEventListener('pointercancel',()=>{tracking=false;pointerId=null;});
   document.querySelector('#show-today')?.addEventListener?.('click',()=>setAgendaDayOffset(0));
   document.querySelector('#show-tomorrow')?.addEventListener?.('click',()=>setAgendaDayOffset(1));
 }

@@ -28,6 +28,10 @@ if (blackboardFridayStart !== '19:30' || blackboardFridayEnd !== '20:30') throw 
   if (!brush || brush.sourceDate!=='2026-09-08' || brush.count!==32) throw new Error('9/10 math must start from brush-plan day 1 (32 questions)');
   if (!first.some(x=>x.type==='major' && x.title.includes('第1–5个新内容单元'))) throw new Error('9/10 436 must start from units 1-5');
   if (first.some(x=>/昨日错题|436回看/.test(`${x.title} ${x.note}`))) throw new Error('reset day must not claim nonexistent prior-day math/436 work');
+  const classMath=first.filter(x=>x.studyClass);
+  if (classMath.length!==2 || !classMath.every(x=>x.type==='math'&&x.title.startsWith('880 带刷')&&x.note.includes('课内不背436'))) throw new Error('9/10 non-FHSU classes must become two quantified 880 study slots, never 436');
+  if (!first.some(x=>x.type==='fhsu'&&x.title.includes('商业政策（FHSU）')&&!/880|436/.test(`${x.title} ${x.note}`))) throw new Error('9/10 FHSU course must remain a pure class slot');
+  if (first.filter(x=>x.brushCount).reduce((sum,x)=>sum+x.brushCount,0)!==32) throw new Error('9/10 880 quantities across class and after-class slots must total the exact 32-question daily plan');
 }
 for (let date=new Date('2026-09-10T12:00:00'); date<=new Date('2026-10-31T12:00:00'); date.setDate(date.getDate()+1)) {
   const rows=composeDailyAgenda(new Date(date),1).data;
@@ -285,7 +289,32 @@ for (let date=new Date('2026-09-09T12:00:00'); date<=new Date('2026-10-23T12:00:
 {
   const actual=new Date('2026-09-10T12:00:00'), {data}=composeDailyAgenda(actual,rangeIndexFor(actual));
   const brush=brushFocusFor(actual,data);
-  if (!brush || brush.count!==32 || brush.sourceDate!=='2026-09-08' || brush.scheduledMinutes!==120 || brush.deficitMinutes!==78) throw new Error('9/10 880 focus must expose the reset first-day task and its honest 78-minute time deficit');
+  if (!brush || brush.count!==32 || brush.sourceDate!=='2026-09-08' || brush.scheduledMinutes!==310 || brush.deficitMinutes!==0) throw new Error('9/10 880 focus must include both non-FHSU class-study slots plus the after-class slots');
+}
+
+// 2026-09-09 最新口径：FHSU 必须听课；其余校内课从 9/10 起都是定量数学刷题时间，且绝不背 436。
+for (let date=new Date('2026-09-10T12:00:00'); date<=new Date('2026-10-23T12:00:00'); date.setDate(date.getDate()+1)) {
+  const actual=new Date(date), key=actual.toISOString().slice(0,10), index=rangeIndexFor(actual);
+  const {data}=composeDailyAgenda(actual,index), dayIndex=(actual.getDay()+6)%7;
+  for (const source of baseClasses.filter(x=>x.day===dayIndex)) {
+    const row=data.find(x=>x.start===source.start&&x.end===source.end);
+    if (!row) throw new Error(`class-time row missing from final agenda: ${key} ${source.title}`);
+    if (source.type==='fhsu') {
+      if (row.type!=='fhsu'||!/（FHSU）/.test(row.title)||/880|436|刷题/.test(`${row.title} ${row.note}`)) throw new Error(`FHSU class must remain course-only: ${key} ${source.title}`);
+    } else if (row.type!=='math'||!row.studyClass||!row.title.startsWith('880 带刷')||!/原课表：/.test(row.note)||!row.note.includes('课内不背436')) {
+      throw new Error(`non-FHSU class must become quantified math-only study: ${key} ${source.title}`);
+    }
+  }
+  const entry=brushPlanEntryFor(key);
+  if (entry) {
+    const allocated=data.filter(x=>Number.isInteger(x.brushCount)&&x.brushCount>0).reduce((sum,x)=>sum+x.brushCount,0);
+    if (allocated!==entry[3]) throw new Error(`final 880 slot quantities must total the daily plan: ${key} expected=${entry[3]} got=${allocated}`);
+  }
+}
+{
+  const {data}=composeDailyAgenda(new Date('2026-11-07T12:00:00'),9);
+  const politicsClass=data.find(x=>x.start==='08:20'&&x.end==='11:45'&&x.studyClass&&x.originalCourse?.includes('形势与政策4'));
+  if (!politicsClass||politicsClass.type!=='math'||!politicsClass.title.includes('数学刷题')||!politicsClass.note.includes('不背436')) throw new Error('non-FHSU politics class must also become a quantified math study slot after the 880 plan ends');
 }
 
 for (const [date,expected] of [['2026-09-02',0],['2026-09-21',0],['2026-09-22',1],['2026-10-08',1],['2026-10-09',2],['2026-11-08',2],['2026-11-09',3],['2026-12-08',3],['2026-12-09',4]]) if (currentRouteIndex(new Date(`${date}T12:00:00`))!==expected) throw new Error(`phase highlight must follow the eight-day shifted ledger date, wrong on ${date}`);
