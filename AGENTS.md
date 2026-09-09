@@ -31,16 +31,18 @@ iPhone 上已装"描述文件"（Web Clip），图标打开的就是线上地址
 | 常量/函数 | 含义 |
 |---|---|
 | `strictDateSchedules` | 9/2–9/30 每日账面（键=账面日期，显示时按滞后映射到实际日期） |
-| `actualScheduleStartDate` / `scheduleLagDays` | 实际第 1 天与顺延天数（当前 2026-09-06 / 4 天） |
+| `resetStudyStartDate` / `actualScheduleStartDate` / `scheduleLagDays` | 数学与 436 的实际第 1 天及账面顺延（当前 2026-09-10 / 8 天） |
 | `septemberContinuation` | 9/14–9/30 每日 spec（436 页段 / 880 题号 / 英语 / 概率） |
-| `currentBaselineDate` / `majorBaseline` | 436 起点（前 3 个已背）与每日新单元数（5 个/学习日） |
+| `currentBaselineDate` / `majorBaseline` | 436 账面起点（9/2 模板、完成 0 个）与每日新单元数（5 个/学习日） |
 | `majorRecitationMaterial` / `majorChapterCumulative` | 《背诵笔记》真实结构：10 章 213 个编号知识点，"第 N 个内容单元"的唯一事实来源 |
 | `linearAlgebraVerifiedLessons` / `linearAlgebraLessonSlots` / `futureLinearQueue` | 线代链：核对过的真实文件名、9 月排期、10 月队列 |
 | `probabilityRawDurations` | 方浩概率逐讲原始时长（夸克核对） |
-| `math880Required` / `math880BrushPlan` | 880 带刷计划：元数据 + 44 天逐日题单（881 个题号，实际日期 2026-09-08→10-21），`brushPlanEntryFor` / `brushPlanLagDays` 负责查询与顺延 |
+| `math880Required` / `math880BrushPlan` | 880 带刷原题单：44 天、881 个题号；当前实际 2026-09-10 起跑，`brushPlanEntryFor` / `brushPlanLagDays=2` 负责映射与顺延 |
 | `courseInfo` / `courseDisplayTitle()` | 课程教室与教师展示；财务管理教师 NAHID 来自用户口述，其余教师仍待核对，禁止恢复历史误标人名 |
 | `applyFixedEveningFrame()` | 固定晚间框架：18:05 回家 → 充电+夸克挂下载 → 19:30/21:00/22:30 三段 → 00:00 关灯 |
 | `composeDailyAgenda()` / `brushFocusFor()` / `agendaPosition()` | 最终页面合成、880 今日战单、当前/下一格定位；课程、生活框架、顺延任务的优先级只在这里收口，schedule 测试会直接检查最终结果 |
+| `blackboardFridayBlock()` | 真实星期约束：Blackboard/BB 只在周五 19:30–20:30，历史账面的 homework 行在最终合成时全部丢弃 |
+| `setAgendaDayOffset()` / `setupDayNavigation()` | 默认今天；课表向右滑看明天、向左滑回今天，按钮是同等兜底 |
 | `strictMorning()` / `routines` | 早晨框架：06:00 起床 → 06:20 第一格 → 07:00–07:45 在家加练 → 07:50 出门（买饭+吃+走路 30 分钟）→ 08:20 到校 |
 | `majorOrdinalLabel` / `normalizeMajorString` | "第 X–Y 个内容单元"序号引擎（含章提示、213 封口、二轮滚动） |
 | `routeData` / `courseLedger` | 阶段路线与台账（README 测试都锚定其中的句子，改文案要同步 tests） |
@@ -56,23 +58,24 @@ git add -A && git commit -m "..." && git push origin main                 # 推�
 - 版本号显示：页面页脚 `APP_VERSION`（app.js 顶部），改了就让它跟 `?v=` 一致。
 - 发布后验证：打开线上 URL 确认内容变了（或 `curl` 线上 `app.js?v=新版本号`）。
 
-## 2026-09-09 页面与最终排程审阅
+## 2026-09-09 最新重置与页面规则
 
-- 本轮**没有收到新的实际完成进度**，因此 `scheduleLagDays`、`brushPlanLagDays`、436 起点、880 题单和课程事实均保持不变。
-- 页面首屏改为直接显示“当前安排 / 接下来”，执行口径同时列出真实星期课程、账面来源日期和 880 原题单日期；这些信息都从现有数据即时计算，不新造进度。
+- 用户最新确认：截至 9/9，数学 880 完成 0 题、436 完成 0 个内容单元；旧“9/6 已开始”“436 前 3 个已背”“880 9/9 开刷”全部作废。
+- 实际 9/10 统一起跑：`scheduleLagDays=8`，9/10 消化 9/2 首账；`brushPlanLagDays=2`，9/10 显示原 9/8 题单的第 1 天 32 题；436 显示第 1–5 个内容单元。
+- 9/9 最终页面不得显示任何 `math` / `major` 任务；9/10 才出现首日任务。数学首日已排 120 分钟、对照原表估时仍缺 78 分钟，必须如实显示，不能把排入时间冒充完成。
+- Blackboard/BB 是真实星期约束，只在每周五 19:30–20:30 出现一次；最终合成层忽略旧模板里所有 `homework` 行，周六、周日和白天不得出现。
+- 页面默认今天；在 `#daily-agenda` 向右滑看明天、向左滑回今天，也可点“今天 / 明天”。顶部“当前安排 / 接下来”始终取真实今天，不把明日预览误标为正在进行。
 - `composeDailyAgenda()` 是最终渲染的单一入口：真实课程优先于冲突的休息占位；固定晚间框架只保留一段 18:05–18:25 回家通勤，并保留 19:10–19:30 洗澡恢复块。
-- `tests/schedule.mjs` 会逐日检查 2026-09-06 至 2026-10-22 的最终显示时间轴，必须 06:00–24:00 连续且无重叠；只验证底层账面已不再足够。
+- `tests/schedule.mjs` 会检查重置起点、Blackboard 周五唯一性和最终显示时间轴；`tests/perf.mjs` 会模拟右滑/左滑。所有日程仍必须 06:00–24:00 连续且无重叠。
 - 用户随后要求把教室、教师和 880 写得更明确：课程标题显示真实教室；财务管理显示用户口述的教师 `NAHID`，其余教师因现有截图无姓名而显示“待核对”；`brushFocusFor()` 完整列出当日 880 题单、原题单日期、题量、估时、已排分钟和缺口，不擅自增加题号或把排入时间当完成。
 
-## 当前锚点快照（2026-09-07，改动前先确认用户有没有新进展）
+## 当前锚点快照（2026-09-09，改动前先确认用户有没有新进展）
 
-- **实际第 1 天 = 2026-09-06**，滞后 4 天（9/2–9/5 未执行）。
-- **436**：只背了前 3 个（9/7 确认），新单元从 9/3 账起、5 个/学习日（用户 2026-09-07 拍板：非专业出身、20–30 分钟/题，不死磕）、周日只回收；
-  一轮 213 个预计 10/25 账收口并总回收；资料结构见 `majorRecitationMaterial`。
+- **实际第 1 天 = 2026-09-10**，9/2 起的账面整体后移 8 天。
+- **436**：当前完成 0 个；9/10 从第 1–5 个起，5 个/学习日、周日只回收；一轮 213 个预计实际 10/29 前后收口。资料结构见 `majorRecitationMaterial`。
 - **880**：2026-09-07 中午用户拍板改回**带刷表跳选题号**（推翻同日早间“顺序推进”方案）。
-  逐日题单在 `math880BrushPlan`（44 天，实际日期 9/8 开刷 → 10/21 收尾；必做 828、选择做 37、
-  特难题 16，合计 881，已与原带刷计划表逐章逐题型核对一致）。渲染时 `applyBrushPlanOverlay`
-  把当天数学格改写成“880 带刷”题单；实际 10/5–10/21 由生成的带刷日子接管（键=实际日期）。
+  逐日原题单在 `math880BrushPlan`（44 天，9/8→10/21；必做 828、选择做 37、特难题 16，合计 881，已与原表核对）。当前完成 0 题；实际 9/10 从原 9/8 首日 32 题起跑，预计 10/23 收尾。
+  渲染时 `applyBrushPlanOverlay` 把当天数学格改写成“880 带刷”题单。
   落后就把 `brushPlanLagDays` +1，周日是缓冲垫。
 - **线代**：第 2 章只剩 2.8 矩阵的分块（34% 断点，9/3 账已排收尾）；2.9 已听完（100%，永不排课）；
   之后 03 矩阵相似 → 04 二次型按真实文件名推进（`linearAlgebraVerifiedLessons`）。
