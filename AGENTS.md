@@ -42,7 +42,7 @@ iPhone 上已装"描述文件"（Web Clip），图标打开的就是线上地址
 | `applyFixedEveningFrame()` | 固定晚间框架：18:05 回家 → 充电+夸克挂下载 → 19:30/21:00/22:30 三段 → 00:00 关灯 |
 | `composeDailyAgenda()` / `brushFocusFor()` / `agendaPosition()` | 最终页面合成、880 今日战单、当前/下一格定位；课程、生活框架、顺延任务的优先级只在这里收口，schedule 测试会直接检查最终结果 |
 | `blackboardFridayBlock()` | 真实星期约束：Blackboard/BB 只在周五 19:30–20:30，历史账面的 homework 行在最终合成时全部丢弃 |
-| `setAgendaDayOffset()` / `setupDayNavigation()` | 默认今天；课表向右滑看明天、向左滑回今天，按钮是同等兜底 |
+| `setAgendaDayOffset()` / `setupDayNavigation()` | 默认今天；手指向右划看明天、向左划回今天，卡片跟手移动并平滑换页，按钮是同等兜底 |
 | `strictMorning()` / `routines` | 早晨框架：06:00 起床 → 06:20 第一格 → 07:00–07:45 在家加练 → 07:50 出门（买饭+吃+走路 30 分钟）→ 08:20 到校 |
 | `majorOrdinalLabel` / `normalizeMajorString` | "第 X–Y 个内容单元"序号引擎（含章提示、213 封口、二轮滚动） |
 | `routeData` / `courseLedger` | 阶段路线与台账（README 测试都锚定其中的句子，改文案要同步 tests） |
@@ -64,7 +64,7 @@ git add -A && git commit -m "..." && git push origin main                 # 推�
 - 实际 9/10 统一起跑：`scheduleLagDays=8`，9/10 消化 9/2 首账；`brushPlanLagDays=2`，9/10 显示原 9/8 题单的第 1 天 32 题；436 显示第 1–5 个内容单元。
 - 9/9 最终页面不得显示任何 `math` / `major` 任务；9/10 才出现首日任务。数学首日已排 120 分钟、对照原表估时仍缺 78 分钟，必须如实显示，不能把排入时间冒充完成。
 - Blackboard/BB 是真实星期约束，只在每周五 19:30–20:30 出现一次；最终合成层忽略旧模板里所有 `homework` 行，周六、周日和白天不得出现。
-- 页面默认今天；在 `#daily-agenda` 向右滑看明天、向左滑回今天，也可点“今天 / 明天”。顶部“当前安排 / 接下来”始终取真实今天，不把明日预览误标为正在进行。
+- 页面默认今天；手指从 `#daily-agenda` 中间向右划看明天、向左划回今天，拖动期间卡片必须跟手，也可点“今天 / 明天”。顶部“当前安排 / 接下来”始终取真实今天，不把明日预览误标为正在进行。
 - `composeDailyAgenda()` 是最终渲染的单一入口：真实课程优先于冲突的休息占位；固定晚间框架只保留一段 18:05–18:25 回家通勤，并保留 19:10–19:30 洗澡恢复块。
 - `tests/schedule.mjs` 会检查重置起点、Blackboard 周五唯一性和最终显示时间轴；`tests/perf.mjs` 会模拟右滑/左滑。所有日程仍必须 06:00–24:00 连续且无重叠。
 - 用户随后要求把教室、教师和 880 写得更明确：课程标题显示真实教室；财务管理显示用户口述的教师 `NAHID`，其余教师因现有截图无姓名而显示“待核对”；`brushFocusFor()` 完整列出当日 880 题单、原题单日期、题量、估时、已排分钟和缺口，不擅自增加题号或把排入时间当完成。

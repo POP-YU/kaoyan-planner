@@ -1,4 +1,4 @@
-const APP_VERSION = 'reset-0910a';
+const APP_VERSION = 'reset-0910b';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -1294,20 +1294,71 @@ function syncDayNavigationControls(){
     button.setAttribute?.('aria-pressed',String(agendaDayOffset===offset));
   }
 }
-function setAgendaDayOffset(offset){
+function animateAgendaSwap(previousCard,direction,dragX=0){
+  const host=document.querySelector('#daily-agenda'),currentCard=host?.querySelector?.('.day-agenda-card');
+  if(!host||!currentCard||!previousCard?.cloneNode)return;
+  const distance=Math.max(host.clientWidth||0,320);
+  const ghost=previousCard.cloneNode(true);
+  ghost.classList.remove('is-dragging');ghost.classList.add('swipe-ghost');
+  ghost.style.setProperty('--swipe-start',`${dragX}px`);
+  ghost.style.setProperty('--swipe-end',`${direction*distance}px`);
+  host.append(ghost);
+  const enterClass=direction>0?'swipe-enter-left':'swipe-enter-right';
+  currentCard.classList.add(enterClass);
+  const removeGhost=()=>ghost.remove?.();
+  ghost.addEventListener?.('animationend',removeGhost,{once:true});
+  setTimeout(()=>{removeGhost();currentCard.classList.remove(enterClass);},340);
+}
+function setAgendaDayOffset(offset,transition=null){
   const next=offset===1?1:0;if(next===agendaDayOffset)return;
+  const previousCard=document.querySelector('#daily-agenda')?.querySelector?.('.day-agenda-card');
   agendaDayOffset=next;renderDailyAgenda();renderMajorSyllabus(displayDate());
+  if(transition)animateAgendaSwap(previousCard,transition.direction,transition.dragX);
 }
 function setupDayNavigation(){
   const host=document.querySelector('#daily-agenda');if(!host?.addEventListener)return;
-  let startX=0,startY=0,tracking=false;
-  host.addEventListener('pointerdown',event=>{if(event.pointerType==='mouse'&&event.button!==0)return;startX=event.clientX;startY=event.clientY;tracking=true;});
-  host.addEventListener('pointerup',event=>{
-    if(!tracking)return;tracking=false;
-    const dx=event.clientX-startX,dy=event.clientY-startY;
-    if(Math.abs(dx)<55||Math.abs(dx)<=Math.abs(dy)*1.2)return;
-    if(dx>0)setAgendaDayOffset(1);else setAgendaDayOffset(0);
+  let startX=0,startY=0,lastX=0,lastY=0,startAt=0,pointerId=null,tracking=false,axis='';
+  const activeCard=()=>host.querySelector?.('.day-agenda-card');
+  const resetCard=card=>{
+    if(!card)return;card.classList.remove('is-dragging');card.style.setProperty('--swipe-x','0px');
+    setTimeout(()=>card.style.removeProperty('--swipe-x'),280);
+  };
+  const finish=(event,cancelled=false)=>{
+    if(!tracking||(pointerId!==null&&event.pointerId!==undefined&&event.pointerId!==pointerId))return;
+    const card=activeCard(),endX=event.clientX??lastX,endY=event.clientY??lastY;
+    const dx=endX-startX,dy=endY-startY,elapsed=Math.max(1,Date.now()-startAt);
+    const horizontal=axis==='horizontal'||(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)*1.12);
+    const intended=agendaDayOffset===0?dx>0:dx<0;
+    const threshold=Math.min(64,Math.max(42,(host.clientWidth||360)*.14));
+    const committed=!cancelled&&horizontal&&intended&&(Math.abs(dx)>=threshold||(Math.abs(dx)>=28&&Math.abs(dx)/elapsed>=.45));
+    tracking=false;axis='';
+    try{host.releasePointerCapture?.(pointerId);}catch{}
+    pointerId=null;
+    if(committed){
+      card?.classList.remove('is-dragging');
+      setAgendaDayOffset(agendaDayOffset===0?1:0,{direction:dx>0?1:-1,dragX:dx});
+    }else resetCard(card);
+  };
+  host.addEventListener('pointerdown',event=>{
+    if((event.pointerType==='mouse'&&event.button!==0)||tracking)return;
+    startX=lastX=event.clientX;startY=lastY=event.clientY;startAt=Date.now();pointerId=event.pointerId??null;tracking=true;axis='';
+    try{host.setPointerCapture?.(pointerId);}catch{}
   });
+  host.addEventListener('pointermove',event=>{
+    if(!tracking||(pointerId!==null&&event.pointerId!==undefined&&event.pointerId!==pointerId))return;
+    lastX=event.clientX;lastY=event.clientY;
+    const dx=lastX-startX,dy=lastY-startY;
+    if(!axis&&Math.hypot(dx,dy)>=8)axis=Math.abs(dx)>Math.abs(dy)*1.12?'horizontal':'vertical';
+    if(axis!=='horizontal')return;
+    event.preventDefault?.();
+    const intended=agendaDayOffset===0?dx>0:dx<0;
+    const resistance=intended?dx:dx*.12;
+    const limit=(host.clientWidth||360)*.56;
+    const dragX=Math.max(-limit,Math.min(limit,resistance));
+    const card=activeCard();card?.classList.add('is-dragging');card?.style.setProperty('--swipe-x',`${dragX}px`);
+  });
+  host.addEventListener('pointerup',event=>finish(event));
+  host.addEventListener('pointercancel',event=>finish(event,true));
   document.querySelector('#show-today')?.addEventListener?.('click',()=>setAgendaDayOffset(0));
   document.querySelector('#show-tomorrow')?.addEventListener?.('click',()=>setAgendaDayOffset(1));
 }
