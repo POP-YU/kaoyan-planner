@@ -1,4 +1,4 @@
-const APP_VERSION = 'brush-0909c';
+const APP_VERSION = 'review-0909a';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -700,8 +700,10 @@ const fixedEveningPayloadTypes = new Set(['math','major','english','politics','h
 function applyFixedEveningFrame(){
   const fmt = m => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
   Object.entries(strictDateSchedules).forEach(([date,rows])=>{
-    // 只保留 16:35 前结束的白天行；16:05 之后的洗澡/通勤/休息填充行由固定框架接管。
-    const keep = rows.filter(x=>minutes(x.end)<=minutes('16:35'));
+    // 旧日程中的回家、晚饭、洗澡和睡前框架全部由下面的固定框架接管。
+    // 不能只按结束时间过滤：周五旧“15:45 回家”会与真实 15:00–16:35 课程重叠。
+    const supersededFrame = x => /^(通勤 · 学校→家|晚饭|短休|洗澡|洗漱)/.test(x.title||'');
+    const keep = rows.filter(x=>minutes(x.end)<=minutes('16:35') && !supersededFrame(x));
     const payload = rows.filter(x=>minutes(x.end)>minutes('16:35') && fixedEveningPayloadTypes.has(x.type));
     const frame = [
       t(`eve-commute-${date}`,0,'18:05','18:25','通勤 · 学校→家','routine','每天固定18:05出发；充电和WiFi在家等着','','',''),
@@ -1153,8 +1155,9 @@ function currentRouteIndex(now=new Date()){
 function renderPhaseLine(){const el=document.querySelector('#phase-line');if(!el)return;const active=currentRouteIndex();el.innerHTML=routeData.map((r,i)=>`<article class="phase-card ${i===active?'is-current':''}" style="--route:${r.color};--tint:${r.tint}"><span class="phase-date">${r.dates}</span><strong>${r.title}</strong><p>${r.desc}</p><small>${r.check}</small></article>`).join('');}
 function displayDate(){const now=new Date();const dates=datesForRange(currentRangeIndex);const start=dates[0];const end=dates[6];if(now<start)return start;if(now>end)return end;return new Date(now.getFullYear(),now.getMonth(),now.getDate());}
 function updateCurrentAgenda(){
-  if(!document.querySelectorAll)return;
   const now=new Date(),current=now.getHours()*60+now.getMinutes();
+  const position=agendaPosition(currentAgendaRows,now);updateNowPanel(position);
+  if(!document.querySelectorAll)return;
   document.querySelectorAll('.agenda-item[data-start]').forEach(row=>{
     const start=minutes(row.dataset.start),end=minutes(row.dataset.end);
     row.classList.toggle('is-current',current>=start&&current<end);
@@ -1195,18 +1198,50 @@ function packAroundRealClasses(taskBlocks, occupied){
   }
   return {rows:out, overflow};
 }
-function renderDailyAgenda(){const host=document.querySelector('#daily-agenda');if(!host)return;const d=displayDate();lastAgendaDate=dateKey(d);const dates=datesForRange(currentRangeIndex);const dayIndex=Math.max(0,Math.min(6,Math.round((d-dates[0])/86400000)));const dayBlocks=datedBlocks(currentRangeIndex).filter(x=>x.day===dayIndex);
-// 课表与任务结合：真实课程按周几固定插进主线（纯净、带教室；fhsu 格内什么都不排），
-// 账面学习任务由 packAroundRealClasses 围绕课格排布，不再出现"课表呢/课时撞任务"。
-const specialCourses=dayBlocks.filter(x=>x.type==='course'&&x.title.includes('形势与政策'));
-const classRows=[...baseClasses.filter(x=>x.day===dayIndex),...specialCourses].sort((a,b)=>minutes(a.start)-minutes(b.start)).map(x=>({...x,title:courseDisplayTitle(x),note:'',why:'上课：按真实周几固定；此格不排任何考研任务。'}));
-const ledger=dayBlocks.filter(x=>x.type!=='course'&&x.type!=='fhsu');
-const FIXED=new Set(['routine','meal','sleep']);
-const fixedRows=ledger.filter(x=>FIXED.has(x.type));
-const taskRows=ledger.filter(x=>!FIXED.has(x.type)&&x.type!=='free').sort((a,b)=>minutes(a.start)-minutes(b.start));
-const {rows:packed,overflow}=packAroundRealClasses(taskRows,[...fixedRows,...classRows].map(x=>({start:x.start,end:x.end})));
-const merged=[...fixedRows,...classRows,...packed];
-const data=buildDayAgenda(merged,currentRangeIndex,dayIndex);host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';const mainHtml=data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('');const overflowHtml=overflow.length?`<div class="overflow-note">今晚没排下（课多不硬塞，进明早容错格先补）：${overflow.join('；')}</div>`:'';card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${overflowHtml}`;host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();}
+// 把“真实星期课表 + 顺延账面 + 固定生活框架”合成最终页面。测试直接调用这个
+// 纯函数检查最终显示结果，避免底层账面无重叠、页面重排后却撞课。
+function composeDailyAgenda(d,index=currentRangeIndex){
+  const dayIndex=(d.getDay()+6)%7;
+  const dayBlocks=datedBlocks(index).filter(x=>x.day===dayIndex);
+  const specialCourses=dayBlocks.filter(x=>x.type==='course'&&x.title.includes('形势与政策'));
+  const classRows=[...baseClasses.filter(x=>x.day===dayIndex),...specialCourses]
+    .sort((a,b)=>minutes(a.start)-minutes(b.start))
+    .map(x=>({...x,title:courseDisplayTitle(x),note:'',why:'上课：按真实周几固定；此格不排任何考研任务。'}));
+  const ledger=dayBlocks.filter(x=>x.type!=='course'&&x.type!=='fhsu');
+  const fixedTypes=new Set(['routine','meal','sleep','free']);
+  const overlapsClass=x=>classRows.some(c=>minutes(x.start)<minutes(c.end)&&minutes(c.start)<minutes(x.end));
+  const fixedRows=ledger.filter(x=>fixedTypes.has(x.type)&&(x.type!=='free'||!overlapsClass(x)));
+  const taskRows=ledger.filter(x=>!fixedTypes.has(x.type)).sort((a,b)=>minutes(a.start)-minutes(b.start));
+  const {rows:packed,overflow}=packAroundRealClasses(taskRows,[...fixedRows,...classRows].map(x=>({start:x.start,end:x.end})));
+  return {dayIndex,data:buildDayAgenda([...fixedRows,...classRows,...packed],index,dayIndex),overflow};
+}
+let currentAgendaRows=[];
+function agendaPosition(rows,now=new Date()){
+  const current=now.getHours()*60+now.getMinutes();
+  const ordered=[...rows].sort((a,b)=>minutes(a.start)-minutes(b.start));
+  const active=ordered.find(x=>current>=minutes(x.start)&&current<minutes(x.end))||null;
+  const next=ordered.find(x=>minutes(x.start)>=(active?minutes(active.end):current))||null;
+  return {active,next};
+}
+function updateNowPanel(position){
+  const set=(titleId,timeId,row,fallback)=>{
+    const title=document.querySelector(titleId),time=document.querySelector(timeId);
+    if(title)title.textContent=row?.title||fallback;
+    if(time)time.textContent=row?`${row.start}–${row.end}`:'今天没有后续安排';
+  };
+  set('#current-task-title','#current-task-time',position.active,'下一格尚未开始');
+  set('#next-task-title','#next-task-time',position.next,'今天已经收口');
+}
+function renderDailyAgenda(){
+  const host=document.querySelector('#daily-agenda');if(!host)return;
+  const d=displayDate();lastAgendaDate=dateKey(d);
+  const {dayIndex,data,overflow}=composeDailyAgenda(d,currentRangeIndex);currentAgendaRows=data;
+  host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';
+  const mainHtml=data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('');
+  const overflowHtml=overflow.length?`<div class="overflow-note">今天未排下（不挤睡眠，进入下一执行日）：${overflow.join('；')}</div>`:'';
+  card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${overflowHtml}`;
+  host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();
+}
 function renderTimetable(){
   syncRangeToToday();
   renderDailyAgenda();
@@ -1215,9 +1250,16 @@ function renderTimetable(){
   const dateTitle=document.querySelector('#date-title');
   const topDate=document.querySelector('#top-date');
   const focus=document.querySelector('#today-focus');
-  if(dateTitle)dateTitle.textContent=`${now.getFullYear()}年${now.getMonth()+1}月起 · 初试前`;
+  const actualKey=dateKey(now),sourceKey=scheduleSourceDate(actualKey),brush=brushPlanEntryFor(actualKey);
+  const keyText=key=>{const [,month,day]=key.split('-').map(Number);return `${month}月${day}日`;};
+  if(dateTitle)dateTitle.textContent=`${dateText(now)} · 今天执行什么`;
+  const subtitle=document.querySelector('#date-subtitle');
+  if(subtitle){
+    const brushText=brush?`880 执行带刷第 ${math880BrushPlan.indexOf(brush)+1} 天（原题单 ${keyText(brush[0])}，${brush[3]} 题）`:'880 今天没有新题单';
+    subtitle.textContent=`课程按今天${days[now.getDay()===0?6:now.getDay()-1]}的真实课表固定；436、线代、概率和英语执行${keyText(sourceKey)}账；${brushText}。没有做完的不算完成，按规则顺延。`;
+  }
   if(topDate)topDate.textContent='真实时间 · 当天自动更新';
-  if(focus)focus.textContent=`${dateText(now)} · 严格执行`;
+  if(focus)focus.textContent=`${dateText(now)} · 按当前格执行`;
   updateDailyBreakfast();
 }
 // 页面只保留当天课表与阶段路线；复盘不再占一整块屏幕。

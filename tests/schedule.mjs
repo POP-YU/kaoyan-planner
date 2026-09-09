@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
-const nodes = new Map(['course-ledger-body','daily-agenda','daily-title','today-badge','date-title','top-date','today-focus','today-meal','phase-line','live-clock'].map(id => [id, {innerHTML:'',textContent:'',append(){}}]));
+const nodes = new Map(['course-ledger-body','daily-agenda','daily-title','today-badge','date-title','date-subtitle','top-date','today-focus','today-meal','phase-line','live-clock','current-task-title','current-task-time','next-task-title','next-task-time'].map(id => [id, {innerHTML:'',textContent:'',append(){}}]));
 const document = {
   hidden: false,
   querySelector(selector){ return nodes.get(selector.slice(1)) ?? null; },
@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex,courseInfo};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,currentRouteIndex,courseInfo} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,agendaPosition,currentRouteIndex,courseInfo,rangeStarts};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,agendaPosition,currentRouteIndex,courseInfo,rangeStarts} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -241,6 +241,26 @@ for (const row of baseClasses.filter(x=>x.type==='fhsu')) {
 }
 for (const name of Object.keys(courseInfo)) {
   if (courseInfo[name].teacher) throw new Error(`courseInfo must not carry teacher names (schedule has none): ${name}`);
+}
+
+// 最终页面守卫：底层账面还要经过真实星期课表和固定晚间框架重排。
+// 这里直接验证用户最终看到的时间轴，防止旧“15:45回家”重新压到15:00–16:35课程上。
+const rangeIndexFor = date => Math.max(0,Math.floor((Number(date)-Number(rangeStarts[0]))/(7*24*60*60*1000)));
+for (let date=new Date('2026-09-06T12:00:00'); date<=new Date('2026-10-22T12:00:00'); date.setDate(date.getDate()+1)) {
+  const actual=new Date(date), key=actual.toISOString().slice(0,10), index=rangeIndexFor(actual);
+  const {data}=composeDailyAgenda(actual,index);
+  const rows=[...data].sort((a,b)=>minutes(a.start)-minutes(b.start));
+  if (rows[0]?.start!=='06:00' || rows.at(-1)?.end!=='24:00') throw new Error(`rendered page boundary missing on ${key}`);
+  for (let i=1;i<rows.length;i++) if (rows[i].start!==rows[i-1].end) throw new Error(`rendered page gap/overlap ${key}: ${rows[i-1].end} -> ${rows[i].start}`);
+  const commutes=rows.filter(x=>x.title==='通勤 · 学校→家');
+  if (commutes.length!==1 || commutes[0].start!=='18:05' || commutes[0].end!=='18:25') throw new Error(`rendered page must show the single fixed 18:05 commute on ${key}`);
+}
+{
+  const actual=new Date('2026-09-09T12:00:00'), {data}=composeDailyAgenda(actual,rangeIndexFor(actual));
+  if (!data.some(x=>x.start==='15:00'&&x.end==='16:35'&&x.title.includes('营销学'))) throw new Error('9/9 real afternoon class missing from rendered page');
+  if (!data.some(x=>x.start==='19:10'&&x.end==='19:30'&&x.title==='洗澡 · 放空')) throw new Error('fixed evening recovery block must not be overwritten by packed study');
+  const status=agendaPosition(data,new Date('2026-09-09T19:15:00'));
+  if (status.active?.title!=='洗澡 · 放空' || !status.next) throw new Error('current/next panel must read from the final rendered agenda');
 }
 
 for (const [date,expected] of [['2026-09-02',0],['2026-09-14',0],['2026-09-19',1],['2026-10-01',1],['2026-10-06',2],['2026-11-06',3],['2026-12-06',4]]) if (currentRouteIndex(new Date(`${date}T12:00:00`))!==expected) throw new Error(`phase highlight must follow the consumed ledger date, wrong on ${date}`);

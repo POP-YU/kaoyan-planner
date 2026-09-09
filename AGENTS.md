@@ -39,6 +39,7 @@ iPhone 上已装"描述文件"（Web Clip），图标打开的就是线上地址
 | `probabilityRawDurations` | 方浩概率逐讲原始时长（夸克核对） |
 | `math880Required` / `math880BrushPlan` | 880 带刷计划：元数据 + 44 天逐日题单（881 个题号，实际日期 2026-09-08→10-21），`brushPlanEntryFor` / `brushPlanLagDays` 负责查询与顺延 |
 | `applyFixedEveningFrame()` | 固定晚间框架：18:05 回家 → 充电+夸克挂下载 → 19:30/21:00/22:30 三段 → 00:00 关灯 |
+| `composeDailyAgenda()` / `agendaPosition()` | 最终页面合成与当前/下一格定位；课程、生活框架、顺延任务的优先级只在这里收口，schedule 测试会直接检查最终结果 |
 | `strictMorning()` / `routines` | 早晨框架：06:00 起床 → 06:20 第一格 → 07:00–07:45 在家加练 → 07:50 出门（买饭+吃+走路 30 分钟）→ 08:20 到校 |
 | `majorOrdinalLabel` / `normalizeMajorString` | "第 X–Y 个内容单元"序号引擎（含章提示、213 封口、二轮滚动） |
 | `routeData` / `courseLedger` | 阶段路线与台账（README 测试都锚定其中的句子，改文案要同步 tests） |
@@ -53,6 +54,13 @@ git add -A && git commit -m "..." && git push origin main                 # 推�
 - 缓存穿透：改了代码要同步 `index.html` 的 `?v=` 参数和 `tests/smoke.mjs` 里的版本串。
 - 版本号显示：页面页脚 `APP_VERSION`（app.js 顶部），改了就让它跟 `?v=` 一致。
 - 发布后验证：打开线上 URL 确认内容变了（或 `curl` 线上 `app.js?v=新版本号`）。
+
+## 2026-09-09 页面与最终排程审阅
+
+- 本轮**没有收到新的实际完成进度**，因此 `scheduleLagDays`、`brushPlanLagDays`、436 起点、880 题单和课程事实均保持不变。
+- 页面首屏改为直接显示“当前安排 / 接下来”，执行口径同时列出真实星期课程、账面来源日期和 880 原题单日期；这些信息都从现有数据即时计算，不新造进度。
+- `composeDailyAgenda()` 是最终渲染的单一入口：真实课程优先于冲突的休息占位；固定晚间框架只保留一段 18:05–18:25 回家通勤，并保留 19:10–19:30 洗澡恢复块。
+- `tests/schedule.mjs` 会逐日检查 2026-09-06 至 2026-10-22 的最终显示时间轴，必须 06:00–24:00 连续且无重叠；只验证底层账面已不再足够。
 
 ## 当前锚点快照（2026-09-07，改动前先确认用户有没有新进展）
 
