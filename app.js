@@ -1,4 +1,4 @@
-const APP_VERSION = 'review-0909a';
+const APP_VERSION = 'sprint-0909b';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -17,16 +17,16 @@ const baseClasses = [
   classBlock('fri-letter',4,'10:10','11:45','外贸英文函电','course')
 ];
 // 课程元数据：教室来自用户课表截图（2026-2027学年第1学期 第1周）。
-// 截图里没有教师姓名——此前误标的人名已全部删除；fhsu 三门即课表上的 (FHSU) 外教课。
+// 用户口述确认财务管理教师为 NAHID；其余截图没有教师姓名，明确写待核对，不回填历史误标人名。
 // 同一门课不同天上不同教室的（报关实务/营销学），按周几记教室；形势与政策4 为双周课（非本周）。
 const courseInfo = {
-  '报关实务': { rooms:{0:'国商310',3:'国商309'} },
-  '外贸英文函电': { rooms:{2:'国商608',4:'国商608'} },
-  '营销学': { rooms:{0:'国商513',2:'国商207'}, foreign:true },
-  '商业政策': { rooms:{1:'国商311',3:'国商311'}, foreign:true },
-  '财务管理': { rooms:{0:'国商502',2:'国商502'}, foreign:true },
-  '国际贸易实务': { rooms:{3:'国商514'} },
-  '形势与政策4': { rooms:{5:'博文411'} }
+  '报关实务': { rooms:{0:'国商310',3:'国商309'}, teacher:'待核对' },
+  '外贸英文函电': { rooms:{2:'国商608',4:'国商608'}, teacher:'待核对' },
+  '营销学': { rooms:{0:'国商513',2:'国商207'}, teacher:'待核对', foreign:true },
+  '商业政策': { rooms:{1:'国商311',3:'国商311'}, teacher:'待核对', foreign:true },
+  '财务管理': { rooms:{0:'国商502',2:'国商502'}, teacher:'NAHID', foreign:true },
+  '国际贸易实务': { rooms:{3:'国商514'}, teacher:'待核对' },
+  '形势与政策4': { rooms:{5:'博文411'}, teacher:'待核对' }
 };
 const returnSlots = [['16:35','17:00'],['16:35','17:00'],['16:35','17:00'],['16:35','17:00'],['15:45','16:05'],['16:40','17:00'],['16:00','16:20']];
 const routines = days.flatMap((_,i)=>[
@@ -1169,7 +1169,7 @@ function courseDisplayTitle(x){
   if(!info)return x.title;
   const room=info.rooms?(info.rooms[x.day]||Object.values(info.rooms)[0]):'';
   const tag=info.foreign?'（FHSU）':'';
-  return `${x.title}${tag}${room?' · '+room:''}`;
+  return `${x.title}${tag}${room?' · '+room:''}${info.teacher?' · 教师：'+info.teacher:''}`;
 }
 // 把账面学习任务围绕"真实课表"排进当天：课格固定且纯净（不排任何任务），
 // 学习格不早于自己原来的开始时间（保早晚节律），只在课后的空档里找位置，
@@ -1215,6 +1215,15 @@ function composeDailyAgenda(d,index=currentRangeIndex){
   const {rows:packed,overflow}=packAroundRealClasses(taskRows,[...fixedRows,...classRows].map(x=>({start:x.start,end:x.end})));
   return {dayIndex,data:buildDayAgenda([...fixedRows,...classRows,...packed],index,dayIndex),overflow};
 }
+const studyMinutesLabel=value=>value>=60?`${Math.floor(value/60)}小时${value%60?`${value%60}分`:''}`:`${value}分钟`;
+function brushFocusFor(d,data){
+  const entry=brushPlanEntryFor(dateKey(d));if(!entry)return null;
+  const [sourceDate,stage,task,count,hours]=entry;
+  const rows=data.filter(x=>(x.title||'').startsWith('880 带刷'));
+  const scheduledMinutes=rows.reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0);
+  const expectedMinutes=Math.round(parseFloat(hours)*60);
+  return {sourceDate,stage,task,count,hours,scheduledMinutes,expectedMinutes,deficitMinutes:Math.max(0,expectedMinutes-scheduledMinutes),slots:rows.map(x=>`${x.start}–${x.end}`)};
+}
 let currentAgendaRows=[];
 function agendaPosition(rows,now=new Date()){
   const current=now.getHours()*60+now.getMinutes();
@@ -1237,9 +1246,11 @@ function renderDailyAgenda(){
   const d=displayDate();lastAgendaDate=dateKey(d);
   const {dayIndex,data,overflow}=composeDailyAgenda(d,currentRangeIndex);currentAgendaRows=data;
   host.innerHTML='';const card=document.createElement('article');card.className='day-agenda-card is-today single-day';
+  const brush=brushFocusFor(d,data);
+  const brushHtml=brush?`<section class="brush-focus" aria-label="880今日战单"><header><span>880 · 今日战单</span><strong>${brush.stage} ${brush.count}题</strong></header><div class="brush-metrics"><b>原题单 ${brush.sourceDate.slice(5).replace('-','/')}</b><b>估时 ${brush.hours}</b><b>已排 ${studyMinutesLabel(brush.scheduledMinutes)}</b></div><p>${brush.task}</p><small>落点：${brush.slots.join('、')||'今天尚未排入时间轴'}。${brush.deficitMinutes?`仍缺 ${studyMinutesLabel(brush.deficitMinutes)}，没有做完就随未完成账顺延。`:'时间覆盖计划表估时，但只有做完并订正才算完成。'}</small></section>`:'';
   const mainHtml=data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('');
   const overflowHtml=overflow.length?`<div class="overflow-note">今天未排下（不挤睡眠，进入下一执行日）：${overflow.join('；')}</div>`:'';
-  card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header><div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${overflowHtml}`;
+  card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">实时当天</span></header>${brushHtml}<div class="agenda-table-head"><span>时间</span><span>今天做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${overflowHtml}`;
   host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · 当天安排`;document.querySelector('#today-badge').textContent=`${dateText(d)} 自动更新`;updateCurrentAgenda();renderPhaseLine();
 }
 function renderTimetable(){

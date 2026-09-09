@@ -10,8 +10,8 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,agendaPosition,currentRouteIndex,courseInfo,rangeStarts};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,agendaPosition,currentRouteIndex,courseInfo,rangeStarts} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,brushFocusFor,agendaPosition,currentRouteIndex,courseInfo,rangeStarts};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,brushFocusFor,agendaPosition,currentRouteIndex,courseInfo,rangeStarts} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 
 const expectedCourses = [
@@ -230,8 +230,8 @@ for (const [date,rows] of Object.entries(strictDateSchedules)) {
     if (Array.isArray(row.title)) throw new Error(`course row title must be a string, not nested array: ${date}`);
   }
 }
-// 课程元数据必须按周几给全教室（来自用户真实课表截图 2026-09-08）；截图无教师姓名，
-// 此前误标的人名已删除；fhsu 三门须标 (FHSU) 外教课。
+// 课程元数据必须按周几给全教室；财务管理教师由用户口述确认为 NAHID，
+// 其余教师没有可核对姓名，必须明确写待核对，不能恢复历史误标。
 for (const row of baseClasses) {
   const info=courseInfo[row.title];
   if (!info || !info.rooms || !info.rooms[row.day]) throw new Error(`courseInfo must have a room for ${row.title} on day ${row.day}`);
@@ -239,9 +239,8 @@ for (const row of baseClasses) {
 for (const row of baseClasses.filter(x=>x.type==='fhsu')) {
   if (!courseInfo[row.title].foreign) throw new Error(`fhsu course must be marked (FHSU): ${row.title}`);
 }
-for (const name of Object.keys(courseInfo)) {
-  if (courseInfo[name].teacher) throw new Error(`courseInfo must not carry teacher names (schedule has none): ${name}`);
-}
+if (courseInfo['财务管理'].teacher!=='NAHID') throw new Error('finance teacher must use the user-confirmed NAHID name');
+for (const [name,info] of Object.entries(courseInfo)) if (name!=='财务管理' && info.teacher!=='待核对') throw new Error(`unverified teacher must stay explicitly pending: ${name}`);
 
 // 最终页面守卫：底层账面还要经过真实星期课表和固定晚间框架重排。
 // 这里直接验证用户最终看到的时间轴，防止旧“15:45回家”重新压到15:00–16:35课程上。
@@ -258,7 +257,11 @@ for (let date=new Date('2026-09-06T12:00:00'); date<=new Date('2026-10-22T12:00:
 {
   const actual=new Date('2026-09-09T12:00:00'), {data}=composeDailyAgenda(actual,rangeIndexFor(actual));
   if (!data.some(x=>x.start==='15:00'&&x.end==='16:35'&&x.title.includes('营销学'))) throw new Error('9/9 real afternoon class missing from rendered page');
+  if (!data.some(x=>x.start==='13:15'&&x.end==='14:50'&&x.title.includes('国商502')&&x.title.includes('教师：NAHID'))) throw new Error('9/9 finance row must show verified room and teacher');
+  if (!data.some(x=>x.start==='08:20'&&x.end==='09:55'&&x.title.includes('国商608')&&x.title.includes('教师：待核对'))) throw new Error('unverified teacher must be visible as pending instead of invented');
   if (!data.some(x=>x.start==='19:10'&&x.end==='19:30'&&x.title==='洗澡 · 放空')) throw new Error('fixed evening recovery block must not be overwritten by packed study');
+  const brush=brushFocusFor(actual,data);
+  if (!brush || brush.count!==32 || brush.sourceDate!=='2026-09-08' || brush.scheduledMinutes!==205 || brush.deficitMinutes!==0) throw new Error('9/9 880 focus must expose the verified 32-question task and all 205 scheduled minutes');
   const status=agendaPosition(data,new Date('2026-09-09T19:15:00'));
   if (status.active?.title!=='洗澡 · 放空' || !status.next) throw new Error('current/next panel must read from the final rendered agenda');
 }

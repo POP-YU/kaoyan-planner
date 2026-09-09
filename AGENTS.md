@@ -38,8 +38,9 @@ iPhone 上已装"描述文件"（Web Clip），图标打开的就是线上地址
 | `linearAlgebraVerifiedLessons` / `linearAlgebraLessonSlots` / `futureLinearQueue` | 线代链：核对过的真实文件名、9 月排期、10 月队列 |
 | `probabilityRawDurations` | 方浩概率逐讲原始时长（夸克核对） |
 | `math880Required` / `math880BrushPlan` | 880 带刷计划：元数据 + 44 天逐日题单（881 个题号，实际日期 2026-09-08→10-21），`brushPlanEntryFor` / `brushPlanLagDays` 负责查询与顺延 |
+| `courseInfo` / `courseDisplayTitle()` | 课程教室与教师展示；财务管理教师 NAHID 来自用户口述，其余教师仍待核对，禁止恢复历史误标人名 |
 | `applyFixedEveningFrame()` | 固定晚间框架：18:05 回家 → 充电+夸克挂下载 → 19:30/21:00/22:30 三段 → 00:00 关灯 |
-| `composeDailyAgenda()` / `agendaPosition()` | 最终页面合成与当前/下一格定位；课程、生活框架、顺延任务的优先级只在这里收口，schedule 测试会直接检查最终结果 |
+| `composeDailyAgenda()` / `brushFocusFor()` / `agendaPosition()` | 最终页面合成、880 今日战单、当前/下一格定位；课程、生活框架、顺延任务的优先级只在这里收口，schedule 测试会直接检查最终结果 |
 | `strictMorning()` / `routines` | 早晨框架：06:00 起床 → 06:20 第一格 → 07:00–07:45 在家加练 → 07:50 出门（买饭+吃+走路 30 分钟）→ 08:20 到校 |
 | `majorOrdinalLabel` / `normalizeMajorString` | "第 X–Y 个内容单元"序号引擎（含章提示、213 封口、二轮滚动） |
 | `routeData` / `courseLedger` | 阶段路线与台账（README 测试都锚定其中的句子，改文案要同步 tests） |
@@ -61,6 +62,7 @@ git add -A && git commit -m "..." && git push origin main                 # 推�
 - 页面首屏改为直接显示“当前安排 / 接下来”，执行口径同时列出真实星期课程、账面来源日期和 880 原题单日期；这些信息都从现有数据即时计算，不新造进度。
 - `composeDailyAgenda()` 是最终渲染的单一入口：真实课程优先于冲突的休息占位；固定晚间框架只保留一段 18:05–18:25 回家通勤，并保留 19:10–19:30 洗澡恢复块。
 - `tests/schedule.mjs` 会逐日检查 2026-09-06 至 2026-10-22 的最终显示时间轴，必须 06:00–24:00 连续且无重叠；只验证底层账面已不再足够。
+- 用户随后要求把教室、教师和 880 写得更明确：课程标题显示真实教室；财务管理显示用户口述的教师 `NAHID`，其余教师因现有截图无姓名而显示“待核对”；`brushFocusFor()` 完整列出当日 880 题单、原题单日期、题量、估时、已排分钟和缺口，不擅自增加题号或把排入时间当完成。
 
 ## 当前锚点快照（2026-09-07，改动前先确认用户有没有新进展）
 
@@ -75,7 +77,7 @@ git add -A && git commit -m "..." && git push origin main                 # 推�
 - **线代**：第 2 章只剩 2.8 矩阵的分块（34% 断点，9/3 账已排收尾）；2.9 已听完（100%，永不排课）；
   之后 03 矩阵相似 → 04 二次型按真实文件名推进（`linearAlgebraVerifiedLessons`）。
 - **概率**：方浩基础班 30 讲，第 1 讲文件名已核对，29/30 讲数一跳过。
-- **FHSU 课程行纯净化（硬约束）**：用户 2026-09-07 明确要求“fhsu 的课程不能够允许你占用”——报关实务/外贸英文函电/国际贸易实务/营销学/财务管理/商业政策 六门课只显示课程名称（type=`fhsu`、note 为空、不嵌入 880/线代/概率/436 任务）。880 带刷题单、线代、概率一律落在课余/晚间数学格：`continuationRows` 里原本写进 FHSU 课内格的 `spec.mathMorning` / `spec.math` 已改为晚间 `mathMorningEvening(spec)` 槽位；9/30 门禁日的 `majorGate[0]`（第1–71个）也从课内格移到了晚间 major 槽，三个回收桶（1–71 / 72–142 / 143–213）全部保留。
+- **FHSU 课程行纯净化（硬约束）**：用户 2026-09-07 明确要求“fhsu 的课程不能够允许你占用”——报关实务/外贸英文函电/国际贸易实务/营销学/财务管理/商业政策只承载课程信息（课程名、FHSU、教室、教师），不嵌入 880/线代/概率/436 任务。880 带刷题单、线代、概率一律落在课余/晚间数学格：`continuationRows` 里原本写进 FHSU 课内格的 `spec.mathMorning` / `spec.math` 已改为晚间 `mathMorningEvening(spec)` 槽位；9/30 门禁日的 `majorGate[0]`（第1–71个）也从课内格移到了晚间 major 槽，三个回收桶（1–71 / 72–142 / 143–213）全部保留。
 - **作息**：06:00 起、07:00 在家加练、07:50 出门 30 分钟到校、18:05 回家、00:00 关灯；
   午休 12:20–12:45（25–35 分钟封顶）。
 - **iPhone**：描述文件（`kaoyan.mobileconfig`，Web Clip 指向线上）已可用，装一次即常新。
