@@ -72,6 +72,14 @@ git add -A && git commit -m "..." && git push origin main                 # 推�
   午休 12:20–12:45（25–35 分钟封顶）。
 - **iPhone**：描述文件（`kaoyan.mobileconfig`，Web Clip 指向线上）已可用，装一次即常新。
 
+## 交接素材索引（tools/）
+
+- `2027李林880带刷执行计划.xlsx` — 880 官方逐日题单 + 进度看板（用户每天在里面打勾；
+  网页课表管"什么时间做什么"，这份 Excel 管"题做没做完"，两者并行使用）
+- `brush_plan.json` — 从 Excel"每日计划"表提取的 44 天结构化数据（date/stage/task/count/hours）
+- `gen880_from_pdf.py` — 从带刷计划表 PDF + 两本做题本 PDF 生成上述 Excel 的原始脚本
+  （换开始日期：改脚本里的 START 重跑）
+
 ## 常见任务怎么做
 
 - **用户漏做了一天** → 顺延机制 +1（改 `scheduleLagDays` 或整体后移对应序列），同步更新
