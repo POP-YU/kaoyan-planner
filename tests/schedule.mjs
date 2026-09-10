@@ -33,7 +33,7 @@ if (!newCourseRescueActive('2026-09-11') || !newCourseRescueActive('2026-09-17')
     newCourseMinutes+=focus.newCourseMinutes; brushMinutes+=focus.brushMinutes;
   }
   const ratio=newCourseMinutes/(newCourseMinutes+brushMinutes);
-  if (ratio<0.565 || ratio>0.635) throw new Error(`seven-day math split must stay approximately 60/40, got ${(ratio*100).toFixed(1)}% new-course time`);
+  if (ratio<0.55 || ratio>0.635) throw new Error(`seven-day math split must stay near 60/40 while allowing the explicit 9/11 carryover-heavy day, got ${(ratio*100).toFixed(1)}% new-course time`);
   const sep12=composeDailyAgenda(new Date('2026-09-12T12:00:00'),rangeIndexFor(new Date('2026-09-12T12:00:00'))).data;
   if (!sep12.some(x=>x.start==='19:30'&&x.title.includes('矩阵相似 01')&&x.title.includes('断点续看'))) throw new Error('9/12 must protect linear-algebra continuation before the final 880 block');
   const sep15=composeDailyAgenda(new Date('2026-09-15T12:00:00'),rangeIndexFor(new Date('2026-09-15T12:00:00'))).data;
@@ -48,7 +48,7 @@ if (!newCourseRescueActive('2026-09-11') || !newCourseRescueActive('2026-09-17')
     const rows=composeDailyAgenda(new Date(date),rangeIndexFor(date)).data;
     activeMinutes.push(rows.filter(x=>activeTypes.has(x.type)).reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0));
   }
-  if (Math.min(...activeMinutes)<540 || Math.max(...activeMinutes)>720) throw new Error(`9/11-9/23 final core-study calibration must stay within 9-12 hours, got ${Math.min(...activeMinutes)}-${Math.max(...activeMinutes)} minutes`);
+  if (Math.min(...activeMinutes)<540 || Math.max(...activeMinutes)>750) throw new Error(`9/11-9/23 final core-study calibration must stay within 9-12 hours on regular days and allow the explicit 9/11 urgent home plan up to 12.5 hours, got ${Math.min(...activeMinutes)}-${Math.max(...activeMinutes)} minutes`);
   const resetDay=composeDailyAgenda(new Date('2026-09-10T12:00:00'),rangeIndexFor(new Date('2026-09-10T12:00:00'))).data;
   const resetMinutes=resetDay.filter(x=>activeTypes.has(x.type)).reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0);
   if (resetMinutes!==415) throw new Error(`reported-nap day with the verified partial results and one-game closeout must retain exactly 6h55 scheduled core-study time, got ${resetMinutes} minutes`);
@@ -85,15 +85,24 @@ if (!newCourseRescueActive('2026-09-11') || !newCourseRescueActive('2026-09-17')
   if (status.active?.title!=='起床恢复 · 喝水洗脸') throw new Error('9/10 current panel must move directly to wake-up recovery after the reported nap');
   const tomorrow=composeDailyAgenda(new Date('2026-09-11T12:00:00'),1).data;
   if (!tomorrow.some(x=>x.start==='08:20'&&x.end==='09:50'&&x.title.includes('矩阵的分块（昨日欠账优先）'))) throw new Error('9/11 must use the free morning window to recover the missed linear-algebra 2.8 block');
-  if (!tomorrow.some(x=>x.start==='17:25'&&x.title.includes('矩阵相似 01'))) throw new Error('9/11 catch-up must not silently delete the scheduled 03-01 lesson');
+  if (!tomorrow.some(x=>x.start==='16:15'&&x.title.includes('矩阵相似 01'))) throw new Error('9/11 home replan must retain and advance the scheduled 03-01 lesson');
   if (!tomorrow.some(x=>x.start==='06:20'&&x.type==='major'&&x.title.includes('第4–6个新内容单元'))) throw new Error('9/11 morning must move forward to units 4-6 instead of repeating mastered units 1-3');
-  if (!tomorrow.some(x=>x.start==='12:45'&&x.type==='major'&&x.title.includes('第7–8个新内容单元'))) throw new Error('9/11 midday must continue with units 7-8 without duplicating the morning units');
+  if (!tomorrow.some(x=>x.start==='07:00'&&x.end==='07:45'&&x.type==='major'&&x.title.includes('第4–6个')&&/默写|复述/.test(`${x.title} ${x.note}`))) throw new Error('9/11 second morning slot must keep 436 recall ahead of all self-study problem solving');
+  if (!tomorrow.some(x=>x.start==='13:10'&&x.type==='major'&&x.title.includes('第7–8个新内容单元'))) throw new Error('9/11 home study must continue with units 7-8 after the commute, lunch, and bounded nap');
   if (tomorrow.some(x=>x.start==='06:20'&&x.title.includes('第1–3个'))) throw new Error('9/11 morning must not repeat the already-mastered units 1-3');
-  if (!tomorrow.some(x=>x.start==='16:35'&&x.type==='major'&&x.title.includes('第4–8个')&&x.title.includes('A/B/C'))) throw new Error('9/11 afternoon must still validate the full five-unit 4-8 set');
+  if (!tomorrow.some(x=>x.start==='15:25'&&x.type==='major'&&x.title.includes('第4–8个')&&x.title.includes('A/B/C'))) throw new Error('9/11 afternoon must still validate the full five-unit 4-8 set');
   if (!tomorrow.some(x=>x.type==='english'&&x.title.includes('2010年 Text 1（昨日欠账优先）'))) throw new Error('9/11 must recover the missed Text 1 before opening Text 2');
   if (!tomorrow.some(x=>x.type==='english'&&x.title.includes('9月10日薄弱词优先'))) throw new Error('9/11 vocabulary must recover the missed weak-word list before new words');
+  if (!tomorrow.some(x=>x.start==='11:45'&&x.end==='12:05'&&x.type==='routine'&&x.title.includes('学校→家'))) throw new Error('9/11 must go home immediately after the only Friday class');
+  if (!tomorrow.some(x=>x.start==='12:05'&&x.end==='12:45'&&x.type==='meal'&&/在家|外卖/.test(`${x.title} ${x.note}`))) throw new Error('9/11 lunch must happen at home and include the takeaway option');
+  if (!tomorrow.some(x=>x.start==='12:45'&&x.end==='13:10'&&x.type==='sleep')) throw new Error('9/11 may keep only the bounded 25-minute post-lunch recovery');
+  if (tomorrow.some(x=>x.start==='15:00'&&x.end==='16:35'&&x.type==='free')) throw new Error('9/11 must not waste the course-free afternoon on a 95-minute rest block');
+  if (tomorrow.some(x=>x.start==='18:05'&&x.title.includes('学校→家'))) throw new Error('9/11 must not schedule a second commute after already returning home at noon');
+  if (!tomorrow.some(x=>x.start==='09:50'&&x.end==='10:10'&&x.type==='routine'&&x.title.includes('准备课内刷题'))) throw new Error('9/11 pre-class transition must prepare study rather than display a rest block');
+  const activeMinutes=tomorrow.filter(x=>['math','major','english','politics'].includes(x.type)).reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0);
+  if (activeMinutes!==750) throw new Error(`9/11 urgent home plan must contain exactly 12.5 hours of core study without crossing midnight, got ${activeMinutes} minutes`);
   const lateBrush=tomorrow.filter(x=>(x.title||'').startsWith('880 带刷')&&!x.studyClass);
-  if (!lateBrush.length || Math.min(...lateBrush.map(x=>minutes(x.start)))<22*60 || !lateBrush.every(x=>x.note.includes('9月10日剩余15题'))) throw new Error('9/11 self-study 880 must be last and begin with the 15-question carryover');
+  if (lateBrush.length!==1 || lateBrush[0].start!=='21:20'||lateBrush[0].end!=='23:15'||!lateBrush[0].note.includes('9月10日剩余15题')) throw new Error('9/11 self-study 880 must be the final 115-minute study block and begin with the 15-question carryover');
 }
 for (let date=new Date('2026-09-10T12:00:00'); date<=new Date('2026-10-31T12:00:00'); date.setDate(date.getDate()+1)) {
   const rows=composeDailyAgenda(new Date(date),1).data;
@@ -274,7 +283,7 @@ for (const unitRange of ['第1–71个已背内容单元','第72–142个已背�
   if (!sep30.some(x=>x.type==='major' && x.title.includes(unitRange))) throw new Error(`September 30 436 framework gate missing ${unitRange}`);
 }
 if (!sep30.some(x=>x.type==='major' && x.title.includes('第1–71个已背内容单元（第一章–第四章）'))) throw new Error('September 30 436 gate must map ordinal ranges to the verified chapters');
-if (!courseLedger.some(x=>x.subject.includes('436') && x.now.includes('213个编号知识点') && x.now.includes('第1–3个已背熟') && x.week.includes('早格直接背第4–6个') && x.week.includes('中午接第7–8个') && x.week.includes('下午统一验收第4–8个'))) throw new Error('436 ledger must carry the verified forward-only 9/11 split without repeating units 1-3');
+if (!courseLedger.some(x=>x.subject.includes('436') && x.now.includes('213个编号知识点') && x.now.includes('第1–3个已背熟') && x.week.includes('06:20直接背第4–6个') && x.week.includes('13:10接第7–8个') && x.week.includes('15:25统一验收第4–8个'))) throw new Error('436 ledger must carry the verified forward-only 9/11 split without repeating units 1-3');
 // 2026-09-06：436《背诵笔记》结构成为内容单元序号的唯一事实来源。
 if (majorRecitationMaterial.source !== '背诵笔记（436 资产评估专业基础）' || majorRecitationMaterial.totalUnits !== 213 || majorRecitationMaterial.pages !== 168) throw new Error('436 recitation material must be the verified 背诵笔记 with 213 numbered points across 168 pages');
 if (majorChapterCumulative.length !== 10 || majorChapterCumulative.reduce((s,c)=>s+c.units,0) !== 213 || majorChapterCumulative[3].to !== 108 || majorChapterCumulative[9].from !== 202) throw new Error('436 chapter cumulative map must cover the recitation part in the verified order');
@@ -335,9 +344,11 @@ for (let date=new Date('2026-09-09T12:00:00'); date<=new Date('2026-10-23T12:00:
   const rows=[...data].sort((a,b)=>minutes(a.start)-minutes(b.start));
   if (rows[0]?.start!=='06:00' || rows.at(-1)?.end!=='24:00') throw new Error(`rendered page boundary missing on ${key}`);
   for (let i=1;i<rows.length;i++) if (rows[i].start!==rows[i-1].end) throw new Error(`rendered page gap/overlap ${key}: ${rows[i-1].end} -> ${rows[i].start}`);
-  const commutes=rows.filter(x=>x.title==='通勤 · 学校→家');
+  const commutes=rows.filter(x=>(x.title||'').includes('通勤 · 学校→家'));
   if (key==='2026-09-10') {
     if (commutes.length!==0) throw new Error('reported nap day must not show an unobserved commute');
+  } else if (key==='2026-09-11') {
+    if (commutes.length!==1 || commutes[0].start!=='11:45' || commutes[0].end!=='12:05') throw new Error('Friday morning-only class day must show the single noon commute home');
   } else if (commutes.length!==1 || commutes[0].start!=='18:05' || commutes[0].end!=='18:25') throw new Error(`rendered page must show the single fixed 18:05 commute on ${key}`);
 }
 {
