@@ -13,12 +13,29 @@ const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},s
 vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,resetStudyStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,brushFocusFor,agendaPosition,currentRouteIndex,courseInfo,rangeStarts,blackboardFridayStart,blackboardFridayEnd};`, context, {filename:'app.js'});
 const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,resetStudyStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,brushFocusFor,agendaPosition,currentRouteIndex,courseInfo,rangeStarts,blackboardFridayStart,blackboardFridayEnd} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
+const rangeIndexFor = date => Math.max(0,Math.floor((Number(date)-Number(rangeStarts[0]))/(7*24*60*60*1000)));
 
 // 2026-09-09 用户最新事实：数学与 436 均未开始，统一从 9/10 起跑；
 // Blackboard/BB 只放真实周五晚间，不再占周六、周日或白天。
 if (resetStudyStartDate !== '2026-09-10' || actualScheduleStartDate !== '2026-09-10' || scheduleLagDays !== 8) throw new Error('math/436 reset must start on 2026-09-10 with the 9/2 ledger replayed eight days later');
 if (currentBaselineDate !== '2026-09-02' || majorBaseline.completedUnits !== 0 || majorBaseline.dailyNewUnits !== 5) throw new Error('436 must restart from zero, five new units per study day');
 if (blackboardFridayStart !== '19:30' || blackboardFridayEnd !== '20:30') throw new Error('Blackboard must use the fixed Friday-evening hour');
+{
+  const activeTypes=new Set(['math','major','english','politics']);
+  const activeMinutes=[];
+  for (let date=new Date('2026-09-11T12:00:00'); date<=new Date('2026-09-23T12:00:00'); date.setDate(date.getDate()+1)) {
+    const rows=composeDailyAgenda(new Date(date),rangeIndexFor(date)).data;
+    activeMinutes.push(rows.filter(x=>activeTypes.has(x.type)).reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0));
+  }
+  if (Math.min(...activeMinutes)!==540 || Math.max(...activeMinutes)!==720) throw new Error(`9/11-9/23 final core-study calibration must remain 9-12 hours, got ${Math.min(...activeMinutes)}-${Math.max(...activeMinutes)} minutes`);
+  const resetDay=composeDailyAgenda(new Date('2026-09-10T12:00:00'),rangeIndexFor(new Date('2026-09-10T12:00:00'))).data;
+  const resetMinutes=resetDay.filter(x=>activeTypes.has(x.type)).reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0);
+  if (resetMinutes!==430) throw new Error(`reported-nap day with missed afternoon 436 moved to night must retain exactly 7h10 scheduled core-study time, got ${resetMinutes} minutes`);
+  const truthPhase=routeData.find(x=>x.dates==='10月9日—11月8日');
+  const paperPhase=routeData.find(x=>x.dates==='11月9日—12月8日');
+  if (!truthPhase?.desc.includes('10/23收尾后开始数学真题入口') || !truthPhase.desc.includes('模拟卷只补漏洞')) throw new Error('post-880 route must start truth-paper work without letting simulations displace verified priorities');
+  if (!paperPhase?.desc.includes('只作强度参考') || !paperPhase.check.includes('错因、二测和自检')) throw new Error('paper phase must calibrate blogger pacing against real output instead of copying set counts');
+}
 {
   const before=composeDailyAgenda(new Date('2026-09-09T12:00:00'),1).data;
   if (before.some(x=>x.type==='math'||x.type==='major')) throw new Error('math/436 must not appear before the 9/10 reset start');
@@ -36,7 +53,11 @@ if (blackboardFridayStart !== '19:30' || blackboardFridayEnd !== '20:30') throw 
   if (!nap || nap.type!=='sleep' || !nap.note.includes('436缺口回收、课内数学和线代2.8均未完成')) throw new Error('9/10 reported 14:20-18:07 sleep must replace the missed afternoon tasks without counting them complete');
   const remaining=first.find(x=>x.start==='19:10'&&x.end==='21:30');
   if (!remaining || remaining.type!=='math' || remaining.brushCount!==22 || !remaining.note.includes('若上午第1–10题已完成')) throw new Error('9/10 evening must show the conditional 22-question remaining 880 block');
-  if (!first.some(x=>x.start==='21:40'&&x.end==='22:20'&&x.type==='major'&&x.title.includes('第1–5个闭卷验收'))) throw new Error('9/10 evening must keep a bounded 436 closed-book check');
+  if (!first.some(x=>x.start==='12:45'&&x.end==='14:20'&&x.type==='buffer'&&x.title.includes('未进行')&&x.note.includes('移到今晚重新学习'))) throw new Error('9/10 missed 12:45-14:20 436 block must be recorded as not done, never as completed study');
+  if (!first.some(x=>x.start==='21:40'&&x.end==='23:15'&&x.type==='major'&&x.title.includes('第1–5个新内容单元 · 重新学习 + 框架默写'))) throw new Error('9/10 evening must contain the full moved 95-minute 436 study block');
+  if (!first.some(x=>x.start==='23:15'&&x.end==='23:30'&&x.type==='major'&&x.title.includes('A/B/C登记'))) throw new Error('9/10 moved 436 block must finish with retrieval evidence');
+  if (first.some(x=>x.start>='21:40'&&x.type==='english')) throw new Error('9/10 English must not be squeezed beside the moved 436 block or into the sleep boundary');
+  if (!first.some(x=>x.start==='23:30'&&x.note.includes('英语阅读与薄弱词今晚未做'))) throw new Error('9/10 ledger must truthfully record displaced English work');
   if (first.some(x=>x.title==='通勤 · 学校→家')) throw new Error('9/10 reported nap override must not pretend the missed 18:05 commute happened');
   const status=agendaPosition(first,new Date('2026-09-10T18:10:00'));
   if (status.active?.title!=='起床恢复 · 喝水洗脸') throw new Error('9/10 current panel must move directly to wake-up recovery after the reported nap');
@@ -277,7 +298,6 @@ for (const [name,info] of Object.entries(courseInfo)) if (name!=='财务管理' 
 
 // 最终页面守卫：底层账面还要经过真实星期课表和固定晚间框架重排。
 // 这里直接验证用户最终看到的时间轴，防止旧“15:45回家”重新压到15:00–16:35课程上。
-const rangeIndexFor = date => Math.max(0,Math.floor((Number(date)-Number(rangeStarts[0]))/(7*24*60*60*1000)));
 for (let date=new Date('2026-09-09T12:00:00'); date<=new Date('2026-10-23T12:00:00'); date.setDate(date.getDate()+1)) {
   const actual=new Date(date), key=actual.toISOString().slice(0,10), index=rangeIndexFor(actual);
   const {data}=composeDailyAgenda(actual,index);
