@@ -29,9 +29,20 @@ if (blackboardFridayStart !== '19:30' || blackboardFridayEnd !== '20:30') throw 
   if (!first.some(x=>x.type==='major' && x.title.includes('第1–5个新内容单元'))) throw new Error('9/10 436 must start from units 1-5');
   if (first.some(x=>/昨日错题|436回看/.test(`${x.title} ${x.note}`))) throw new Error('reset day must not claim nonexistent prior-day math/436 work');
   const classMath=first.filter(x=>x.studyClass);
-  if (classMath.length!==2 || !classMath.every(x=>x.type==='math'&&x.title.startsWith('880 带刷')&&x.note.includes('课内不背436'))) throw new Error('9/10 non-FHSU classes must become two quantified 880 study slots, never 436');
+  if (classMath.length!==1 || classMath[0].start!=='08:20' || classMath[0].brushCount!==10) throw new Error('9/10 must retain only the morning quantified class-study slot before the reported nap');
   if (!first.some(x=>x.type==='fhsu'&&x.title.includes('商业政策（FHSU）')&&!/880|436/.test(`${x.title} ${x.note}`))) throw new Error('9/10 FHSU course must remain a pure class slot');
   if (first.filter(x=>x.brushCount).reduce((sum,x)=>sum+x.brushCount,0)!==32) throw new Error('9/10 880 quantities across class and after-class slots must total the exact 32-question daily plan');
+  const nap=first.find(x=>x.start==='14:20'&&x.end==='18:07');
+  if (!nap || nap.type!=='sleep' || !nap.note.includes('436缺口回收、课内数学和线代2.8均未完成')) throw new Error('9/10 reported 14:20-18:07 sleep must replace the missed afternoon tasks without counting them complete');
+  const remaining=first.find(x=>x.start==='19:10'&&x.end==='21:30');
+  if (!remaining || remaining.type!=='math' || remaining.brushCount!==22 || !remaining.note.includes('若上午第1–10题已完成')) throw new Error('9/10 evening must show the conditional 22-question remaining 880 block');
+  if (!first.some(x=>x.start==='21:40'&&x.end==='22:20'&&x.type==='major'&&x.title.includes('第1–5个闭卷验收'))) throw new Error('9/10 evening must keep a bounded 436 closed-book check');
+  if (first.some(x=>x.title==='通勤 · 学校→家')) throw new Error('9/10 reported nap override must not pretend the missed 18:05 commute happened');
+  const status=agendaPosition(first,new Date('2026-09-10T18:10:00'));
+  if (status.active?.title!=='起床恢复 · 喝水洗脸') throw new Error('9/10 current panel must move directly to wake-up recovery after the reported nap');
+  const tomorrow=composeDailyAgenda(new Date('2026-09-11T12:00:00'),1).data;
+  if (!tomorrow.some(x=>x.start==='08:20'&&x.end==='09:50'&&x.title.includes('矩阵的分块（昨日欠账优先）'))) throw new Error('9/11 must use the free morning window to recover the missed linear-algebra 2.8 block');
+  if (!tomorrow.some(x=>x.start==='16:35'&&x.title.includes('矩阵相似 01'))) throw new Error('9/11 catch-up must not silently delete the scheduled 03-01 lesson');
 }
 for (let date=new Date('2026-09-10T12:00:00'); date<=new Date('2026-10-31T12:00:00'); date.setDate(date.getDate()+1)) {
   const rows=composeDailyAgenda(new Date(date),1).data;
@@ -274,7 +285,9 @@ for (let date=new Date('2026-09-09T12:00:00'); date<=new Date('2026-10-23T12:00:
   if (rows[0]?.start!=='06:00' || rows.at(-1)?.end!=='24:00') throw new Error(`rendered page boundary missing on ${key}`);
   for (let i=1;i<rows.length;i++) if (rows[i].start!==rows[i-1].end) throw new Error(`rendered page gap/overlap ${key}: ${rows[i-1].end} -> ${rows[i].start}`);
   const commutes=rows.filter(x=>x.title==='通勤 · 学校→家');
-  if (commutes.length!==1 || commutes[0].start!=='18:05' || commutes[0].end!=='18:25') throw new Error(`rendered page must show the single fixed 18:05 commute on ${key}`);
+  if (key==='2026-09-10') {
+    if (commutes.length!==0) throw new Error('reported nap day must not show an unobserved commute');
+  } else if (commutes.length!==1 || commutes[0].start!=='18:05' || commutes[0].end!=='18:25') throw new Error(`rendered page must show the single fixed 18:05 commute on ${key}`);
 }
 {
   const actual=new Date('2026-09-09T12:00:00'), {data}=composeDailyAgenda(actual,rangeIndexFor(actual));
@@ -289,7 +302,7 @@ for (let date=new Date('2026-09-09T12:00:00'); date<=new Date('2026-10-23T12:00:
 {
   const actual=new Date('2026-09-10T12:00:00'), {data}=composeDailyAgenda(actual,rangeIndexFor(actual));
   const brush=brushFocusFor(actual,data);
-  if (!brush || brush.count!==32 || brush.sourceDate!=='2026-09-08' || brush.scheduledMinutes!==310 || brush.deficitMinutes!==0) throw new Error('9/10 880 focus must include both non-FHSU class-study slots plus the after-class slots');
+  if (!brush || brush.count!==32 || brush.sourceDate!=='2026-09-08' || brush.scheduledMinutes!==235 || brush.deficitMinutes!==0) throw new Error('9/10 880 focus must reflect the reported nap and the revised morning-plus-evening execution slots');
 }
 
 // 2026-09-09 最新口径：FHSU 必须听课；其余校内课从 9/10 起都是定量数学刷题时间，且绝不背 436。
@@ -297,6 +310,7 @@ for (let date=new Date('2026-09-10T12:00:00'); date<=new Date('2026-10-23T12:00:
   const actual=new Date(date), key=actual.toISOString().slice(0,10), index=rangeIndexFor(actual);
   const {data}=composeDailyAgenda(actual,index), dayIndex=(actual.getDay()+6)%7;
   for (const source of baseClasses.filter(x=>x.day===dayIndex)) {
+    if (key==='2026-09-10'&&source.start==='15:00') continue;
     const row=data.find(x=>x.start===source.start&&x.end===source.end);
     if (!row) throw new Error(`class-time row missing from final agenda: ${key} ${source.title}`);
     if (source.type==='fhsu') {

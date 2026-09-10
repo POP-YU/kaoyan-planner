@@ -1,4 +1,4 @@
-const APP_VERSION = 'reset-0910d';
+const APP_VERSION = 'reset-0910f';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -1216,6 +1216,40 @@ function allocateBrushPlanAcrossAgenda(rows,actualKey){
     x.steps=['按今日战单接续','独立完成','对答案并标概念/计算/思路'];x.output=amount?`${amount}题结果+错因`:'订正记录';
   });
 }
+// 2026-09-10 18:07 用户实时报告：14:20 入睡，18:07 醒来。下午被睡眠覆盖的
+// 436 缺口、课内数学和线代都不能算完成；今晚只保留可收口的三条主线，00:00
+// 睡眠边界不动。线代 2.8 使用次日原本空闲的 08:20–09:50 回收，不挤 BB。
+const reportedNapDate='2026-09-10';
+function applyReportedNapOverride(actualKey,dayIndex,rows,overflow){
+  if(actualKey===reportedNapDate){
+    const before=rows.filter(x=>minutes(x.end)<=minutes('14:20'));
+    const remainingMath=t('nap-replan-math',dayIndex,'19:10','21:30','880 带刷（必做）· 今日剩余第11–32题 / 共32题','math','若上午第1–10题已完成，本格处理第11–32题，共22题；若上午也未完成，就从最早未完成题继续，剩余量明天如实顺延','下午睡眠覆盖了原15:00课内数学格；不把未做题目算完成。',['从最早未完成题开始','独立完成并当场订正','登记剩余题号和错因'],'最多22题结果+错因');
+    remainingMath.brushCount=22;
+    const revised=[
+      t('reported-nap',dayIndex,'14:20','18:07','临时睡眠 · 已记录','sleep','14:20–18:07实际睡眠；原436缺口回收、课内数学和线代2.8均未完成，不计完成','用户实时报告覆盖原计划。',[],'实际睡眠3小时47分'),
+      t('nap-wake',dayIndex,'18:07','18:20','起床恢复 · 喝水洗脸','routine','先喝水、洗脸、开灯走动，13分钟内离开床','长睡后先恢复清醒，不立即硬上高负荷。',['喝水','洗脸','开灯走动'],'18:20坐到桌前'),
+      t('nap-dinner',dayIndex,'18:20','18:50','晚饭 · 补水','meal','正常吃饭，不刷短视频；不靠咖啡硬顶','先补能量，但不给晚间继续拖延。',[],'吃完收桌'),
+      t('nap-reset',dayIndex,'18:50','19:10','洗澡 · 整理桌面','free','20分钟恢复，19:10准时开始数学','把长睡后的迟钝和开工准备一次处理完。',[],'资料与计时器就位'),
+      remainingMath,
+      t('nap-break',dayIndex,'21:30','21:40','休息 · 走动补水','free','只站起来走动补水，不刷手机','给后续闭卷输出恢复注意力。',[],'21:40回来'),
+      t('nap-major',dayIndex,'21:40','22:20','436 · 第1–5个闭卷验收','major','只验收14:20前实际学过的内容并标A/B/C；若第1–5个未学完，标C后明天先补，不算完成','今晚不重开大段新内容，只验证真实输出。',['关书逐个口述','标A/B/C','只补最大缺口'],'5个掌握等级+缺口'),
+      t('nap-reading',dayIndex,'22:20','23:10','英语二 · 2010年 Text 1','english','20分钟限时 + 30分钟逐题找证据/写错因','保留当天一篇完整阅读闭环。',['限时作答','找证据句','记录错因'],'答案+证据句+错因'),
+      t('nap-words',dayIndex,'23:10','23:30','英语单词 · 今日薄弱词','english','只回收阅读中暴露的薄弱词，不开新词','缩量保留非零接触。',[],'薄弱词清单'),
+      t('nap-ledger',dayIndex,'23:30','23:45','登记欠账 · 准备明天','buffer','登记880剩余题号；线代2.8欠账移到明天08:20优先处理；确认设备充电和资料下载','只记录真实未完成项，不在睡前继续加量。',[],'明日入口清单'),
+      t('nap-sleep',dayIndex,'23:45','24:00','洗漱 · 00:00关灯','sleep','下午长睡也不把今晚拖到凌晨；00:00关灯','稳住明早起床时间，防止昼夜继续后移。',[],'00:00关灯')
+    ];
+    return {data:[...before,...revised].sort((a,b)=>minutes(a.start)-minutes(b.start)),overflow:[...overflow,'线代 · 第2章 08 矩阵的分块：移至9月11日08:20优先回收']};
+  }
+  if(actualKey==='2026-09-11'){
+    const keep=rows.filter(x=>!(minutes(x.start)>=minutes('08:20')&&minutes(x.end)<=minutes('10:10')));
+    const catchup=[
+      t('nap-linear-catchup',dayIndex,'08:20','09:50','线代 · 第2章 08 矩阵的分块（昨日欠账优先）','math','从34%断点续看；1.5倍速允许暂停，未看完记时间戳；随后闭卷写2道对应题','9月10日14:20–18:07实际睡眠覆盖了原线代格，今天先回收，不能跳到03-01。',['从34%断点续看','记录时间戳/关键公式','闭卷写2道题'],'时间戳+2题过程'),
+      t('nap-linear-break',dayIndex,'09:50','10:10','下课前休息 · 走动补水','free','20分钟，10:10进入课内数学格','补完线代后切换学科。',[],'10:10到位')
+    ];
+    return {data:[...keep,...catchup].sort((a,b)=>minutes(a.start)-minutes(b.start)),overflow};
+  }
+  return {data:rows,overflow};
+}
 // 把账面学习任务围绕"真实课表"排进当天：FHSU 课格固定且纯净，
 // 其余课格从 9/10 起固定为数学刷题时间；所有固定课格都继续作为时间边界。
 // 学习格不早于自己原来的开始时间（保早晚节律），只在课后的空档里找位置，
@@ -1272,7 +1306,8 @@ function composeDailyAgenda(d,index=currentRangeIndex){
   const {rows:packed,overflow}=packAroundRealClasses(taskRows,[...fixedRows,...classRows].map(x=>({start:x.start,end:x.end})));
   const data=buildDayAgenda([...fixedRows,...classRows,...packed],index,dayIndex);
   allocateBrushPlanAcrossAgenda(data,actualKey);
-  return {dayIndex,data,overflow};
+  const adjusted=applyReportedNapOverride(actualKey,dayIndex,data,overflow);
+  return {dayIndex,...adjusted};
 }
 const studyMinutesLabel=value=>value>=60?`${Math.floor(value/60)}小时${value%60?`${value%60}分`:''}`:`${value}分钟`;
 function brushFocusFor(d,data){
