@@ -1,4 +1,4 @@
-const APP_VERSION = 'reset-0910i';
+const APP_VERSION = 'reset-0910j';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -1338,7 +1338,11 @@ function applyReportedNapOverride(actualKey,dayIndex,rows,overflow){
     return {data:[...before,...revised].sort((a,b)=>minutes(a.start)-minutes(b.start)),overflow:[...overflow,'880 · 9月10日剩余15题：9月11日先补','436 · 第4个起：9月11日提前安排，第1–3个先快检','英语二 · 2010年 Text 1 + 今日薄弱词：进入下一执行日','线代 · 第2章 08 矩阵的分块：9月11日08:20优先回收']};
   }
   if(actualKey==='2026-09-11'){
-    const keep=rows.filter(x=>!(minutes(x.start)>=minutes('08:20')&&minutes(x.end)<=minutes('10:10')));
+    const keep=rows.filter(x=>!(minutes(x.start)>=minutes('08:20')&&minutes(x.end)<=minutes('10:10'))).map(x=>{
+      if(x.type==='english'&&/2010年 Text 2/.test(x.title||''))return {...x,title:'英语二 · 2010年 Text 1（昨日欠账优先）',note:'9月10日未完成的Text 1先做完并复盘；清完且仍有时间，才开原定Text 2',output:'Text 1错因卡'};
+      if(x.type==='english'&&/英语单词/.test(x.title||''))return {...x,title:'英语单词 · 9月10日薄弱词优先',note:'先回收昨晚未做的薄弱词；有余时再做原定新20+旧40，未完成不熬夜',output:'薄弱词回想记录'};
+      return x;
+    });
     const catchup=[
       t('nap-linear-catchup',dayIndex,'08:20','09:50','线代 · 第2章 08 矩阵的分块（昨日欠账优先）','math','从34%断点续看；1.5倍速允许暂停，未看完记时间戳；随后闭卷写2道对应题','9月10日14:20–18:07实际睡眠覆盖了原线代格，今天先回收，不能跳到03-01。',['从34%断点续看','记录时间戳/关键公式','闭卷写2道题'],'时间戳+2题过程'),
       t('nap-linear-break',dayIndex,'09:50','10:10','下课前休息 · 走动补水','free','20分钟，10:10进入课内数学格','补完线代后切换学科。',[],'10:10到位')

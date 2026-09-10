@@ -88,6 +88,8 @@ if (!newCourseRescueActive('2026-09-11') || !newCourseRescueActive('2026-09-17')
   if (!tomorrow.some(x=>x.start==='17:25'&&x.title.includes('矩阵相似 01'))) throw new Error('9/11 catch-up must not silently delete the scheduled 03-01 lesson');
   if (!tomorrow.some(x=>x.start==='06:20'&&x.type==='major'&&x.title.includes('第1–3个'))) throw new Error('9/11 must place completed 436 material in an early retrieval slot');
   if (!tomorrow.some(x=>x.type==='major'&&x.title.includes('第4–8个新内容单元'))) throw new Error('9/11 436 new work must resume at unit 4 without skipping debt');
+  if (!tomorrow.some(x=>x.type==='english'&&x.title.includes('2010年 Text 1（昨日欠账优先）'))) throw new Error('9/11 must recover the missed Text 1 before opening Text 2');
+  if (!tomorrow.some(x=>x.type==='english'&&x.title.includes('9月10日薄弱词优先'))) throw new Error('9/11 vocabulary must recover the missed weak-word list before new words');
   const lateBrush=tomorrow.filter(x=>(x.title||'').startsWith('880 带刷')&&!x.studyClass);
   if (!lateBrush.length || Math.min(...lateBrush.map(x=>minutes(x.start)))<22*60 || !lateBrush.every(x=>x.note.includes('9月10日剩余15题'))) throw new Error('9/11 self-study 880 must be last and begin with the 15-question carryover');
 }
