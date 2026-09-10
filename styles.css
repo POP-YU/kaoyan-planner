@@ -54,6 +54,7 @@
 
 /* 880 stays inside the timetable, but its verified daily task is visible before the long time axis. */
 .brush-focus{margin:13px 15px 10px;padding:13px 14px;border:1px solid #cbd9f3;border-radius:13px;background:#f2f6ff;color:#344f8f}.brush-focus header{display:flex;align-items:center;justify-content:space-between;gap:12px}.brush-focus header span{font-size:11px;font-weight:800;letter-spacing:.08em}.brush-focus header strong{font-size:14px}.brush-metrics{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}.brush-metrics b{padding:4px 7px;border-radius:7px;background:#fff;font:600 10px var(--font-numeric);color:#526ba3}.brush-focus p{margin:0;font-size:11px;line-height:1.65;color:#405c99}.brush-focus small{display:block;margin-top:7px;font-size:10px;line-height:1.55;color:#6a79a1}.agenda-item.course b,.agenda-item.fhsu b{line-height:1.55}
+.rescue-focus{border-color:#c8ded7;background:#f0f8f5;color:#277064}.rescue-focus .brush-metrics b{color:#367c70}.rescue-focus small{color:#587d75}
 @media(max-width:680px){.brush-focus{margin:11px 10px 8px;padding:11px 12px}.brush-focus header strong{font-size:13px}.brush-focus p{font-size:10.5px}.brush-focus small{font-size:9.5px}}
 
 /* Lightweight today/tomorrow switch: no follow-finger transform, so long cards stay cheap on mobile. */

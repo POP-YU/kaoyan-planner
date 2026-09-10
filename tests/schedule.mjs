@@ -10,16 +10,37 @@ const document = {
   addEventListener(){}
 };
 const context = {document,console,Date,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){}};
-vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,resetStudyStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,brushFocusFor,agendaPosition,currentRouteIndex,courseInfo,rangeStarts,blackboardFridayStart,blackboardFridayEnd};`, context, {filename:'app.js'});
-const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,resetStudyStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,brushFocusFor,agendaPosition,currentRouteIndex,courseInfo,rangeStarts,blackboardFridayStart,blackboardFridayEnd} = context.__plannerTest;
+vm.runInNewContext(`${source}\n;globalThis.__plannerTest={baseClasses,routines,study1,week2,phaseBlocks,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,resetStudyStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorFirstDayCompletedUnits,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,reportedBrushCompleted,reportedBrushRemaining,newCourseRescueStart,newCourseRescueEnd,newCourseRescueActive,newCourseRescueFocusFor,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,brushFocusFor,agendaPosition,currentRouteIndex,courseInfo,rangeStarts,blackboardFridayStart,blackboardFridayEnd};`, context, {filename:'app.js'});
+const {baseClasses,routines,study1,week2,schedules,highIntensityStartWeek,strictStartDate,currentBaselineDate,actualScheduleStartDate,resetStudyStartDate,scheduleLagDays,scheduleSourceDate,majorBaseline,majorFirstDayCompletedUnits,majorCumulativeForDate,majorNewRangeForDate,strictDateSchedules,septemberContinuation,probabilityRawDurations,probabilityMathScope,probabilityModules,probabilityLecture1File,linearAlgebraVerifiedLessons,linearAlgebraLessonSlots,linearAlgebraCatchupSlots,linearAlgebraAppliedSlots,futureLinearQueue,futureLinearLessonForDate,majorRecitationMaterial,majorChapterCumulative,majorChapterForUnit,majorChapterHintForRange,courseLedger,math880Required,math880BrushPlan,brushPlanEntryFor,brushPlanStartDate,brushPlanLagDays,reportedBrushCompleted,reportedBrushRemaining,newCourseRescueStart,newCourseRescueEnd,newCourseRescueActive,newCourseRescueFocusFor,selfCheckRules,taskCheck,routeData,datedBlocks,buildDayAgenda,composeDailyAgenda,brushFocusFor,agendaPosition,currentRouteIndex,courseInfo,rangeStarts,blackboardFridayStart,blackboardFridayEnd} = context.__plannerTest;
 const minutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
 const rangeIndexFor = date => Math.max(0,Math.floor((Number(date)-Number(rangeStarts[0]))/(7*24*60*60*1000)));
 
 // 2026-09-09 用户最新事实：数学与 436 均未开始，统一从 9/10 起跑；
 // Blackboard/BB 只放真实周五晚间，不再占周六、周日或白天。
 if (resetStudyStartDate !== '2026-09-10' || actualScheduleStartDate !== '2026-09-10' || scheduleLagDays !== 8) throw new Error('math/436 reset must start on 2026-09-10 with the 9/2 ledger replayed eight days later');
-if (currentBaselineDate !== '2026-09-02' || majorBaseline.completedUnits !== 0 || majorBaseline.dailyNewUnits !== 5) throw new Error('436 must restart from zero, five new units per study day');
+if (currentBaselineDate !== '2026-09-02' || majorBaseline.completedUnits !== 0 || majorBaseline.dailyNewUnits !== 5 || majorFirstDayCompletedUnits!==3) throw new Error('436 must record three completed first-day units, then continue at five new units per study day');
+if (reportedBrushCompleted!==17 || reportedBrushRemaining!==15) throw new Error('9/10 880 actual result must be 17 completed and 15 carried to tomorrow');
 if (blackboardFridayStart !== '19:30' || blackboardFridayEnd !== '20:30') throw new Error('Blackboard must use the fixed Friday-evening hour');
+if (newCourseRescueStart !== '2026-09-11' || newCourseRescueEnd !== '2026-09-17') throw new Error('seven-day new-course rescue window must be 9/11-9/17');
+if (!newCourseRescueActive('2026-09-11') || !newCourseRescueActive('2026-09-17') || newCourseRescueActive('2026-09-18')) throw new Error('new-course rescue window boundary is wrong');
+{
+  let newCourseMinutes=0, brushMinutes=0;
+  for (let date=new Date('2026-09-11T12:00:00'); date<=new Date('2026-09-17T12:00:00'); date.setDate(date.getDate()+1)) {
+    const rows=composeDailyAgenda(new Date(date),rangeIndexFor(date)).data;
+    const focus=newCourseRescueFocusFor(new Date(date),rows);
+    if (!focus || !focus.newCourseMinutes || !focus.brushMinutes) throw new Error(`rescue split missing on ${date.toISOString().slice(0,10)}`);
+    if (!rows.filter(x=>(x.title||'').startsWith('880 带刷')).every(x=>x.note.includes('P/W/A')&&x.note.includes('前置未学'))) throw new Error(`rescue 880 prerequisite triage missing on ${date.toISOString().slice(0,10)}`);
+    newCourseMinutes+=focus.newCourseMinutes; brushMinutes+=focus.brushMinutes;
+  }
+  const ratio=newCourseMinutes/(newCourseMinutes+brushMinutes);
+  if (ratio<0.565 || ratio>0.635) throw new Error(`seven-day math split must stay approximately 60/40, got ${(ratio*100).toFixed(1)}% new-course time`);
+  const sep12=composeDailyAgenda(new Date('2026-09-12T12:00:00'),rangeIndexFor(new Date('2026-09-12T12:00:00'))).data;
+  if (!sep12.some(x=>x.start==='19:30'&&x.title.includes('矩阵相似 01')&&x.title.includes('断点续看'))) throw new Error('9/12 must protect linear-algebra continuation before the final 880 block');
+  const sep15=composeDailyAgenda(new Date('2026-09-15T12:00:00'),rangeIndexFor(new Date('2026-09-15T12:00:00'))).data;
+  if (!sep15.some(x=>x.start==='21:20'&&x.title.includes('矩阵相似 03'))) throw new Error('9/15 must retain the matrix-similarity lesson before any late 880 work');
+  const sep17=composeDailyAgenda(new Date('2026-09-17T12:00:00'),rangeIndexFor(new Date('2026-09-17T12:00:00'))).data;
+  if (!sep17.some(x=>x.start==='19:50'&&x.title.includes('矩阵相似 04')) || !sep17.some(x=>(x.title||'').startsWith('880 带刷')&&x.start==='22:50')) throw new Error('9/17 evening must put the matrix-similarity lesson before the final 880 time box');
+}
 {
   const activeTypes=new Set(['math','major','english','politics']);
   const activeMinutes=[];
@@ -27,10 +48,10 @@ if (blackboardFridayStart !== '19:30' || blackboardFridayEnd !== '20:30') throw 
     const rows=composeDailyAgenda(new Date(date),rangeIndexFor(date)).data;
     activeMinutes.push(rows.filter(x=>activeTypes.has(x.type)).reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0));
   }
-  if (Math.min(...activeMinutes)!==540 || Math.max(...activeMinutes)!==720) throw new Error(`9/11-9/23 final core-study calibration must remain 9-12 hours, got ${Math.min(...activeMinutes)}-${Math.max(...activeMinutes)} minutes`);
+  if (Math.min(...activeMinutes)<540 || Math.max(...activeMinutes)>720) throw new Error(`9/11-9/23 final core-study calibration must stay within 9-12 hours, got ${Math.min(...activeMinutes)}-${Math.max(...activeMinutes)} minutes`);
   const resetDay=composeDailyAgenda(new Date('2026-09-10T12:00:00'),rangeIndexFor(new Date('2026-09-10T12:00:00'))).data;
   const resetMinutes=resetDay.filter(x=>activeTypes.has(x.type)).reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0);
-  if (resetMinutes!==430) throw new Error(`reported-nap day with missed afternoon 436 moved to night must retain exactly 7h10 scheduled core-study time, got ${resetMinutes} minutes`);
+  if (resetMinutes!==415) throw new Error(`reported-nap day with the verified partial results and one-game closeout must retain exactly 6h55 scheduled core-study time, got ${resetMinutes} minutes`);
   const truthPhase=routeData.find(x=>x.dates==='10月9日—11月8日');
   const paperPhase=routeData.find(x=>x.dates==='11月9日—12月8日');
   if (!truthPhase?.desc.includes('10/23收尾后开始数学真题入口') || !truthPhase.desc.includes('模拟卷只补漏洞')) throw new Error('post-880 route must start truth-paper work without letting simulations displace verified priorities');
@@ -42,8 +63,8 @@ if (blackboardFridayStart !== '19:30' || blackboardFridayEnd !== '20:30') throw 
   if (before.some(x=>/436|880|数学/.test(`${x.title} ${x.note}`))) throw new Error('pre-reset buffer notes must not leak stale math/436 progress');
   const first=composeDailyAgenda(new Date('2026-09-10T12:00:00'),1).data;
   const brush=brushFocusFor(new Date('2026-09-10T12:00:00'),first);
-  if (!brush || brush.sourceDate!=='2026-09-08' || brush.count!==32) throw new Error('9/10 math must start from brush-plan day 1 (32 questions)');
-  if (!first.some(x=>x.type==='major' && x.title.includes('第1–5个新内容单元'))) throw new Error('9/10 436 must start from units 1-5');
+  if (!brush || brush.sourceDate!=='2026-09-08' || brush.count!==32 || brush.actualCompleted!==17 || brush.actualRemaining!==15) throw new Error('9/10 focus must distinguish the 32-question plan from the verified 17 completed and 15 remaining');
+  if (!first.some(x=>x.type==='major' && x.title.includes('第1–3个已背熟')&&x.title.includes('第4个起未完成'))) throw new Error('9/10 436 actual result must record units 1-3 learned and the rest unfinished');
   if (first.some(x=>/昨日错题|436回看/.test(`${x.title} ${x.note}`))) throw new Error('reset day must not claim nonexistent prior-day math/436 work');
   const classMath=first.filter(x=>x.studyClass);
   if (classMath.length!==1 || classMath[0].start!=='08:20' || classMath[0].brushCount!==10) throw new Error('9/10 must retain only the morning quantified class-study slot before the reported nap');
@@ -52,18 +73,23 @@ if (blackboardFridayStart !== '19:30' || blackboardFridayEnd !== '20:30') throw 
   const nap=first.find(x=>x.start==='14:20'&&x.end==='18:07');
   if (!nap || nap.type!=='sleep' || !nap.note.includes('436缺口回收、课内数学和线代2.8均未完成')) throw new Error('9/10 reported 14:20-18:07 sleep must replace the missed afternoon tasks without counting them complete');
   const remaining=first.find(x=>x.start==='19:10'&&x.end==='21:30');
-  if (!remaining || remaining.type!=='math' || remaining.brushCount!==22 || !remaining.note.includes('若上午第1–10题已完成')) throw new Error('9/10 evening must show the conditional 22-question remaining 880 block');
-  if (!first.some(x=>x.start==='12:45'&&x.end==='14:20'&&x.type==='buffer'&&x.title.includes('未进行')&&x.note.includes('移到今晚重新学习'))) throw new Error('9/10 missed 12:45-14:20 436 block must be recorded as not done, never as completed study');
-  if (!first.some(x=>x.start==='21:40'&&x.end==='23:15'&&x.type==='major'&&x.title.includes('第1–5个新内容单元 · 重新学习 + 框架默写'))) throw new Error('9/10 evening must contain the full moved 95-minute 436 study block');
-  if (!first.some(x=>x.start==='23:15'&&x.end==='23:30'&&x.type==='major'&&x.title.includes('A/B/C登记'))) throw new Error('9/10 moved 436 block must finish with retrieval evidence');
+  if (!remaining || remaining.type!=='math' || remaining.brushCount!==22 || remaining.actualBrushCompleted!==17 || !remaining.note.includes('剩15题移到明天')) throw new Error('9/10 evening must show the verified 17/32 result and 15-question carryover');
+  if (!first.some(x=>x.start==='12:45'&&x.end==='14:20'&&x.type==='buffer'&&x.title.includes('未进行')&&x.note.includes('第1–3个已背熟'))) throw new Error('9/10 missed afternoon 436 block must remain separate from the later partial result');
+  if (!first.some(x=>x.start==='21:40'&&x.end==='23:15'&&x.type==='major'&&x.title.includes('第1–3个已背熟')&&x.title.includes('第4个起未完成'))) throw new Error('9/10 436 block must record the user-reported partial result');
+  if (!first.some(x=>x.start==='23:15'&&x.end==='23:40'&&x.type==='free'&&x.title.includes('游戏一局'))) throw new Error('9/10 must contain the requested one-game time box');
+  if (!first.some(x=>x.start==='23:40'&&x.end==='24:00'&&x.type==='sleep'&&x.title.includes('00:00关灯'))) throw new Error('one-game time box must still preserve the midnight sleep boundary');
   if (first.some(x=>x.start>='21:40'&&x.type==='english')) throw new Error('9/10 English must not be squeezed beside the moved 436 block or into the sleep boundary');
-  if (!first.some(x=>x.start==='23:30'&&x.note.includes('英语阅读与薄弱词今晚未做'))) throw new Error('9/10 ledger must truthfully record displaced English work');
+  if (!first.some(x=>x.start==='21:40'&&x.note.includes('英语阅读与薄弱词今晚未做'))) throw new Error('9/10 partial-result row must truthfully retain displaced English work');
   if (first.some(x=>x.title==='通勤 · 学校→家')) throw new Error('9/10 reported nap override must not pretend the missed 18:05 commute happened');
   const status=agendaPosition(first,new Date('2026-09-10T18:10:00'));
   if (status.active?.title!=='起床恢复 · 喝水洗脸') throw new Error('9/10 current panel must move directly to wake-up recovery after the reported nap');
   const tomorrow=composeDailyAgenda(new Date('2026-09-11T12:00:00'),1).data;
   if (!tomorrow.some(x=>x.start==='08:20'&&x.end==='09:50'&&x.title.includes('矩阵的分块（昨日欠账优先）'))) throw new Error('9/11 must use the free morning window to recover the missed linear-algebra 2.8 block');
-  if (!tomorrow.some(x=>x.start==='16:35'&&x.title.includes('矩阵相似 01'))) throw new Error('9/11 catch-up must not silently delete the scheduled 03-01 lesson');
+  if (!tomorrow.some(x=>x.start==='17:25'&&x.title.includes('矩阵相似 01'))) throw new Error('9/11 catch-up must not silently delete the scheduled 03-01 lesson');
+  if (!tomorrow.some(x=>x.start==='06:20'&&x.type==='major'&&x.title.includes('第1–3个'))) throw new Error('9/11 must place completed 436 material in an early retrieval slot');
+  if (!tomorrow.some(x=>x.type==='major'&&x.title.includes('第4–8个新内容单元'))) throw new Error('9/11 436 new work must resume at unit 4 without skipping debt');
+  const lateBrush=tomorrow.filter(x=>(x.title||'').startsWith('880 带刷')&&!x.studyClass);
+  if (!lateBrush.length || Math.min(...lateBrush.map(x=>minutes(x.start)))<22*60 || !lateBrush.every(x=>x.note.includes('9月10日剩余15题'))) throw new Error('9/11 self-study 880 must be last and begin with the 15-question carryover');
 }
 for (let date=new Date('2026-09-10T12:00:00'); date<=new Date('2026-10-31T12:00:00'); date.setDate(date.getDate()+1)) {
   const rows=composeDailyAgenda(new Date(date),1).data;
@@ -158,8 +184,9 @@ for (const [day,title] of [[0,'英语单词 · 新20 + 旧40'],[1,'436 · p1–1
 if (!schedules[2].some(x => x.day===1 && x.start==='14:50' && x.end==='16:35' && x.title.includes('436'))) throw new Error('Tuesday afternoon study block missing');
 if (strictStartDate !== '2026-09-02') throw new Error(`strict plan must restart on 2026-09-02, got ${strictStartDate}`);
 if (scheduleSourceDate('2026-09-09') !== '2026-09-09' || scheduleSourceDate('2026-09-10') !== '2026-09-02' || scheduleSourceDate('2026-09-11') !== '2026-09-03' || scheduleSourceDate('2026-09-13') !== '2026-09-05' || scheduleSourceDate('2026-10-08') !== '2026-09-30') throw new Error('actual dates must consume the 9/2 ledger in order from the 9/10 reset');
-if (majorCumulativeForDate('2026-09-02') !== 5 || majorNewRangeForDate('2026-09-02').start !== 1 || majorNewRangeForDate('2026-09-02').end !== 5) throw new Error('436 first ledger day must cover units 1-5 from zero');
-if (majorNewRangeForDate('2026-09-06') !== null || majorCumulativeForDate('2026-09-06') !== 20) throw new Error('Sunday must be review-only for 436');
+if (majorCumulativeForDate('2026-09-02') !== 3 || majorNewRangeForDate('2026-09-02').start !== 1 || majorNewRangeForDate('2026-09-02').end !== 3) throw new Error('436 first ledger day must record the actual units 1-3 result');
+if (majorNewRangeForDate('2026-09-03').start!==4 || majorNewRangeForDate('2026-09-03').end!==8) throw new Error('436 second ledger day must resume at units 4-8');
+if (majorNewRangeForDate('2026-09-06') !== null || majorCumulativeForDate('2026-09-06') !== 18) throw new Error('Sunday must be review-only for 436 after the partial first day');
 for (const day of ['2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-06','2026-09-07','2026-09-08','2026-09-09','2026-09-10','2026-09-11','2026-09-12','2026-09-13']) {
   if (!strictDateSchedules[day]?.length) throw new Error(`strict daily schedule missing ${day}`);
 }
@@ -171,7 +198,7 @@ const sep2 = strictDateSchedules['2026-09-02'];
 for (const required of [
   '错题登记',
   '英语二 · 2010年 Text 1',
-  '436 · 第1–5个新内容单元'
+  '436 · 第1–3个新内容单元'
 ]) if (!sep2.some(x => x.title.includes(required))) throw new Error(`September 2 restart task missing: ${required}`);
 if (!sep2.some(x => x.title==='外贸英文函电' && x.type==='course')) throw new Error('9/2 外贸英文函电 must be a pure non-fhsu course slot (not occupied by 880)');
 for (const exactCourse of ['财务管理','营销学']) if (!sep2.some(x => x.title===exactCourse && x.type==='fhsu')) throw new Error(`FHSU course must remain course-only: ${exactCourse}`);
@@ -196,7 +223,7 @@ if (!linearAlgebraVerifiedLessons.find(x=>x.key==='03-10')?.caveat.includes('疑
 if (futureLinearQueue[0] !== '04-05' || !futureLinearLessonForDate('2026-10-01')?.includes?.('04-05') || futureLinearLessonForDate('2026-11-19') !== null) throw new Error('October linear continuation queue missing or repeats after exhaustion');
 if (!strictDateSchedules['2026-09-04'].some(x=>x.title.includes('方浩第1讲（随机事件：概念、关系与运算）'))) throw new Error('exact probability lecture topic normalisation missing');
 const sep10Shifted = datedBlocks(1).filter(x=>x.date==='2026-09-10').map(x=>`${x.title} ${x.note}`).join('\n');
-if (!sep10Shifted.includes('第1–5个新内容单元') || !sep10Shifted.includes('2010年 Text 1') || !sep10Shifted.includes('880 带刷（必做 · 32题') || !sep10Shifted.includes('第2章 08 矩阵的分块（断点收尾）')) throw new Error('September 10 as reset day 1 must replay the first study ledger with verified 436, English, math and linear details');
+if (!sep10Shifted.includes('第1–3个新内容单元') || !sep10Shifted.includes('2010年 Text 1') || !sep10Shifted.includes('880 带刷（必做 · 32题') || !sep10Shifted.includes('第2章 08 矩阵的分块（断点收尾）')) throw new Error('September 10 first ledger must retain the verified task sources while recording the partial 436 result');
 if (sep10Shifted.includes('第6–10个新内容单元') || sep10Shifted.includes('2010年 Text 2')) throw new Error('September 10 must not advance past the September 2 first-day ledger');
 if (sep10Shifted.includes('剩余课第1节') || sep10Shifted.includes('剩余课第2节')) throw new Error('September 10 must not expose vague linear lesson placeholders');
 if (!selfCheckRules || !taskCheck({type:'math',title:'880第一章 · 8题',note:''}).includes('概念/计算/思路')) throw new Error('math self-check rule missing');
@@ -231,8 +258,8 @@ const oct8Rendered=datedBlocks(5).filter(x=>x.date==='2026-10-08'&&x.type==='maj
 const sep12Rendered=datedBlocks(1).filter(x=>x.date==='2026-09-12'&&x.type==='major').map(x=>x.title).join('\n');
 const all436=`${sep29Rendered}\n${oct3Rendered}\n${oct4Rendered}\n${oct8Rendered}\n${sep12Rendered}`;
 // 9/10 从零起步：实际日比账面日后移 8 天；9/30 月末门禁落到实际 10/8。
-if (!sep29Rendered.includes('第81–85个新内容单元（第四章）') || !oct3Rendered.includes('第101–105个新内容单元（第四章）') || !oct3Rendered.includes('第1–105个已背内容单元') || !oct4Rendered.includes('第106–110个新内容单元（第四章–第五章）') || !oct4Rendered.includes('第1–110个已背内容单元') || !oct8Rendered.includes('第72–142个已背内容单元（第四章–第六章）') || !oct8Rendered.includes('第143–213个已背内容单元') || !sep12Rendered.includes('第11–15个新内容单元（第一章）') || /p\d/.test(all436)) throw new Error('436 ordinal first-pass/review rendering is wrong under the eight-day reset lag (5 units/day)');
-if (!oct3Rendered.includes('第101–105个新内容单元（第四章）')) throw new Error('436 ordinal labels must name the verified chapter from the actual 背诵笔记');
+if (!sep29Rendered.includes('第79–83个新内容单元（第四章）') || !oct3Rendered.includes('第99–103个新内容单元（第四章）') || !oct3Rendered.includes('第1–103个已背内容单元') || !oct4Rendered.includes('第104–108个新内容单元（第四章）') || !oct4Rendered.includes('第1–108个已背内容单元') || !oct8Rendered.includes('第72–142个已背内容单元（第四章–第六章）') || !oct8Rendered.includes('第143–213个已背内容单元') || !sep12Rendered.includes('第9–13个新内容单元（第一章）') || /p\d/.test(all436)) throw new Error('436 ordinal rendering must preserve the two-unit first-day debt without skipping later content');
+if (!oct3Rendered.includes('第99–103个新内容单元（第四章）')) throw new Error('436 ordinal labels must name the verified chapter from the actual 背诵笔记');
 if (all436.includes('第214个')) throw new Error('ordinals must never run past the 213 verified units');
 for (const day of ['2026-09-13','2026-09-20','2026-09-27']) {
   if (!strictDateSchedules[day].some(x=>x.type==='english' && x.title.includes('小作文审题'))) throw new Error(`low-dose September writing baseline missing ${day}`);
@@ -243,7 +270,7 @@ for (const unitRange of ['第1–71个已背内容单元','第72–142个已背�
   if (!sep30.some(x=>x.type==='major' && x.title.includes(unitRange))) throw new Error(`September 30 436 framework gate missing ${unitRange}`);
 }
 if (!sep30.some(x=>x.type==='major' && x.title.includes('第1–71个已背内容单元（第一章–第四章）'))) throw new Error('September 30 436 gate must map ordinal ranges to the verified chapters');
-if (!courseLedger.some(x=>x.subject.includes('436') && x.now.includes('213个编号知识点') && x.now.includes('当前完成0个') && x.week.includes('一轮213个预计10/29前后收口') && x.week.includes('每天新增5个'))) throw new Error('436 ledger must carry the zero baseline, verified total and 5/day first-pass closeout');
+if (!courseLedger.some(x=>x.subject.includes('436') && x.now.includes('213个编号知识点') && x.now.includes('第1–3个已背熟') && x.week.includes('从第4个继续') && x.week.includes('每天新增5个'))) throw new Error('436 ledger must carry the verified partial first-day result and debt-first continuation');
 // 2026-09-06：436《背诵笔记》结构成为内容单元序号的唯一事实来源。
 if (majorRecitationMaterial.source !== '背诵笔记（436 资产评估专业基础）' || majorRecitationMaterial.totalUnits !== 213 || majorRecitationMaterial.pages !== 168) throw new Error('436 recitation material must be the verified 背诵笔记 with 213 numbered points across 168 pages');
 if (majorChapterCumulative.length !== 10 || majorChapterCumulative.reduce((s,c)=>s+c.units,0) !== 213 || majorChapterCumulative[3].to !== 108 || majorChapterCumulative[9].from !== 202) throw new Error('436 chapter cumulative map must cover the recitation part in the verified order');
@@ -263,7 +290,7 @@ for (let day=14;day<=30;day++) {
   const date=`2026-09-${String(day).padStart(2,'0')}`;
   if (!strictDateSchedules[date].some(x=>x.type==='politics')) throw new Error(`daily low-dose politics missing ${date}`);
 }
-if (routeData[0].dates !== '9月10日—9月21日' || !routeData[0].desc.includes('数学与436均未开始') || !routeData[0].desc.includes('实际9/10从原题单第1天开刷')) throw new Error('phase route must show the 9/10 math/436 reset');
+if (routeData[0].dates !== '9月10日—9月21日' || !routeData[0].desc.includes('880完成17/32题、剩15题') || !routeData[0].desc.includes('436第1–3个已背熟')) throw new Error('phase route must show the latest 9/10 math and 436 results');
 if (!routeData.every(x => x.desc.includes('带刷'))) throw new Error('every phase must reference the brush plan');
 if (!routeData[2].check.includes('9月30日') || !routeData[2].check.includes('实际数据')) throw new Error('October route must be gated by September evidence');
 if (!routeData[2].check.includes('未达项') || !routeData[2].check.includes('先回补')) throw new Error('October route must say what to do when a gate fails');
@@ -322,7 +349,7 @@ for (let date=new Date('2026-09-09T12:00:00'); date<=new Date('2026-10-23T12:00:
 {
   const actual=new Date('2026-09-10T12:00:00'), {data}=composeDailyAgenda(actual,rangeIndexFor(actual));
   const brush=brushFocusFor(actual,data);
-  if (!brush || brush.count!==32 || brush.sourceDate!=='2026-09-08' || brush.scheduledMinutes!==235 || brush.deficitMinutes!==0) throw new Error('9/10 880 focus must reflect the reported nap and the revised morning-plus-evening execution slots');
+  if (!brush || brush.count!==32 || brush.sourceDate!=='2026-09-08' || brush.scheduledMinutes!==235 || brush.deficitMinutes!==0 || brush.actualCompleted!==17 || brush.actualRemaining!==15) throw new Error('9/10 880 focus must reflect both revised slots and the verified partial result');
 }
 
 // 2026-09-09 最新口径：FHSU 必须听课；其余校内课从 9/10 起都是定量数学刷题时间，且绝不背 436。

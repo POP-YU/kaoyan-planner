@@ -1,4 +1,4 @@
-const APP_VERSION = 'reset-0910h';
+const APP_VERSION = 'reset-0910i';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');
@@ -60,7 +60,7 @@ const math880Required = {
   source:'李林880题（数学三）· 2026-09-07 中午改回带刷表跳选题号',
   edition:'用户手头《李林880题》数学三 + 《2027李林880带刷执行计划.xlsx》',
   rule:'按带刷计划表逐日跳选指定题号：2026-09-10从原题单第1天开始；必做828题9/10–10/20完成；选择做37题10/18、10/21–10/22集中处理；特难题16题10/23收尾；周日只吃计划表当周的周日轻量格（缓冲不参与顺延）；错题次日回做',
-  alignment:'题号以核对过的带刷计划表为唯一事实来源（881个题号与原表逐章逐题型一致）；周日轻量+复盘；落后按缓冲顺延（brushPlanLagDays +1），不把没做的当完成',
+  alignment:'题号以核对过的带刷计划表为唯一事实来源（881个题号与原表逐章逐题型一致）；9月10日实际完成17/32、剩15题后，表内日期只作候选锚点；周日轻量+复盘；落后按未完成队列顺延（brushPlanLagDays +1），不把没做的当完成',
   chapter1:{count:38},
   chapter2:{count:56},
   chapter3:{count:86},
@@ -447,9 +447,11 @@ const septemberContinuation = {
 // 具体边界仍以用户手头资料为准。按用户资料包《冲刺3个月规划》“快速多轮、
 // 9 月底教材过完第一轮”的口径，非周日每天新增 5 个内容单元（按用户实测 20–30 分钟/题，每天 5 个新内容单元，不死磕），
 // 一轮 213 个在 9/29 账收口；未完次日只补 3 个，仍不挤睡眠。
-// 9/2 仍是第一份账面模板；实际由 9/10 消化，所以账面第一格为第1–5个。
+// 9/2 仍是第一份账面模板；实际由 9/10 消化。用户当晚最新反馈为第1–3个
+// 已背熟，第4个起未完成，所以第一份账只记3个，后续从第4个继续且仍按5个/学习日。
 const currentBaselineDate = '2026-09-02';
 const majorBaseline = Object.freeze({completedUnits:0,dailyNewUnits:5,label:'内容单元'});
+const majorFirstDayCompletedUnits = 3;
 // 2026-09-06 用户提供《背诵笔记》（436 资产评估专业基础，168页扫描版）并逐页
 // 核对结构：第一篇“背诵”p1–75，共10章、213个编号知识点——每章条目按 1.、2.、
 // 3.… 编号，即课表中的“内容单元”；第二篇“计算题”p76–168 按章排重点题，另含
@@ -509,8 +511,10 @@ function majorCumulativeForDate(date){
   const target=dateAtNoon(date), baseline=dateAtNoon(currentBaselineDate);
   if(target < baseline)return majorBaseline.completedUnits;
   let total=majorBaseline.completedUnits;
-  for(let d=new Date(baseline); d<target; d.setDate(d.getDate()+1)) if(d.getDay()!==0) total+=majorBaseline.dailyNewUnits;
-  if(target.getDay()!==0) total+=majorBaseline.dailyNewUnits;
+  for(let d=new Date(baseline); d<=target; d.setDate(d.getDate()+1)){
+    if(d.getDay()===0)continue;
+    total+=isoDateKey(d)===currentBaselineDate?majorFirstDayCompletedUnits:majorBaseline.dailyNewUnits;
+  }
   return total;
 }
 function majorNewRangeForDate(date){
@@ -554,7 +558,7 @@ function normalizeMajorTask(date,row){
   row.steps=(row.steps||[]).map(value=>normalizeMajorString(date,value,originalTitle));
   if(/p\d/.test(originalTitle)){
     const range=majorNewRangeForDate(date), total=majorCumulativeForDate(date);
-    row.note=`${row.note||''}；9月10日从零起跑，按资料顺序${range?`今天新增第${range.start}–${range.end}个`:`回收已背第1–${Math.min(total,majorRecitationMaterial.totalUnits)}个`}，未完次日只补3个`;
+    row.note=`${row.note||''}；9月10日晚已背熟第1–3个，第4个起按资料顺序${range?`今天新增第${range.start}–${range.end}个`:`回收已背第1–${Math.min(total,majorRecitationMaterial.totalUnits)}个`}；先背与默写，再把880放到课余最后`;
   }else if(!/第\d+–\d+个(?:新|已背)/.test(originalTitle) && /436\s*[·]|出声背436/.test(originalTitle)){
     // Generic phase rows used after the strict September ledger should still
     // name the exact ordinal range instead of falling back to “新页/页码”.
@@ -562,7 +566,7 @@ function normalizeMajorTask(date,row){
       .replace(/本周新增页|当日新页|新旧页|本周页码|页内卡片|页内全部卡片/g,'')
       .replace(/\s{2,}/g,' ').trim();
     row.title=majorOrdinalLabel(date,originalTitle,suffix);
-    row.note=`${row.note||''}；9月10日从零起跑，按资料顺序记录内容单元；未完次日只补3个`;
+    row.note=`${row.note||''}；9月10日晚已背熟第1–3个，第4个起按资料顺序记录内容单元；436优先放前，课余880放最后`;
   }
   return row;
 }
@@ -981,10 +985,10 @@ const probabilityWindow = (start,end) => {
   return `原始${formatClockDuration(raw)} · 1.5倍速+暂停约${plannedLectureMinutes(start,end)}分钟${excluded.length?` · 排除${excluded.join('、')}讲（${excluded.map(k=>probabilityMathScope[k]).join('、')}）`:''}`;
 };
 const courseLedger = [
-  {subject:'高数 · 李林880',now:'带刷表跳选题号；2026-09-09确认当前完成0题，实际9/10从原题单第1天开始：必做828题预计9/10–10/20完成；选择做37题排在10/18、10/21–10/22；特难题16题10/23收尾',week:'逐日题单写在每天课表的“880 带刷”格里，题号与《2027李林880带刷执行计划.xlsx》逐题核对一致；周日轻量格固定不动（缓冲不参与顺延）；落后按 brushPlanLagDays +1',done:'当天独立做完并标错因；错题次日回做；课上跳过的题当晚补'},
+  {subject:'高数 · 李林880',now:'带刷表跳选题号；9/10首日32题已完成17题，剩15题移入9/11刷题格先补；后续候选题单不能越过这15题',week:'9/11–9/17进入新课抢救：整周数学轨道约60%给线代/概率新课及紧跟对应题，约40%给880时间盒；课余880统一放在背诵、默写和新课之后。题单是活跃队列，未完留在队首',done:'先做P/W/A分流：P前置未学，挂起到对应新课后；W前置已学但做错，写错因并二测；A独立做对'},
   {subject:'线代 · 没咋了',now:'第2章收尾：2.9初等变换与初等矩阵已听完（100%）；2.8矩阵的分块停在34%，第1天账（实际9/10）断点收尾，听完再进矩阵相似',duration:'剩余条目原始时长未从夸克列表公开；每格用90分钟时间盒，1.5倍速并允许暂停，未播完记时间戳',week:'03-01从第2天账（实际9/11）起按文件顺序推进；03-10核对+04-01–04-03随账面整体后移；10月后续队列从04-05继续',done:'文件名对上 + 时间戳/公式卡 + 2道对应题；不把时间盒结束冒充看完'},
-  {subject:'概率 · 方浩',now:'基础班30讲；第1讲文件名与“随机事件：概念、关系与运算”已核对；第1讲原始时长未验证；29–30为数一不排',duration:`第7–8讲 ${probabilityWindow(7,8)}；第9–10讲 ${probabilityWindow(9,10)}；第11–12讲 ${probabilityWindow(11,12)}`,week:'先第1–2讲，再第3–4、5–6；第二周起按7–8、9–10、11–12讲推进；每两讲配6道基础题',done:'听课留暂停余量；对应题独做并写错因，未播完留时间戳'},
-  {subject:'436 · 背诵笔记',now:'《背诵笔记》结构已逐页核对：背诵篇10章213个编号知识点（p1–75）+ 计算题篇按章重点题（p76–168）；2026-09-09确认当前完成0个，实际9/10从第1个开始',week:'快速多轮：每天新增5个内容单元（非专业出身、20–30分钟/题，不死磕）；周日账只回收；未完次日账只补3个，不挤睡眠；一轮213个预计10/29前后收口并总回收',done:'按手头资料顺序合书复述；短答/计算完整落笔，记录断点章-节-内容单元'},
+  {subject:'概率 · 方浩',now:'基础班30讲；第1讲文件名与“随机事件：概念、关系与运算”已核对；第1讲原始时长未验证；29–30为数一不排',duration:`第7–8讲 ${probabilityWindow(7,8)}；第9–10讲 ${probabilityWindow(9,10)}；第11–12讲 ${probabilityWindow(11,12)}`,week:'9/12正式从第1讲启动；抢救期依次走1–2、3–4、5–6、7–8、9–10、11–12讲，每两讲配6道基础题；未播完留时间戳，不为追讲次跳断点',done:'听课留暂停余量；对应题独做并写错因，未播完留时间戳'},
+  {subject:'436 · 背诵笔记',now:'《背诵笔记》结构已逐页核对：背诵篇10章213个编号知识点（p1–75）+ 计算题篇按章重点题（p76–168）；9/10实际第1–3个已背熟，第4个起未完成',week:'背诵和默写排在880前面；9/11早格先快检第1–3个，再从第4个继续，每天新增5个内容单元；周日只回收，没完成就从最早断点顺延，不挤睡眠',done:'按手头资料顺序合书复述；短答/计算完整落笔；按A/B/C记录断点章-节-内容单元'},
   {subject:'英语二 · 真题',now:'阅读量少，先做精读闭环',week:'2015–2019年各做 Text 1；单词每日写死数量，共新135+旧270',done:'每篇留1张错因卡；当天单词按格内数量收工'}
 ];
 function renderCourseLedger(){
@@ -1003,7 +1007,7 @@ function renderMajorSyllabus(viewDate=displayDate()){
   const rows=majorChapterCumulative.map(c=>`<tr><th scope="row">${c.no}</th><td>${c.title}</td><td>p${c.startPage}–${c.endPage}</td><td>${c.units}</td><td>第${c.from}–${c.to}个</td></tr>`).join('');
   table.innerHTML=`<thead><tr><th scope="col">章</th><th scope="col">名称</th><th scope="col">页</th><th scope="col">知识点</th><th scope="col">内容单元</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th scope="row">合计</th><td>背诵篇 ${majorRecitationMaterial.recitationPages}；计算题篇 ${majorRecitationMaterial.calculationPages}（按章重点题+课后题）</td><td>—</td><td>${majorRecitationMaterial.totalUnits}</td><td>第1–${majorRecitationMaterial.totalUnits}个</td></tr></tfoot>`;
   const progress=document.querySelector('#syllabus-progress'); if(!progress)return;
-  // 进度按当前查看日的实际执行账计算；9/9 尚未开始，9/10 = 9/2 首账 = 第1–5个。
+  // 进度按当前查看日的实际执行账计算；9/10 首账的实际结果为第1–3个已背熟。
   const actualKey=dateKey(viewDate), beforeReset=actualKey<resetStudyStartDate;
   const sourceToday=scheduleSourceDate(actualKey);
   const cum=beforeReset?0:majorCumulativeForDate(sourceToday), ch=majorChapterForUnit(Math.min(cum,majorRecitationMaterial.totalUnits));
@@ -1011,7 +1015,7 @@ function renderMajorSyllabus(viewDate=displayDate()){
   const cursor=new Date(`${currentBaselineDate}T12:00:00`);
   let total=majorBaseline.completedUnits;
   while(total<majorRecitationMaterial.totalUnits){
-    if(cursor.getDay()!==0)total+=majorBaseline.dailyNewUnits;
+    if(cursor.getDay()!==0)total+=isoDateKey(cursor)===currentBaselineDate?majorFirstDayCompletedUnits:majorBaseline.dailyNewUnits;
     if(total>=majorRecitationMaterial.totalUnits){finish=new Date(cursor);break;}
     cursor.setDate(cursor.getDate()+1);
   }
@@ -1019,8 +1023,8 @@ function renderMajorSyllabus(viewDate=displayDate()){
   if(finish)finish.setDate(finish.getDate()+scheduleLagDays);
   const pace=finish?`按每天${majorBaseline.dailyNewUnits}个、周日只回收，实际日历一轮预计${finish.getMonth()+1}月${finish.getDate()}日前后收尾`:'';
   progress.textContent=beforeReset
-    ? `截至${dateText(viewDate)}实际完成0个；9月10日从第1–5个内容单元开始。${pace}。“内容单元”就是资料每章下按 1.、2.、3.… 编号的条目。`
-    : `${dateText(viewDate)}按表应背到第${Math.min(cum,majorRecitationMaterial.totalUnits)}个${ch?`（${ch.no}·${ch.title}）`:''}；${pace}。“内容单元”就是资料每章下按 1.、2.、3.… 编号的条目。`;
+    ? `截至${dateText(viewDate)}实际完成0个；9月10日开始第1–3个。${pace}。“内容单元”就是资料每章下按 1.、2.、3.… 编号的条目。`
+    : `${dateText(viewDate)}按最新欠账应背到第${Math.min(cum,majorRecitationMaterial.totalUnits)}个${ch?`（${ch.no}·${ch.title}）`:''}；9月10日实际第1–3个已背熟，第4个起顺延；${pace}。“内容单元”就是资料每章下按 1.、2.、3.… 编号的条目。`;
 }
 const rangeStarts = [];
 for (let d = new Date('2026-08-31T00:00:00'); d <= new Date('2026-12-14T00:00:00'); d.setDate(d.getDate()+7)) rangeStarts.push(new Date(d));
@@ -1032,15 +1036,15 @@ function breakfastFor(d){ const seed = d.getFullYear()*10000+(d.getMonth()+1)*10
 function datesForRange(index=currentRangeIndex){ const start = rangeStarts[index]; return days.map((_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d;}); }
 function phaseForRange(index=currentRangeIndex){ if(index===0)return 1; if(index===1)return 2; if(index<5)return 3; if(index<13)return 5; return 9; }
 const routeData = [
-  {dates:'9月10日—9月21日',title:'从零起步 · 先把第一天做实',desc:'2026-09-09确认数学与436均未开始；实际9/10作为新第1天，9/2起的已核对账面整体后移8天消化。880按带刷计划表逐日跳选题号，实际9/10从原题单第1天开刷，必做828题预计10/20完成；436从第1个内容单元开始，每个学习日新增5个。FHSU 课程正常听课；其余校内课时全部作为数学刷题格，按当日880总题量分摊且不背436。Blackboard（BB）只在真实周五19:30–20:30处理。每天18:05回家，到家充电并挂下载，00:00关灯。',check:'验收：数学闭卷+错因；436按资料顺序输出；睡眠守住00:00最晚边界',color:'#5572b8',tint:'#e8eefb'},
+  {dates:'9月10日—9月21日',title:'从零起步 · 先补新课覆盖',desc:'实际9/10作为新第1天；当晚最新记录为880完成17/32题、剩15题，436第1–3个已背熟、第4个起未完成。9/11–9/17进入七天新课抢救：整周数学轨道约60%给线代/概率新课与紧跟对应题，约40%给880；先收线代2.8断点，再走矩阵相似，概率从第1讲启动。436背诵与默写提前，先回看第1–3个再从第4个继续；课余880带刷放到当天最后，先补最早未完成15题，再开候选题单。跨章节且前置未学标P挂起，不挤新课与睡眠。FHSU课程正常听课；其余校内课时继续刷数学且不背436。Blackboard只在真实周五19:30–20:30。',check:'验收：每天留下新课时间戳、880最后题号与P/W/A、436 A/B/C；一道跨章节题不用于判断整章水平，00:00关灯',color:'#5572b8',tint:'#e8eefb'},
   {dates:'9月22日—10月8日',title:'高数强化 · 边学边回测',desc:'880带刷题单逐日覆盖数学格（题号按表推进，周日轻量+复盘）；概率继续按核对讲次推进。436以5个/天推进，一轮213个预计10/29前后收口；英语阅读每天闭环，政治保持低量。',check:'验收：每个单元能闭卷说出框架；每道错题有概念/计算/思路标签',color:'#e46c4e',tint:'#fbe6df'},
-  {dates:'10月9日—11月8日',title:'带刷收尾 + 真题入口',desc:'880带刷计划收尾：10/20完成必做828题，10/18（周日轻量格）与10/21–10/22选择做37题集中处理，10/23特难题16题收尾（逐日题单见课表“880 带刷”格；周日缓冲不动，落后自然后推）。10/23收尾后开始数学真题入口；每套固定执行“限时集中→仿真作答→错题二测→总结自检”，模拟卷只补漏洞，不挤880收尾和真题。436继续一轮并滚动输出（5个/天），英语阅读错因保温，政治刷选择题。',check:'9月30日账随重置落在实际10月8日，只做测量与校准：登记实际数据，按剩余题单、可用分钟、订正/回测量重排；未达项首块先回补。',color:'#3b9b94',tint:'#e1f3f0'},
+  {dates:'10月9日—11月8日',title:'带刷收尾 + 真题入口',desc:'880带刷原表的候选收尾：若此前欠账已经清零，10/20完成必做828题，10/18（周日轻量格）与10/21–10/22处理选择做37题，10/23处理特难题16题；若仍有未完成题，日期自然后推，绝不跳过队首。10/23收尾后开始数学真题入口；每套固定执行“限时集中→仿真作答→错题二测→总结自检”，模拟卷只补漏洞，不挤880收尾和真题。436继续一轮并滚动输出（5个/天），英语阅读错因保温，政治刷选择题。',check:'9月30日账随重置落在实际10月8日，只做测量与校准：登记实际数据，按剩余题单、可用分钟、订正/回测量重排；未达项首块先回补。',color:'#3b9b94',tint:'#e1f3f0'},
   {dates:'11月9日—12月8日',title:'真题套卷 + 多轮输出',desc:'880带刷收尾后，数学以整套真题和错题回做为主；博主的“7天4套、模拟2天1套”只作强度参考，先以第一周真实用时、正确率和订正量校准，不机械追套数。436第三—四轮以名词、短答、计算的限时输出为主；英语小三门和作文进入课表，政治选择题二轮并接时政。',check:'验收：每套都有用时、分数、错因、二测和自检记录；能解释失分，而不是只看套数',color:'#d79b46',tint:'#fff0d7'},
   {dates:'12月9日—初试前',title:'模拟与保温',desc:'数学回收880带刷错题、近年真题和公式；436滚动背诵并做整套模拟，英语整卷与作文默写，政治主观题集中背诵。',check:'验收：按考试时长完成，不靠熬夜硬撑',color:'#8170b5',tint:'#eeebf5'}
 ];
 const selfCheckRules = {
   math:'先闭卷独做，再对答案；错题只标概念/计算/思路三类，次日先回做。',
-  major:'当前完成0个，9月10日从第1个开始；按手头资料顺序记录内容单元；合书写框架，短答与计算必须完整落笔。',
+  major:'9月10日晚已背熟第1–3个，第4个起顺延；按手头资料顺序记录内容单元；先关书复述，再完整落笔，436优先于课余880。',
   english:'阅读每题定位证据句并写错因；单词遮住释义主动回想。',
   politics:'选择题记录对错，并把错项归回具体知识点。'
 };
@@ -1075,7 +1079,7 @@ function progressFor(index, day, type, id='', rawTitle='', dateOverride=''){
     const ordinal=majorOrdinalLabel(date,original,detail);
     return {
       label:ordinal,
-      note:`当前完成0个，9月10日从第1个开始；按资料顺序核对内容单元；未完次日只补3个。${majorIsReview(original)?'本格是回收/输出，不增加新量。':'本格新增5个内容单元（快速多轮，不死磕），先框架后闭卷复述。'}`,
+      note:`9月10日晚已背熟第1–3个，第4个起按资料顺序顺延；436背诵与默写优先放前。${majorIsReview(original)?'本格是回收/输出，不增加新量。':'本格新增5个内容单元（快速多轮，不死磕），先框架后闭卷复述。'}`,
       output:majorIsReview(original)?'闭卷框架/复述记录':'5个新内容单元框架+复述记录'
     };
   }
@@ -1183,6 +1187,15 @@ function classAgendaRow(x,actualKey){
   if(actualKey<resetStudyStartDate||mustAttend)return {...x,title:display,note:'',why:mustAttend?'FHSU 课程正常听课，不嵌入考研任务。':'重置起跑日前保留当天真实课表。'};
   return {...x,type:'math',title:'数学刷题 · 课内学习格',note:`原课表：${display}；本格只刷数学，不背436`,why:'2026-09-09 用户确认：除 FHSU 外，校内课时全部作为考研学习时间，当前优先数学刷题。',steps:['按今日880题单继续','独立完成','当场订正并标错因'],output:'本格题量+错因',studyClass:true,originalCourse:display};
 }
+// 2026-09-10 晚用户反馈：880 已经反过来挤压线代和概率新课，而且一道放在
+// 前章、实际调用后续知识的综合题触发了明显焦虑。9/11–9/17 暂时进入七天
+// “新课抢救期”：数学轨道按整周约 60% 新课主线（含紧跟新课的对应题）/40%
+// 880 时间盒重排。880 的原题号不删除，只把每日题单视为活跃队列；没做到的
+// 继续留在队首。跨章节且前置尚未学的题标 P，不能记成普通错题或能力结论。
+const newCourseRescueStart='2026-09-11';
+const newCourseRescueEnd='2026-09-17';
+const newCourseRescueActive=actualKey=>actualKey>=newCourseRescueStart&&actualKey<=newCourseRescueEnd;
+const rescueTrackCopy='P/W/A：P=前置未学，挂起到对应新课后回做；W=前置已学但做错，进入错因与二测；A=独立做对。';
 function wholeNumberAllocation(total,rows){
   const durations=rows.map(x=>Math.max(1,minutes(x.end)-minutes(x.start))),sum=durations.reduce((a,b)=>a+b,0);
   const raw=durations.map(value=>total*value/sum),allocated=raw.map(Math.floor);
@@ -1209,25 +1222,108 @@ function allocateBrushPlanAcrossAgenda(rows,actualKey){
   targets.forEach((x,index)=>{
     const amount=allocation[index],from=cursor,to=cursor+amount-1;cursor=to+1;
     const origin=x.studyClass?`原课表：${x.originalCourse}；`:'';
+    const carryover=actualKey==='2026-09-11';
     x.type='math';x.brushCount=amount;
-    x.title=amount?`880 带刷（${stage}）· 今日第${from}–${to}题 / 共${count}题`:`880 带刷（${stage}）· 本格只订正`;
-    x.note=`${origin}${amount?`本格完成${amount}题`:'本格不领新题'}；完整题号见上方“880 · 今日战单”；独立做完当场对答案并标错因${x.studyClass?'；课内不背436':''}`;
+    x.title=carryover
+      ? `880 带刷 · 9月10日剩余15题优先（${x.studyClass?'课内先补':'当天最后刷题格'}）`
+      : amount?`880 带刷（${stage}）· 今日第${from}–${to}题 / 共${count}题`:`880 带刷（${stage}）· 本格只订正`;
+    const rescueCopy=newCourseRescueActive(actualKey)?`；到点记录最后题号，未完仍留在活跃队首；${rescueTrackCopy}`:'';
+    const carryoverCopy=carryover?'先补9月10日剩余15题并订正；清完且本格仍有时间，才进入上方候选原题单；':'';
+    x.note=`${origin}${carryoverCopy}${amount?`本格候选上限${amount}题`:'本格不领新题'}；完整题号见上方“880 · ${newCourseRescueActive(actualKey)?'今日活跃题单':'今日战单'}”；独立做完当场对答案并标错因${rescueCopy}${x.studyClass?'；课内不背436':''}`;
     x.why='把当日880总题量按所有可用数学格的分钟数分摊，题量只计算一次。';
     x.steps=['按今日战单接续','独立完成','对答案并标概念/计算/思路'];x.output=amount?`${amount}题结果+错因`:'订正记录';
   });
+}
+function applyNewCourseRescueOverride(actualKey,dayIndex,rows,overflow){
+  if(!newCourseRescueActive(actualKey))return {data:rows,overflow};
+  const data=rows.map(x=>({...x}));
+  const find=(start,end='')=>data.find(x=>x.start===start&&(!end||x.end===end));
+  const setNewCourse=(row,{title,note,steps=['续看课程并记时间戳','合上讲义写关键关系','独立做对应题'],output='时间戳+对应题错因'})=>{
+    if(!row)return;
+    Object.assign(row,{type:'math',title,note,why:'七天新课抢救期先补知识覆盖，再让880承担检验功能；对应题计入新课主线，不另开题量。',steps,output,rescueTrack:'new-course'});
+    delete row.brushCount;
+  };
+  const fmt=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+  const claimLateBrush=(after,amount,spec)=>{
+    let remaining=amount,first=true;
+    const candidates=data.filter(x=>!x.studyClass&&(x.title||'').startsWith('880 带刷')&&minutes(x.start)>=minutes(after)).sort((a,b)=>minutes(a.start)-minutes(b.start));
+    for(const row of candidates){
+      if(remaining<=0)break;
+      const duration=minutes(row.end)-minutes(row.start),use=Math.min(duration,remaining);
+      let target=row;
+      if(use<duration){
+        target={...row,end:fmt(minutes(row.start)+use)};
+        row.start=target.end;
+        data.push(target);
+      }
+      setNewCourse(target,{...spec,title:first?spec.title:`${spec.title}（续）`,note:first?spec.note:'承前格继续；到点记录时间戳或对应题结果，然后进入当天最后的880时间盒。'});
+      remaining-=use;first=false;
+    }
+  };
+  if(actualKey==='2026-09-11'){
+    const early=find('06:20','07:00');
+    if(early)Object.assign(early,{type:'major',title:'436 · 第1–3个已背熟内容单元 · 关书快检',note:'不重新学习：按顺序关书说出3个框架，任一处卡住只标断点；白天从第4个继续。',why:'已背熟内容放到早格短回想，把主要精力留给第4个起的欠账。',steps:['关书连续说1–3','标卡点','到点停'],output:'3个回想结果'});
+    const afternoon=find('16:35','17:25');
+    if(afternoon)Object.assign(afternoon,{type:'major',title:'436 · 第4–8个新内容单元 · A/B/C闭卷验收',note:'白天先学第4–8个，这一格只关书口述和默写；第1–3个已背熟不重复占主时段。',why:'背诵和默写必须在880之前收口。',steps:['关书口述','框架默写','登记A/B/C'],output:'第4–8个等级+断点'});
+  }
+  if(actualKey==='2026-09-12'){
+    claimLateBrush('19:30',90,{
+      title:'线代 · 矩阵相似 01 · 断点续看 / 对应题',
+      note:'若昨日03-01未播完，先从时间戳续看；已看完则闭卷写2道对应题。两种情况都不跳文件。'
+    });
+  }
+  if(actualKey==='2026-09-14'){
+    const early=find('06:20','07:00');
+    if(early)Object.assign(early,{type:'major',title:'436 · 已学内容早间默写',note:'先关书写框架，再对照补最大缺口；不在早格开880。',why:'把可预估的背诵和默写提前，避免被晚间刷题挤掉。',steps:['关书写','对照补','标A/B/C'],output:'一页框架'});
+    const late=find('23:25','23:45');
+    if(late)Object.assign(late,{type:'buffer',title:'新课断点登记 · 不追880',note:'记线代/概率时间戳、880最后题号和436 A/B/C；一道跨章节题不用于判断整章水平',why:'把欠账变成明天可直接开工的入口。',steps:[],output:'明日入口清单'});
+  }
+  if(actualKey==='2026-09-15'){
+    claimLateBrush('20:00',90,{
+      title:'线代 · 矩阵相似 03 矩阵相似对角化 · 时间盒',
+      note:'按已核对文件顺序推进；1.5倍速允许暂停，未播完记时间戳，结束后写2道对应题。'
+    });
+  }
+  if(actualKey==='2026-09-17'){
+    claimLateBrush('19:30',90,{
+      title:'线代 · 矩阵相似 04 矩阵相似 · 时间盒',
+      note:'按已核对文件名进入03-04；1.5倍速允许暂停，未播完只记时间戳。'
+    });
+    claimLateBrush('21:20',90,{
+      title:'概率 · 第1–12讲入口图 + 对应错题回测',
+      note:'把已学讲次归入七个模块；只回做前置已经学过的题，前置未学题继续标P挂起。',
+      output:'一页入口图+错题结果'
+    });
+  }
+  data.forEach(x=>{
+    delete x.brushCount;
+    if(x.type==='math'&&/线代|方浩|概率/.test(x.title||''))x.rescueTrack='new-course';
+    else if((x.title||'').startsWith('880 带刷'))x.rescueTrack='880';
+  });
+  return {data:data.sort((a,b)=>minutes(a.start)-minutes(b.start)),overflow};
+}
+function newCourseRescueFocusFor(d,data){
+  if(!newCourseRescueActive(dateKey(d)))return null;
+  const sum=track=>data.filter(x=>x.rescueTrack===track).reduce((total,x)=>total+minutes(x.end)-minutes(x.start),0);
+  const newCourseMinutes=sum('new-course'),brushMinutes=sum('880'),total=newCourseMinutes+brushMinutes;
+  return {newCourseMinutes,brushMinutes,newCoursePercent:total?Math.round(newCourseMinutes/total*100):0,brushPercent:total?Math.round(brushMinutes/total*100):0};
 }
 // 2026-09-10 18:07 用户实时报告：14:20 入睡，18:07 醒来。下午被睡眠覆盖的
 // 436 缺口、课内数学和线代都不能算完成；今晚只保留可收口的三条主线，00:00
 // 睡眠边界不动。线代 2.8 使用次日原本空闲的 08:20–09:50 回收，不挤 BB。
 const reportedNapDate='2026-09-10';
+const reportedBrushCompleted=17;
+const reportedBrushRemaining=15;
 function applyReportedNapOverride(actualKey,dayIndex,rows,overflow){
   if(actualKey===reportedNapDate){
     const before=rows.filter(x=>minutes(x.end)<=minutes('14:20')).map(x=>{
-      if(x.type==='major'&&x.start==='12:45'&&x.end==='14:20')return {...x,type:'buffer',title:'未进行 · 436已移到今晚',note:'用户确认12:45–14:20未进行；第1–5个内容单元移到今晚重新学习和框架默写，不计完成',why:'以用户最新实际进度覆盖原计划。',steps:[],output:'未完成'};
+      if(x.type==='major'&&x.start==='12:45'&&x.end==='14:20')return {...x,type:'buffer',title:'未进行 · 436移到晚间后只完成第1–3个',note:'用户确认12:45–14:20未进行；晚间重新开始后，第1–3个已背熟，第4个起仍未完成',why:'以用户最新实际进度覆盖原计划。',steps:[],output:'下午未完成'};
       return x;
     });
-    const remainingMath=t('nap-replan-math',dayIndex,'19:10','21:30','880 带刷（必做）· 今日剩余第11–32题 / 共32题','math','若上午第1–10题已完成，本格处理第11–32题，共22题；若上午也未完成，就从最早未完成题继续，剩余量明天如实顺延','下午睡眠覆盖了原15:00课内数学格；不把未做题目算完成。',['从最早未完成题开始','独立完成并当场订正','登记剩余题号和错因'],'最多22题结果+错因');
+    const remainingMath=t('nap-replan-math',dayIndex,'19:10','21:30','880 带刷（实际登记）· 已完成17 / 32题','math','用户23:14最新确认：9月10日题单还剩15题没写；剩15题移到明天，先补完并订正，不能直接跳到下一候选题单','记录真实完成量，不把计划题数冒充完成。',['登记最后完成题号','保留剩余15题','明天从最早未完成题开始'],'17题实际结果+15题欠账');
     remainingMath.brushCount=22;
+    remainingMath.actualBrushCompleted=reportedBrushCompleted;
+    remainingMath.brushRemaining=reportedBrushRemaining;
     const revised=[
       t('reported-nap',dayIndex,'14:20','18:07','临时睡眠 · 已记录','sleep','14:20–18:07实际睡眠；原436缺口回收、课内数学和线代2.8均未完成，不计完成','用户实时报告覆盖原计划。',[],'实际睡眠3小时47分'),
       t('nap-wake',dayIndex,'18:07','18:20','起床恢复 · 喝水洗脸','routine','先喝水、洗脸、开灯走动，13分钟内离开床','长睡后先恢复清醒，不立即硬上高负荷。',['喝水','洗脸','开灯走动'],'18:20坐到桌前'),
@@ -1235,12 +1331,11 @@ function applyReportedNapOverride(actualKey,dayIndex,rows,overflow){
       t('nap-reset',dayIndex,'18:50','19:10','洗澡 · 整理桌面','free','20分钟恢复，19:10准时开始数学','把长睡后的迟钝和开工准备一次处理完。',[],'资料与计时器就位'),
       remainingMath,
       t('nap-break',dayIndex,'21:30','21:40','休息 · 走动补水','free','只站起来走动补水，不刷手机','给后续闭卷输出恢复注意力。',[],'21:40回来'),
-      t('nap-major',dayIndex,'21:40','23:15','436 · 第1–5个新内容单元 · 重新学习 + 框架默写','major','把原12:45–14:20未进行的任务原样移到今晚：按第1–5个内容单元顺序理解、压关键词、关书默写；到点仍不会的标C并顺延，不冒充完成','用户确认下午436完全没进行，今晚必须从学习开始，不再写成“闭卷验收”。',['逐个理解答题骨架','关书默写框架','对照只补漏点'],'实际完成序号+框架+断点'),
-      t('nap-major-grade',dayIndex,'23:15','23:30','436 · A/B/C登记与补洞','major','逐个关书口述并标A/B/C；只补最大缺口，不在睡前加新内容','给今晚的重新学习留下可验证结果。',['关书口述','标A/B/C','写明明日先补项'],'5个掌握等级或真实断点'),
-      t('nap-ledger',dayIndex,'23:30','23:45','登记欠账 · 准备明天','buffer','登记880剩余题号；英语阅读与薄弱词今晚未做，进入下一执行日；线代2.8欠账移到明天08:20优先处理；确认设备充电和资料下载','只记录真实未完成项，不在睡前继续加量。',[],'明日入口清单'),
-      t('nap-sleep',dayIndex,'23:45','24:00','洗漱 · 00:00关灯','sleep','下午长睡也不把今晚拖到凌晨；00:00关灯','稳住明早起床时间，防止昼夜继续后移。',[],'00:00关灯')
+      t('nap-major',dayIndex,'21:40','23:15','436 · 实际进度：第1–3个已背熟，第4个起未完成','major','第1–3个按用户最新反馈记为已背熟；第4个起明天提前安排。英语阅读与薄弱词今晚未做；线代2.8明天08:20优先处理','只记录真实结果；完成3个不扩大成5个。',['记录第1–3个已完成','第4个起保留断点','明天先回想再开新'],`第1–3个已背熟；第4个起欠账`),
+      t('nap-game',dayIndex,'23:15','23:40','游戏一局 · 25分钟时间盒','free','只打一局，结束就退出；不续第二局','按用户23:14的最新决定给今晚明确收口。',['打一局','退出游戏'],'23:40结束'),
+      t('nap-sleep',dayIndex,'23:40','24:00','洗漱 · 00:00关灯','sleep','游戏结束直接洗漱；00:00关灯，不把今天拖到凌晨','稳住明早起床时间，防止昼夜继续后移。',[],'00:00关灯')
     ];
-    return {data:[...before,...revised].sort((a,b)=>minutes(a.start)-minutes(b.start)),overflow:[...overflow,'英语二 · 2010年 Text 1 + 今日薄弱词：今晚让位给未进行的436，进入下一执行日','线代 · 第2章 08 矩阵的分块：移至9月11日08:20优先回收']};
+    return {data:[...before,...revised].sort((a,b)=>minutes(a.start)-minutes(b.start)),overflow:[...overflow,'880 · 9月10日剩余15题：9月11日先补','436 · 第4个起：9月11日提前安排，第1–3个先快检','英语二 · 2010年 Text 1 + 今日薄弱词：进入下一执行日','线代 · 第2章 08 矩阵的分块：9月11日08:20优先回收']};
   }
   if(actualKey==='2026-09-11'){
     const keep=rows.filter(x=>!(minutes(x.start)>=minutes('08:20')&&minutes(x.end)<=minutes('10:10')));
@@ -1256,6 +1351,15 @@ function applyReportedNapOverride(actualKey,dayIndex,rows,overflow){
 // 其余课格从 9/10 起固定为数学刷题时间；所有固定课格都继续作为时间边界。
 // 学习格不早于自己原来的开始时间（保早晚节律），只在课后的空档里找位置，
 // 一个格放不下就拆成"续"格；23:20 睡眠边界后还放不下的，进当日容错注记。
+function prioritizeMemorizationBeforeBrush(actualKey,rows){
+  const ordered=[...rows].sort((a,b)=>minutes(a.start)-minutes(b.start));
+  if(actualKey<'2026-09-11')return ordered;
+  const early=ordered.filter(x=>minutes(x.end)<=minutes('16:35'));
+  const later=ordered.filter(x=>minutes(x.end)>minutes('16:35')).map(x=>({...x,preferDailyOrder:true}));
+  const priority=x=>x.type==='major'?0:(x.type==='math'&&!/880/.test(x.title||''))?1:(x.type==='english'||x.type==='politics')?2:/880/.test(x.title||'')?3:4;
+  later.sort((a,b)=>priority(a)-priority(b)||minutes(a.start)-minutes(b.start));
+  return [...early,...later];
+}
 function packAroundRealClasses(taskBlocks, occupied){
   const fmt=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
   const occ=[...occupied].sort((a,b)=>minutes(a.start)-minutes(b.start));
@@ -1265,7 +1369,7 @@ function packAroundRealClasses(taskBlocks, occupied){
   const out=[]; const overflow=[]; let gi=0, gc=gaps.length?gaps[0][0]:1440;
   for(const blk of taskBlocks){
     let rem=minutes(blk.end)-minutes(blk.start), first=true;
-    const want=minutes(blk.start);
+    const want=blk.preferDailyOrder?minutes('16:35'):minutes(blk.start);
     while(gi<gaps.length && gaps[gi][1]<=want){ gi++; gc=gi<gaps.length?gaps[gi][0]:1440; }
     gc=Math.max(gc,want);
     while(rem>0){
@@ -1304,21 +1408,26 @@ function composeDailyAgenda(d,index=currentRangeIndex){
   const fixedTypes=new Set(['routine','meal','sleep','free','homework']);
   const overlapsClass=x=>classRows.some(c=>minutes(x.start)<minutes(c.end)&&minutes(c.start)<minutes(x.end));
   const fixedRows=finalLedger.filter(x=>fixedTypes.has(x.type)&&(x.type!=='free'||!overlapsClass(x)));
-  const taskRows=finalLedger.filter(x=>!fixedTypes.has(x.type)).sort((a,b)=>minutes(a.start)-minutes(b.start));
+  const taskRows=prioritizeMemorizationBeforeBrush(actualKey,finalLedger.filter(x=>!fixedTypes.has(x.type)));
   const {rows:packed,overflow}=packAroundRealClasses(taskRows,[...fixedRows,...classRows].map(x=>({start:x.start,end:x.end})));
   const data=buildDayAgenda([...fixedRows,...classRows,...packed],index,dayIndex);
   allocateBrushPlanAcrossAgenda(data,actualKey);
   const adjusted=applyReportedNapOverride(actualKey,dayIndex,data,overflow);
-  return {dayIndex,...adjusted};
+  const rescued=applyNewCourseRescueOverride(actualKey,dayIndex,adjusted.data,adjusted.overflow);
+  if(newCourseRescueActive(actualKey))allocateBrushPlanAcrossAgenda(rescued.data,actualKey);
+  return {dayIndex,...rescued};
 }
 const studyMinutesLabel=value=>value>=60?`${Math.floor(value/60)}小时${value%60?`${value%60}分`:''}`:`${value}分钟`;
 function brushFocusFor(d,data){
-  const entry=brushPlanEntryFor(dateKey(d));if(!entry)return null;
+  const actualKey=dateKey(d),entry=brushPlanEntryFor(actualKey);if(!entry)return null;
   const [sourceDate,stage,task,count,hours]=entry;
   const rows=data.filter(x=>(x.title||'').startsWith('880 带刷'));
   const scheduledMinutes=rows.reduce((sum,x)=>sum+minutes(x.end)-minutes(x.start),0);
   const expectedMinutes=Math.round(parseFloat(hours)*60);
-  return {sourceDate,stage,task,count,hours,scheduledMinutes,expectedMinutes,deficitMinutes:Math.max(0,expectedMinutes-scheduledMinutes),slots:rows.map(x=>`${x.start}–${x.end}`)};
+  const carryoverCount=actualKey==='2026-09-11'?reportedBrushRemaining:0;
+  const actualCompleted=actualKey===reportedNapDate?reportedBrushCompleted:null;
+  const actualRemaining=actualKey===reportedNapDate?reportedBrushRemaining:null;
+  return {sourceDate,stage,task,count,hours,scheduledMinutes,expectedMinutes,deficitMinutes:Math.max(0,expectedMinutes-scheduledMinutes),slots:rows.map(x=>`${x.start}–${x.end}`),rescueMode:newCourseRescueActive(actualKey),carryoverCount,actualCompleted,actualRemaining};
 }
 let currentAgendaRows=[];
 function agendaPosition(rows,now=new Date()){
@@ -1344,11 +1453,14 @@ function renderDailyAgenda(){
   const {dayIndex,data,overflow}=composeDailyAgenda(d,index);currentAgendaRows=data;
   host.innerHTML='';const card=document.createElement('article');card.className=`day-agenda-card ${agendaDayOffset===0?'is-today':'is-tomorrow'} single-day`;
   const brush=brushFocusFor(d,data);
-  const brushHtml=brush?`<section class="brush-focus" aria-label="880今日战单"><header><span>880 · 今日战单</span><strong>${brush.stage} ${brush.count}题</strong></header><div class="brush-metrics"><b>原题单 ${brush.sourceDate.slice(5).replace('-','/')}</b><b>估时 ${brush.hours}</b><b>已排 ${studyMinutesLabel(brush.scheduledMinutes)}</b></div><p>${brush.task}</p><small>落点：${brush.slots.join('、')||'今天尚未排入时间轴'}。${brush.deficitMinutes?`仍缺 ${studyMinutesLabel(brush.deficitMinutes)}，没有做完就随未完成账顺延。`:'时间覆盖计划表估时，但只有做完并订正才算完成。'}</small></section>`:'';
+  const rescue=newCourseRescueFocusFor(d,data);
+  const rescueHtml=rescue?`<section class="brush-focus rescue-focus" aria-label="七天新课抢救比例"><header><span>数学 · 七天新课抢救</span><strong>今天约 ${rescue.newCoursePercent} / ${rescue.brushPercent}</strong></header><div class="brush-metrics"><b>新课主线 ${studyMinutesLabel(rescue.newCourseMinutes)}</b><b>880时间盒 ${studyMinutesLabel(rescue.brushMinutes)}</b><b>整周目标约60 / 40</b></div><small>线代、概率及其紧跟对应题算新课主线；880只检验已学内容。遇到跨章节题先按P/W/A分流，P=前置未学，不记成普通错题。</small></section>`:'';
+  const brushHeadline=brush.actualCompleted!==null?`实际${brush.actualCompleted}/${brush.count} · 剩${brush.actualRemaining}题`:brush.carryoverCount?`先补${brush.carryoverCount}题 · 候选${brush.count}题`:`${brush.stage} ${brush.count}题`;
+  const brushHtml=brush?`<section class="brush-focus" aria-label="880今日${brush.rescueMode?'活跃题单':'战单'}"><header><span>880 · 今日${brush.rescueMode?'活跃题单':'战单'}</span><strong>${brushHeadline}</strong></header><div class="brush-metrics"><b>${brush.rescueMode?'候选原题单':'原题单'} ${brush.sourceDate.slice(5).replace('-','/')}</b><b>估时 ${brush.hours}</b><b>已排 ${studyMinutesLabel(brush.scheduledMinutes)}</b></div><p>${brush.task}</p><small>${brush.actualCompleted!==null?'9月10日已登记实际完成17题，剩15题移到9月11日队首；':brush.carryoverCount?'9月10日剩余15题必须在候选题单之前；':brush.rescueMode?'先接最早未完成题；上方题单是账面候选，不要求牺牲新课清零。':' '}落点：${brush.slots.join('、')||'今天尚未排入时间轴'}。${brush.actualCompleted!==null?'排入时间不等于完成量。':brush.deficitMinutes?`候选题单时间仍缺 ${studyMinutesLabel(brush.deficitMinutes)}；到点只记最后题号并顺延。`:'时间覆盖计划表估时，但只有做完并订正才算完成。'}</small></section>`:'';
   const mainHtml=data.map(x=>`<div class="agenda-item ${x.type}" data-start="${x.start}" data-end="${x.end}"><time>${x.start}<br /><i>${x.end}</i></time><div><b>${x.title}</b><span>${x.note||''}</span></div></div>`).join('');
   const overflowHtml=overflow.length?`<div class="overflow-note">今天未排下（不挤睡眠，进入下一执行日）：${overflow.join('；')}</div>`:'';
   const viewLabel=agendaDayOffset===0?'今天':'明天';
-  card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">${agendaDayOffset===0?'实时当天':'明日预览'}</span></header>${brushHtml}<div class="agenda-table-head"><span>时间</span><span>${viewLabel}做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${overflowHtml}`;
+  card.innerHTML=`<header><div><span class="day-name">${days[dayIndex]}</span><strong>${dateText(d)}</strong></div><span class="day-state">${agendaDayOffset===0?'实时当天':'明日预览'}</span></header>${rescueHtml}${brushHtml}<div class="agenda-table-head"><span>时间</span><span>${viewLabel}做什么 / 这一格的边界</span></div><div class="agenda-list">${mainHtml}</div>${overflowHtml}`;
   host.append(card);document.querySelector('#daily-title').textContent=`${days[dayIndex]} · ${dateText(d)} · ${viewLabel}安排`;document.querySelector('#today-badge').textContent=agendaDayOffset===0?`${dateText(d)} 自动更新`:`${dateText(d)} 明日预览`;
   updateScheduleContext(d);syncDayNavigationControls();updateCurrentAgenda();renderPhaseLine(d);
 }
