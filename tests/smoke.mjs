@@ -8,11 +8,11 @@ const must = (text, fragment, label) => { if (!text.includes(fragment)) throw ne
 ['小于的考研课表','id="daily-agenda"','id="phase-line"','id="live-clock"','id="current-task-title"','id="next-task-title"','id="date-subtitle"','id="show-today"','id="show-tomorrow"','向左划看明天，向右划回今天','kaoyan.mobileconfig','id="app-version"','apple-touch-icon'].forEach((x) => must(html,x,x));
 must(html,'考研任务按未完成账顺延','ledger explanation');
 must(html,'路线日期是锚点；日任务按实际执行日顺延','phase anchor explanation');
-['styles.css?v=reset-0910j','app.js?v=reset-0910j'].forEach((x) => must(html,x,x));
+['styles.css?v=reset-0911a','app.js?v=reset-0911a'].forEach((x) => must(html,x,x));
 // 2026-09-08：主屏 Web Clip 用户要求"打开即最新版"。sw.js（网络优先、缓存仅离线兜底）
 // 已注册；每次发布必须同步 bump index.html 的 sw.js?v= 与 sw.js 内 CACHE 版本。
-must(html,"serviceWorker.register('sw.js?v=reset-0910j')",'service worker registration');
-must(sw,"kaoyan-reset-0910j",'sw cache version');
+must(html,"serviceWorker.register('sw.js?v=reset-0911a')",'service worker registration');
+must(sw,"kaoyan-reset-0911a",'sw cache version');
 must(sw,"addEventListener('fetch'",'sw fetch handler');
 must(sw,'caches.delete','sw old cache purge');
 must(sw,'skipWaiting','sw immediate activation');
@@ -27,6 +27,8 @@ must(html,'id="syllabus-progress"','436 syllabus progress line');
   '独立做对',
   '一道跨章节题不用于判断整章水平',
   '先背，再刷',
+  '早格不再重复：直接背第4–6个',
+  '中午接第7–8个',
   '9月10日880已完成17/32题，剩15题顺延',
   '436第1–3个已背熟，第4个起顺延',
   '23:15–23:40只打一局游戏',

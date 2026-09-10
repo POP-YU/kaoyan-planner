@@ -86,8 +86,10 @@ if (!newCourseRescueActive('2026-09-11') || !newCourseRescueActive('2026-09-17')
   const tomorrow=composeDailyAgenda(new Date('2026-09-11T12:00:00'),1).data;
   if (!tomorrow.some(x=>x.start==='08:20'&&x.end==='09:50'&&x.title.includes('矩阵的分块（昨日欠账优先）'))) throw new Error('9/11 must use the free morning window to recover the missed linear-algebra 2.8 block');
   if (!tomorrow.some(x=>x.start==='17:25'&&x.title.includes('矩阵相似 01'))) throw new Error('9/11 catch-up must not silently delete the scheduled 03-01 lesson');
-  if (!tomorrow.some(x=>x.start==='06:20'&&x.type==='major'&&x.title.includes('第1–3个'))) throw new Error('9/11 must place completed 436 material in an early retrieval slot');
-  if (!tomorrow.some(x=>x.type==='major'&&x.title.includes('第4–8个新内容单元'))) throw new Error('9/11 436 new work must resume at unit 4 without skipping debt');
+  if (!tomorrow.some(x=>x.start==='06:20'&&x.type==='major'&&x.title.includes('第4–6个新内容单元'))) throw new Error('9/11 morning must move forward to units 4-6 instead of repeating mastered units 1-3');
+  if (!tomorrow.some(x=>x.start==='12:45'&&x.type==='major'&&x.title.includes('第7–8个新内容单元'))) throw new Error('9/11 midday must continue with units 7-8 without duplicating the morning units');
+  if (tomorrow.some(x=>x.start==='06:20'&&x.title.includes('第1–3个'))) throw new Error('9/11 morning must not repeat the already-mastered units 1-3');
+  if (!tomorrow.some(x=>x.start==='16:35'&&x.type==='major'&&x.title.includes('第4–8个')&&x.title.includes('A/B/C'))) throw new Error('9/11 afternoon must still validate the full five-unit 4-8 set');
   if (!tomorrow.some(x=>x.type==='english'&&x.title.includes('2010年 Text 1（昨日欠账优先）'))) throw new Error('9/11 must recover the missed Text 1 before opening Text 2');
   if (!tomorrow.some(x=>x.type==='english'&&x.title.includes('9月10日薄弱词优先'))) throw new Error('9/11 vocabulary must recover the missed weak-word list before new words');
   const lateBrush=tomorrow.filter(x=>(x.title||'').startsWith('880 带刷')&&!x.studyClass);
@@ -272,7 +274,7 @@ for (const unitRange of ['第1–71个已背内容单元','第72–142个已背�
   if (!sep30.some(x=>x.type==='major' && x.title.includes(unitRange))) throw new Error(`September 30 436 framework gate missing ${unitRange}`);
 }
 if (!sep30.some(x=>x.type==='major' && x.title.includes('第1–71个已背内容单元（第一章–第四章）'))) throw new Error('September 30 436 gate must map ordinal ranges to the verified chapters');
-if (!courseLedger.some(x=>x.subject.includes('436') && x.now.includes('213个编号知识点') && x.now.includes('第1–3个已背熟') && x.week.includes('从第4个继续') && x.week.includes('每天新增5个'))) throw new Error('436 ledger must carry the verified partial first-day result and debt-first continuation');
+if (!courseLedger.some(x=>x.subject.includes('436') && x.now.includes('213个编号知识点') && x.now.includes('第1–3个已背熟') && x.week.includes('早格直接背第4–6个') && x.week.includes('中午接第7–8个') && x.week.includes('下午统一验收第4–8个'))) throw new Error('436 ledger must carry the verified forward-only 9/11 split without repeating units 1-3');
 // 2026-09-06：436《背诵笔记》结构成为内容单元序号的唯一事实来源。
 if (majorRecitationMaterial.source !== '背诵笔记（436 资产评估专业基础）' || majorRecitationMaterial.totalUnits !== 213 || majorRecitationMaterial.pages !== 168) throw new Error('436 recitation material must be the verified 背诵笔记 with 213 numbered points across 168 pages');
 if (majorChapterCumulative.length !== 10 || majorChapterCumulative.reduce((s,c)=>s+c.units,0) !== 213 || majorChapterCumulative[3].to !== 108 || majorChapterCumulative[9].from !== 202) throw new Error('436 chapter cumulative map must cover the recitation part in the verified order');
