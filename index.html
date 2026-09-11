@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /><meta name="theme-color" content="#f7f3ee" /><link rel="apple-touch-icon" href="icon-512.png" /><link rel="icon" type="image/png" href="icon-512.png" />
 <meta name="description" content="按日期展开的考研课表：课程、学习、早餐、通勤、作业和睡眠都放在正确的位置。" /><title>小于的考研课表</title>
-<link rel="stylesheet" href="styles.css?v=reset-0911b" />
+<link rel="stylesheet" href="styles.css?v=reset-0911c" />
 </head>
 <body><div class="app-shell">
 <header class="topbar"><div class="brand-lockup"><div class="brand-mark">YU</div><div><p class="eyebrow">2026 · 辽大资产评估</p><h1>小于的考研课表</h1></div></div><div class="top-date" id="top-date"></div></header>
 <main>
 <section class="hero-section"><div class="hero-copy"><p class="eyebrow accent">现在</p><div class="live-clock" id="live-clock">00:00:00</div><p class="clock-caption" id="today-focus">当天自动更新</p></div><div class="today-card"><div class="today-task"><span class="section-kicker">当前安排</span><strong id="current-task-title">正在读取课表</strong><small id="current-task-time">按真实时间自动定位</small></div><div class="today-task next"><span class="section-kicker">接下来</span><strong id="next-task-title">正在读取下一格</strong><small id="next-task-time">不会提前跳过当前任务</small></div><small class="today-meal" id="today-meal">早餐每天按真实日期自动更新</small></div></section>
-<section id="timetable-view" class="view-panel is-visible" aria-label="自动更新的每日课表"><div class="schedule-meta"><div><span class="section-kicker">执行口径</span><h3 id="date-title">正在计算今天的执行账</h3><p id="date-subtitle">真实课程按今天的星期固定；考研任务按未完成账顺延，880 按独立带刷题单执行。</p></div><div class="legend"><span><i class="dot other"></i>学校课程</span><span><i class="dot math"></i>数学</span><span><i class="dot major"></i>436</span><span><i class="dot english"></i>英语</span><span><i class="dot politics"></i>政治</span><span><i class="dot meal"></i>生活</span></div></div><section class="daily-overview" aria-label="具体每天安排"><div class="daily-heading"><div><span class="section-kicker">今天 / 明天</span><h4 id="daily-title">当天安排</h4></div><div class="day-view-tools"><div class="day-view-switch" role="group" aria-label="选择查看日期"><button type="button" id="show-today" class="is-active" aria-pressed="true">今天</button><button type="button" id="show-tomorrow" aria-pressed="false">明天</button></div><span class="today-badge" id="today-badge">当天自动更新</span><small class="swipe-hint">向左划看明天，向右划回今天</small></div></div><div class="daily-agenda" id="daily-agenda" aria-live="polite"></div></section><section class="phase-overview" aria-label="整体阶段路线"><div class="phase-heading"><span class="section-kicker">整体阶段</span><span class="phase-note">路线日期是锚点；日任务按实际执行日顺延</span></div><div class="phase-line" id="phase-line"></div></section><section class="intensity-calibration" id="intensity-calibration" aria-label="七天新课抢救与资料强度校准"><header><span class="section-kicker">执行更新 · 7天新课抢救</span><h4>7天新课抢救 · 数学约六四开</h4><p><strong>9月11日至17日</strong>，不再让880挤掉知识覆盖：整周数学轨道约六成给线代、概率新课及紧跟对应题，约四成给880时间盒。<strong>周五11:45下课直接回家，午饭在家吃或点外卖；不保留15:00–16:35整段休息。</strong>每天课表顶部显示真实分钟和当天比例；没做完的题留在活跃队首，绝不靠熬夜清零。</p></header><div class="intensity-grid"><article><b>先背，再刷</b><p>第1–3个已经背过，9月11日早格不再重复：06:20直接背第4–6个，07:00立即关书复述和默写；13:10接第7–8个，15:25统一验收第4–8个。10:10–11:45课内连续刷880，不另排课上休息；课余880仍放到当天最后，先补9月10日剩余15题。</p></article><article><b>880 · 前置分流</b><p>P＝前置未学，挂起到对应新课后回做；W＝已学做错，写错因并二测；A＝独立做对。<strong>一道跨章节题不用于判断整章水平。</strong></p></article><article><b>七天后只看证据</b><p>每天记录新课时间戳、880最后题号与P/W/A、436 A/B/C和关灯时间。根据七天真实产出再调比例，不因焦虑继续加小时。</p></article></div><small>最新账面：9月10日880已完成17/32题，剩15题顺延；436第1–3个已背熟，第4个起顺延；23:15–23:40只打一局游戏，00:00关灯。已核对1份19条精读总结和1份483条视频元数据表；博主的时长和个案分数只作参考，不是保证。</small></section><section class="syllabus-section" aria-label="436 背诵资料真实目录"><div class="syllabus-heading"><div><span class="section-kicker">436 · 背诵资料</span><h4>《背诵笔记》真实目录 · 已逐页核对</h4><p id="syllabus-progress">正在按当天日期计算背诵进度…</p></div></div><div class="syllabus-table-wrap"><table class="syllabus-table" id="syllabus-table"></table></div></section></section>
+<section id="timetable-view" class="view-panel is-visible" aria-label="自动更新的每日课表"><div class="schedule-meta"><div><span class="section-kicker">执行口径</span><h3 id="date-title">正在计算今天的执行账</h3><p id="date-subtitle">真实课程按今天的星期固定；考研任务按未完成账顺延，880 按独立带刷题单执行。</p></div><div class="legend"><span><i class="dot other"></i>学校课程</span><span><i class="dot math"></i>数学</span><span><i class="dot major"></i>436</span><span><i class="dot english"></i>英语</span><span><i class="dot politics"></i>政治</span><span><i class="dot meal"></i>生活</span></div></div><section class="daily-overview" aria-label="具体每天安排"><div class="daily-heading"><div><span class="section-kicker">今天 / 明天</span><h4 id="daily-title">当天安排</h4></div><div class="day-view-tools"><div class="day-view-switch" role="group" aria-label="选择查看日期"><button type="button" id="show-today" class="is-active" aria-pressed="true">今天</button><button type="button" id="show-tomorrow" aria-pressed="false">明天</button></div><span class="today-badge" id="today-badge">当天自动更新</span><small class="swipe-hint">向左划看明天，向右划回今天</small></div></div><div class="daily-agenda" id="daily-agenda" aria-live="polite"></div></section><section class="phase-overview" aria-label="整体阶段路线"><div class="phase-heading"><span class="section-kicker">整体阶段</span><span class="phase-note">路线日期是锚点；日任务按实际执行日顺延</span></div><div class="phase-line" id="phase-line"></div></section><section class="intensity-calibration" id="intensity-calibration" aria-label="七天新课抢救与资料强度校准"><header><span class="section-kicker">执行更新 · 7天新课抢救</span><h4>7天新课抢救 · 数学约六四开</h4><p><strong>9月11日至17日</strong>继续新课抢救，但436按真实完成量校正：<strong>截至20:16只确认第4个已记住，第5个起不算完成。</strong>原资料显示第4个有十项要素，第6个含五部分并跨页，编号不能当作等量任务。今晚20:20先刷880，21:45后再处理第5、6个；压缩英语和刷题时间，不借用00:00后的睡眠。</p></header><div class="intensity-grid"><article><b>今晚即时重排</b><p><strong>20:20–21:45</strong>先做880剩余题；<strong>21:45–22:10</strong>单独处理第5个三分法；<strong>22:10–22:50</strong>给第6个建立五特点理解链；<strong>22:50–23:05</strong>关书验收。英语薄弱词顺延到9月12日。</p></article><article><b>880 · 前置分流</b><p>P＝前置未学，挂起到对应新课后回做；W＝已学做错，写错因并二测；A＝独立做对。<strong>一道跨章节题不用于判断整章水平。</strong></p></article><article><b>七天后只看证据</b><p>每天记录新课时间戳、880最后题号与P/W/A、436 A/B/C和关灯时间。根据七天真实产出再调比例，不因焦虑继续加小时。</p></article></div><small>最新账面：9月10日880已完成17/32题，剩15题顺延；436第1–4个已确认，第5个起未完成。第5、6个今晚是候选任务，只有闭卷通过才推进；23:25停止学习，00:00关灯。PDF原件只用于本地核对，不上传公开仓库。</small></section><section class="syllabus-section" aria-label="436 背诵资料真实目录"><div class="syllabus-heading"><div><span class="section-kicker">436 · 背诵资料</span><h4>《背诵笔记》真实目录 · 已逐页核对</h4><p id="syllabus-progress">正在按当天日期计算背诵进度…</p></div></div><div class="syllabus-table-wrap"><table class="syllabus-table" id="syllabus-table"></table></div></section></section>
 <section class="major-method-section" id="major-method" aria-label="436背书方法">
   <header class="method-hero">
     <div>
       <span class="section-kicker">页面最下面 · 436执行法</span>
-      <h4>小于的436背书法：先关书讲出来，再算“学会”</h4>
-      <p>这是按你最新实绩定制的版本：9月10日晚第1–3个已背熟，第4个起顺延；非本专业、每天最多5个新内容单元、周日只回收。<strong>436背诵与默写提前，课余880放到最后；非FHSU课内只刷数学，不背436</strong>。目标不是“看着眼熟”，而是考场上能独立组织答案。</p>
+      <h4>小于的436背书法：先理解成逻辑，再关书讲出来</h4>
+      <p>这是按你最新实绩和原资料密度重做的版本：9月10日完成第1–3个，<strong>9月11日截至20:16只确认第4个已记住，第5个起未完成</strong>。每天最多5个只是候选上限，不是固定完成量；长条目可以独占一格。你不靠逐字死背，而是先建立因果与分类，再用关书输出判断是否真的记住；非FHSU课内只刷数学，不背436。</p>
     </div>
     <div class="method-rule"><span>唯一完成标准</span><strong>关书能说，落笔能写</strong><small>翻着书顺下来、反复划线、只看懂，都不计完成。</small></div>
   </header>
@@ -27,7 +27,7 @@
   </div>
 
   <div class="method-block">
-    <div class="method-block-heading"><span class="section-kicker">每日闭环</span><h5>5个新内容，必须走完四步</h5></div>
+    <div class="method-block-heading"><span class="section-kicker">每日闭环</span><h5>按内容密度推进，不再机械凑5个</h5></div>
     <ol class="method-loop">
       <li><span>1</span><div><strong>搭骨架，不抄全文</strong><p>把每个标题改成一道问题；只写“答题顺序 + 3–5个关键词”。先知道它在本章解决什么问题，再记细节。</p></div></li>
       <li><span>2</span><div><strong>关书出声，暴露断点</strong><p>在家或安静处看问题后合书作答。约10秒仍开不了头就直接记C，不边看边背，也不靠熟悉感放行。</p></div></li>
@@ -51,9 +51,9 @@
       <p class="chapter-gate">章末：一页章节框架 → 已核对的辽大436真题 → 对照补答题语句。没有核对过的题号不编。</p>
     </article>
     <article class="method-card">
-      <span class="section-kicker">与你的课表对齐</span>
-      <h5>地点决定训练方式</h5>
-      <ul><li><strong>较早的安静自习格：</strong>理解当天5个、压成框架，不等刷题后再背。</li><li><strong>后续436格：</strong>出声闭卷复述，再补漏点；下一格先抽前一天B/C。</li><li><strong>课余880：</strong>放在当天其他主任务之后，按时间盒收口；未知用时不反过来吞掉背诵。</li><li><strong>周日：</strong>不添新账，只做本周抽查、短答或计算验收。</li></ul>
+      <span class="section-kicker">今晚第5、6个</span>
+      <h5>按你的理解性记忆压成两条链</h5>
+      <ul><li><strong>第5个：做结论 / 给建议 / 查质量</strong>，分别对应评估、评估咨询、评估复核；先会区分作用，再补原文。</li><li><strong>第6个：什么时候估 → 按什么市场估 → 为什么有价值 → 谁保证中立 → 结果是什么性质</strong>，对应时点性、市场性、预测性、公正性、咨询性。</li><li>第6个跨页且明显更长，今晚只要求五个标题和每个标题一句逻辑，不要求逐字背完整段落。</li><li>第5、6个没有闭卷通过，就继续停在第5个；绝不跳到第7个制造假进度。</li></ul>
     </article>
   </div>
 
@@ -68,9 +68,9 @@
 
   <div class="method-gate">
     <div><span class="section-kicker">防止假进度</span><h5>卡住时不加量，先把欠账关掉</h5></div>
-    <ul><li>当天5个里有3个及以上为C：下一段436时间<strong>先清欠账，再开新内容</strong>；没清完就如实顺延。</li><li>不因为焦虑把5个提高到10个，也不挤00:00睡眠边界；未通过闭卷输出的内容不记“已背”。</li><li>每天只留一行证据：<strong>日期｜新内容1–5｜A/B/C｜最大缺口｜下次回访日｜手写输出</strong>。</li></ul>
+    <ul><li>候选条目中只要最早一项还是C，下一段436时间就<strong>先清最早断点，再开新内容</strong>；不按编号硬跳。</li><li>短条目可以连做，像第4、第6这种多分点或跨页长条目可以占满一格；不因为焦虑挤00:00睡眠边界。</li><li>每天只留一行证据：<strong>日期｜实际完成到第几个｜A/B/C｜最大缺口｜下次回访日｜手写输出</strong>。</li></ul>
     <p>先照此法<strong>连续执行7天后再按真实结果调整</strong>：看A/B/C数量、最常漏的类型和手写完成情况，只改一个变量。它是你当前条件下最合适的可验证首版，不是“保证上岸”的承诺。</p>
   </div>
 </section>
 </main><footer class="footer"><span>给认真备考的人一张能落地的表。</span><span><a href="kaoyan.mobileconfig" id="profile-link">📱 iPhone：下载描述文件</a>（下载后到 设置→已下载描述文件→安装，主屏幕才有图标）</span><span>日期、时钟和早餐跟着这台设备的真实时间走 · <span id="app-version"></span></span></footer></div>
-<script src="app.js?v=reset-0911b"></script><script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js?v=reset-0911b').catch(()=>{});</script></body></html>
+<script src="app.js?v=reset-0911c"></script><script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js?v=reset-0911c').catch(()=>{});</script></body></html>

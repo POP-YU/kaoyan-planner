@@ -8,11 +8,11 @@ const must = (text, fragment, label) => { if (!text.includes(fragment)) throw ne
 ['小于的考研课表','id="daily-agenda"','id="phase-line"','id="live-clock"','id="current-task-title"','id="next-task-title"','id="date-subtitle"','id="show-today"','id="show-tomorrow"','向左划看明天，向右划回今天','kaoyan.mobileconfig','id="app-version"','apple-touch-icon'].forEach((x) => must(html,x,x));
 must(html,'考研任务按未完成账顺延','ledger explanation');
 must(html,'路线日期是锚点；日任务按实际执行日顺延','phase anchor explanation');
-['styles.css?v=reset-0911b','app.js?v=reset-0911b'].forEach((x) => must(html,x,x));
+['styles.css?v=reset-0911c','app.js?v=reset-0911c'].forEach((x) => must(html,x,x));
 // 2026-09-08：主屏 Web Clip 用户要求"打开即最新版"。sw.js（网络优先、缓存仅离线兜底）
 // 已注册；每次发布必须同步 bump index.html 的 sw.js?v= 与 sw.js 内 CACHE 版本。
-must(html,"serviceWorker.register('sw.js?v=reset-0911b')",'service worker registration');
-must(sw,"kaoyan-reset-0911b",'sw cache version');
+must(html,"serviceWorker.register('sw.js?v=reset-0911c')",'service worker registration');
+must(sw,"kaoyan-reset-0911c",'sw cache version');
 must(sw,"addEventListener('fetch'",'sw fetch handler');
 must(sw,'caches.delete','sw old cache purge');
 must(sw,'skipWaiting','sw immediate activation');
@@ -26,22 +26,21 @@ must(html,'id="syllabus-progress"','436 syllabus progress line');
   '已学做错',
   '独立做对',
   '一道跨章节题不用于判断整章水平',
-  '先背，再刷',
-  '早格不再重复：06:20直接背第4–6个',
-  '13:10接第7–8个',
-  '周五11:45下课直接回家',
-  '午饭在家吃或点外卖',
-  '不保留15:00–16:35整段休息',
-  '10:10–11:45课内连续刷880，不另排课上休息',
-  '9月10日880已完成17/32题，剩15题顺延',
-  '436第1–3个已背熟，第4个起顺延',
-  '23:15–23:40只打一局游戏',
-  '1份19条精读总结和1份483条视频元数据表'
+  '今晚即时重排',
+  '截至20:16只确认第4个已记住',
+  '20:20先刷880，21:45后再处理第5、6个',
+  '英语薄弱词顺延到9月12日',
+  '23:25停止学习，00:00关灯',
+  'PDF原件只用于本地核对，不上传公开仓库',
+  '436第1–4个已确认，第5个起未完成',
+  '第5、6个今晚是候选任务，只有闭卷通过才推进'
 ].forEach((x) => must(html,x,`intensity calibration: ${x}`));
 [
   'id="major-method"',
   '小于的436背书法',
-  '每天最多5个新内容单元',
+  '每天最多5个只是候选上限',
+  '第5个：做结论 / 给建议 / 查质量',
+  '第6个：什么时候估 → 按什么市场估 → 为什么有价值 → 谁保证中立 → 结果是什么性质',
   '课内只刷数学，不背436',
   'A：能独立讲完整',
   'B：能讲框架但漏关键点',
@@ -51,8 +50,8 @@ must(html,'id="syllabus-progress"','436 syllabus progress line');
   '简答 / 论述',
   '计算题',
   '章末：一页章节框架 → 已核对的辽大436真题 → 对照补答题语句',
-  '日期｜新内容1–5｜A/B/C',
-  '先清欠账，再开新内容',
+  '日期｜实际完成到第几个｜A/B/C',
+  '先清最早断点，再开新内容',
   '连续执行7天后再按真实结果调整'
 ].forEach((x) => must(html,x,`436 method: ${x}`));
 const syllabusIndex = html.indexOf('id="syllabus-table"');
