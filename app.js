@@ -1,4 +1,4 @@
-const APP_VERSION = 'holiday-0925a';
+const APP_VERSION = 'holiday-0925b';
 const days = ['周一','周二','周三','周四','周五','周六','周日'];
 const t = (id,day,start,end,title,type,note,why,steps,output) => ({id,day,start,end,title,type,note,why,steps,output});
 const classBlock = (id,day,start,end,title,type='other') => t(id,day,start,end,title,type,'','',[], '');

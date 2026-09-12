@@ -8,11 +8,11 @@ const must = (text, fragment, label) => { if (!text.includes(fragment)) throw ne
 ['小于的考研课表','id="daily-agenda"','id="phase-line"','id="live-clock"','id="current-task-title"','id="next-task-title"','id="date-subtitle"','id="show-today"','id="show-tomorrow"','向左划看明天，向右划回今天','kaoyan.mobileconfig','id="app-version"','apple-touch-icon'].forEach((x) => must(html,x,x));
 must(html,'考研任务按未完成账顺延','ledger explanation');
 must(html,'路线日期是锚点；日任务按实际执行日顺延','phase anchor explanation');
-['styles.css?v=holiday-0925a','app.js?v=holiday-0925a'].forEach((x) => must(html,x,x));
+['styles.css?v=holiday-0925b','app.js?v=holiday-0925b'].forEach((x) => must(html,x,x));
 // 2026-09-08：主屏 Web Clip 用户要求"打开即最新版"。sw.js（网络优先、缓存仅离线兜底）
 // 已注册；每次发布必须同步 bump index.html 的 sw.js?v= 与 sw.js 内 CACHE 版本。
-must(html,"serviceWorker.register('sw.js?v=holiday-0925a')",'service worker registration');
-must(sw,"kaoyan-holiday-0925a",'sw cache version');
+must(html,"serviceWorker.register('sw.js?v=holiday-0925b')",'service worker registration');
+must(sw,"kaoyan-holiday-0925b",'sw cache version');
 must(sw,"addEventListener('fetch'",'sw fetch handler');
 must(sw,'caches.delete','sw old cache purge');
 must(sw,'skipWaiting','sw immediate activation');
@@ -66,7 +66,7 @@ if (/fonts\.(googleapis|gstatic)\.com/.test(html)) throw new Error('remote font 
 ['--swipe-x','.is-dragging','.swipe-ghost','@keyframes swipe-enter-left','will-change:transform'].forEach((x)=>{if(css.includes(x))throw new Error(`laggy follow-finger CSS remains: ${x}`);});
 if (css.includes('.phase-card small{position:absolute')) throw new Error('phase completion text must stay in normal flow instead of overlapping the description');
 ['renderTimetable','renderMajorSyllabus','majorRecitationMaterial','majorChapterCumulative','majorFirstDayCompletedUnits','datedBlocks','buildDayAgenda','composeDailyAgenda','applyReportedNapOverride','reportedNapDate','reportedBrushCompleted','reportedBrushRemaining','14:20–18:07实际睡眠','未进行 · 436移到晚间后只完成第1–3个','已完成17 / 32题','剩15题移到明天','436 · 实际进度：第1–3个已背熟，第4个起未完成','游戏一局 · 25分钟时间盒','英语阅读与薄弱词今晚未做','线代2.8明天08:20优先处理','newCourseRescueStart','newCourseRescueEnd','applyNewCourseRescueOverride','newCourseRescueFocusFor','prioritizeMemorizationBeforeBrush','P/W/A','前置未学','9月10日剩余15题','actualCompleted','actualRemaining','排入时间不等于完成量','brushFocusFor','agendaPosition','rangeStarts','2026-09-02','actualScheduleStartDate','resetStudyStartDate','2026-09-10','scheduleLagDays','scheduleSourceDate','currentBaselineDate','majorCumulativeForDate','majorNewRangeForDate','strictDateSchedules','breakfastMenu','breakfastFor','probabilityRawDurations','probabilityModules','probabilityLecture1File','linearAlgebraVerifiedLessons','linearAlgebraLessonSlots','futureLinearQueue','futureLinearLessonForDate','taskCheck','验收：','次日或48小时','剩余题单','可用分钟','订正/回测','方浩第1讲（随机事件：概念、关系与运算）','特征值与特征向量','p1–6','章内题数以手头书为准','九月闭卷小测6题','月末门禁','小作文审题','routeData','updateClock','scheduleClock','visibilitychange','stopLiveUpdates','06:00','24:00','肉夹馍','绿豆粥','英语二 · 2010年 Text 1','英语单词 · 新20 + 旧40','按题号顺序推进','880第一章 · 第1–4题（顺序启动）','按题号顺序','math880BrushPlan','brushPlanEntryFor','brushPlanLagDays','880 带刷',"今日${brush.rescueMode?'活跃题单':'战单'}",'教师：','必做828题9/10–10/20完成','881个题号与原表逐章逐题型一致','Blackboard（BB）作业 · 周五晚固定','blackboardFridayStart','classAgendaRow','allocateBrushPlanAcrossAgenda','课内不背436','setAgendaDayOffset','setupDayNavigation','pointerdown','pointerup','数一不排','今日事今日毕','213个编号知识点','矩阵的分块','断点收尾','18:05','夸克挂下载','承前格续做','applyFixedEveningFrame','APP_VERSION'].forEach((x) => must(js,x,x));
-['holidaySprintStart','holidaySprintEnd','holidaySprintActive','holidaySprintFocusFor','holidaySprintAgenda','2026-09-25','2026-10-07','13天总验收','12小时15分','最早未完成条目优先',"const APP_VERSION = 'holiday-0925a'"].forEach((x)=>must(js,x,`holiday sprint: ${x}`));
+['holidaySprintStart','holidaySprintEnd','holidaySprintActive','holidaySprintFocusFor','holidaySprintAgenda','2026-09-25','2026-10-07','13天总验收','12小时15分','最早未完成条目优先',"const APP_VERSION = 'holiday-0925b'"].forEach((x)=>must(js,x,`holiday sprint: ${x}`));
 ['高数诊断','作业 · 当天清掉','只听课，不叠考研任务','洗漱 · 整理床铺','离开屏幕','routine-night-break'].forEach((x) => { if (js.includes(x)) throw new Error(`obsolete schedule copy remains: ${x}`); });
 ['10/23收尾后开始数学真题入口','限时集中→仿真作答→错题二测→总结自检','“7天4套、模拟2天1套”只作强度参考','不机械追套数'].forEach((x) => must(js,x,`source-calibrated route: ${x}`));
 // 2026-09-08：用户真实课表本身以 (FHSU) 标记三门外教课，渲染层用它做标注，不再算 obsolete copy。
